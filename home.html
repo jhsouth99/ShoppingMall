@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>이거어때 - 공동구매 쇼핑몰</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: 'Noto Sans KR', sans-serif;
+			color: #333;
+			line-height: 1.6;
+			background-color: #f8f8f8;
+		}
+
+		.container {
+			max-width: 1200px;
+			margin: 0 auto;
+			padding: 0 20px;
+		}
+
+		a {
+			text-decoration: none;
+			color: inherit;
+		}
+
+		ul,
+		li {
+			list-style: none;
+		}
+
+		button,
+		select,
+		input {
+			font-family: inherit;
+			border: none;
+			outline: none;
+			background: transparent;
+			cursor: pointer;
+		}
+
+		input[type="text"],
+		select {
+			padding: 10px;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+		}
+
+		img {
+			max-width: 100%;
+			display: block;
+		}
+
+		header {
+			background-color: white;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+			position: sticky;
+			top: 0;
+			z-index: 1000;
+		}
+
+		.header-top {
+			padding: 20px 0;
+			border-bottom: 1px solid #f1f1f1;
+		}
+
+		.header-top .container {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+
+		.logo a {
+			font-size: 24px;
+			font-weight: 700;
+			color: #000;
+		}
+
+		.search-container {
+			position: relative;
+			width: 40%;
+		}
+
+		.search-container input {
+			width: 100%;
+			padding: 10px 40px 10px 15px;
+			border: 1px solid #eee;
+			border-radius: 20px;
+			background-color: #f5f5f5;
+		}
+
+		.search-container button {
+			position: absolute;
+			right: 15px;
+			top: 50%;
+			transform: translateY(-50%);
+			font-size: 16px;
+			color: #888;
+		}
+
+		/* 검색 기록 스타일 수정 */
+		.search-history {
+			display: none;
+			position: absolute;
+			top: 100%;
+			left: 0;
+			width: 100%;
+			background-color: white;
+			border: 1px solid #eee;
+			border-radius: 4px;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+			padding: 10px;
+			margin-top: 5px;
+			z-index: 1001;
+			/* 카테고리 메뉴보다 높게 설정 */
+		}
+
+		.search-history h4 {
+			font-size: 14px;
+			color: #888;
+			margin-bottom: 10px;
+		}
+
+		.search-history ul {
+			max-height: 200px;
+			overflow-y: auto;
+			padding-right: 5px;
+			/* 스크롤바 공간 확보 */
+		}
+
+		.search-history li {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 8px 10px;
+			border-bottom: 1px solid #f5f5f5;
+			cursor: pointer;
+			position: relative;
+			/* 상대 위치 설정 */
+		}
+
+		.search-history li:hover {
+			background-color: #f8f8f8;
+		}
+
+		.search-history li:last-child {
+			border-bottom: none;
+		}
+
+		.search-history li span {
+			flex-grow: 1;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			padding-right: 25px;
+		}
+
+		.search-history li .delete-search-item {
+			position: absolute;
+			right: 10px;
+			top: 50%;
+			transform: translateY(-50%);
+			background: none;
+			color: #aaa;
+			font-size: 16px;
+			padding: 0;
+			width: 20px;
+			height: 20px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			border-radius: 50%;
+			transition: all 0.2s;
+			border: none;
+			cursor: pointer;
+		}
+
+		.search-history li .delete-search-item:hover {
+			color: #ff5d5d;
+			background-color: #f1f1f1;
+		}
+
+		.user-menu {
+			display: flex;
+			align-items: center;
+			gap: 20px;
+		}
+
+		.user-menu a {
+			display: flex;
+			align-items: center;
+			font-size: 14px;
+			color: #555;
+		}
+
+		.cart-count {
+			display: inline-block;
+			background-color: #ff5d5d;
+			color: white;
+			font-size: 10px;
+			width: 16px;
+			height: 16px;
+			border-radius: 50%;
+			text-align: center;
+			line-height: 16px;
+			margin-left: 5px;
+		}
+
+		/* 네비게이션 스타일 */
+		.header-nav {
+			background-color: white;
+		}
+
+		.main-nav ul {
+			display: flex;
+			justify-content: center;
+		}
+
+		.main-nav>ul>li {
+			position: relative;
+		}
+
+		.main-nav>ul>li>a {
+			display: block;
+			padding: 15px 20px;
+			font-weight: 500;
+			color: #333;
+			transition: color 0.3s;
+		}
+
+		.main-nav>ul>li:hover>a {
+			color: #ff5d5d;
+		}
+
+		/* 서브메뉴 초기 상태를 확실히 숨김 처리 */
+		.submenu {
+			display: none !important;
+			/* !important를 사용하여 우선순위 부여 */
+			position: absolute;
+			top: 100%;
+			left: 0;
+			min-width: 200px;
+			background-color: white;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+			border: 1px solid #eee;
+			border-radius: 4px;
+			z-index: 100;
+		}
+
+		/* 호버 상태에서만 !important 규칙 덮어쓰기 */
+		@media (min-width: 769px) {
+			.has-submenu:hover .submenu {
+				display: block !important;
+			}
+		}
+
+		/* 모바일에서는 active 클래스 있을 때만 표시 */
+		@media (max-width: 768px) {
+			.submenu.active {
+				display: block !important;
+			}
+		}
+
+		.submenu li a {
+			display: block;
+			padding: 10px 15px;
+			font-size: 14px;
+			color: #666;
+			transition: background-color 0.3s, color 0.3s;
+		}
+
+		.submenu li a:hover {
+			background-color: #f8f8f8;
+			color: #ff5d5d;
+		}
+
+		/* 배너 슬라이더 스타일 */
+		.banner-slider {
+			margin: 30px 0;
+		}
+
+		.slider-container {
+			position: relative;
+			overflow: hidden;
+			border-radius: 8px;
+		}
+
+		.slider-wrapper {
+			display: flex;
+			transition: transform 0.5s ease;
+		}
+
+		.slide {
+			width: 100%;
+			flex-shrink: 0;
+			display: none;
+			position: relative;
+		}
+
+		.slide.active {
+			display: block;
+		}
+
+		.slide img {
+			width: 100%;
+			height: auto;
+		}
+
+		.slide-content {
+			position: absolute;
+			bottom: 50px;
+			left: 50px;
+			max-width: 50%;
+			color: white;
+			text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+		}
+
+		.slide-content h2 {
+			font-size: 32px;
+			margin-bottom: 10px;
+		}
+
+		.slide-content p {
+			font-size: 18px;
+			margin-bottom: 20px;
+		}
+
+		.slide-btn {
+			display: inline-block;
+			padding: 12px 24px;
+			background-color: #ff5d5d;
+			color: white;
+			border-radius: 4px;
+			font-weight: 500;
+			transition: background-color 0.3s;
+		}
+
+		.slide-btn:hover {
+			background-color: #ff3a3a;
+		}
+
+		.slider-control {
+			position: absolute;
+			top: 50%;
+			transform: translateY(-50%);
+			width: 40px;
+			height: 40px;
+			background-color: rgba(255, 255, 255, 0.7);
+			border-radius: 50%;
+			font-size: 20px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: #333;
+			transition: background-color 0.3s;
+			z-index: 10;
+		}
+
+		.slider-control:hover {
+			background-color: rgba(255, 255, 255, 0.9);
+		}
+
+		.slider-control.prev {
+			left: 20px;
+		}
+
+		.slider-control.next {
+			right: 20px;
+		}
+
+		.slider-dots {
+			position: absolute;
+			bottom: 20px;
+			left: 50%;
+			transform: translateX(-50%);
+			display: flex;
+			gap: 10px;
+		}
+
+		.dot {
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			background-color: rgba(255, 255, 255, 0.5);
+			cursor: pointer;
+			transition: background-color 0.3s;
+		}
+
+		.dot.active {
+			background-color: white;
+		}
+
+		/* 제품 섹션 스타일 */
+		.product-section {
+			padding: 40px 0;
+		}
+
+		.section-header {
+			margin-bottom: 30px;
+		}
+
+		.section-header h2 {
+			font-size: 24px;
+			margin-bottom: 20px;
+		}
+
+		.filter-container {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 15px;
+			align-items: center;
+			padding-bottom: 15px;
+			border-bottom: 1px solid #eee;
+		}
+
+		.category-filter,
+		.price-filter,
+		.sort-options {
+			min-width: 150px;
+		}
+
+		.special-filter {
+			display: flex;
+			gap: 15px;
+		}
+
+		.special-filter label {
+			display: flex;
+			align-items: center;
+			gap: 5px;
+			font-size: 14px;
+			color: #666;
+		}
+
+		/* 상품 그리드 스타일 */
+		.product-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+			gap: 30px;
+			margin-top: 30px;
+		}
+
+		.product-card {
+			background-color: white;
+			border-radius: 8px;
+			overflow: hidden;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+			transition: transform 0.3s, box-shadow 0.3s;
+		}
+
+		.product-card:hover {
+			transform: translateY(-5px);
+			box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+		}
+
+		.product-image {
+			position: relative;
+			overflow: hidden;
+			aspect-ratio: 1/1;
+		}
+
+		.product-badge {
+			position: absolute;
+			top: 10px;
+			left: 10px;
+			padding: 5px 10px;
+			font-size: 12px;
+			font-weight: 600;
+			color: white;
+			border-radius: 4px;
+		}
+
+		.product-badge.discount {
+			background-color: #ff5d5d;
+		}
+
+		.product-badge.group {
+			background-color: #5d7fff;
+			left: auto;
+			right: 10px;
+		}
+
+		.product-badge.hot {
+			background-color: #ffb84d;
+		}
+
+		.product-info {
+			padding: 15px;
+		}
+
+		.product-name {
+			font-size: 16px;
+			margin-bottom: 10px;
+			font-weight: 500;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.product-price {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			margin-bottom: 10px;
+		}
+
+		.original-price {
+			font-size: 14px;
+			color: #999;
+			text-decoration: line-through;
+		}
+
+		.discount-price,
+		.current-price {
+			font-size: 18px;
+			font-weight: 600;
+			color: #333;
+		}
+
+		.group-purchase-info {
+			border-top: 1px solid #f1f1f1;
+			margin-top: 10px;
+			padding-top: 10px;
+		}
+
+		.group-price {
+			font-size: 14px;
+			color: #5d7fff;
+			margin-bottom: 8px;
+		}
+
+		.progress-bar {
+			height: 6px;
+			background-color: #eee;
+			border-radius: 3px;
+			overflow: hidden;
+			margin-bottom: 5px;
+		}
+
+		.progress {
+			height: 100%;
+			background-color: #5d7fff;
+		}
+
+		.progress-text {
+			font-size: 12px;
+			color: #666;
+			text-align: right;
+		}
+
+		.load-more {
+			text-align: center;
+			margin-top: 40px;
+		}
+
+		#load-more-btn {
+			padding: 12px 30px;
+			background-color: white;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			font-size: 14px;
+			color: #666;
+			transition: all 0.3s;
+		}
+
+		#load-more-btn:hover {
+			background-color: #f8f8f8;
+			border-color: #ccc;
+		}
+
+		footer {
+			background-color: #333;
+			color: #aaa;
+			padding: 50px 0 30px;
+			margin-top: 50px;
+		}
+
+		.footer-top {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 30px;
+			padding-bottom: 20px;
+			border-bottom: 1px solid #444;
+		}
+
+		.footer-logo a {
+			font-size: 20px;
+			font-weight: 700;
+			color: white;
+		}
+
+		.footer-nav ul {
+			display: flex;
+			gap: 20px;
+		}
+
+		.footer-nav a {
+			font-size: 14px;
+			color: #ddd;
+			transition: color 0.3s;
+		}
+
+		.footer-nav a:hover {
+			color: white;
+		}
+
+		.footer-info {
+			margin-bottom: 20px;
+		}
+
+		.footer-info p {
+			font-size: 12px;
+			margin-bottom: 5px;
+		}
+
+		.footer-copyright {
+			font-size: 12px;
+			color: #777;
+		}
+
+		/* 반응형 스타일 */
+		@media (max-width: 992px) {
+			.product-grid {
+				grid-template-columns: repeat(3, 1fr);
+			}
+
+			.slide-content {
+				left: 30px;
+				bottom: 30px;
+			}
+
+			.slide-content h2 {
+				font-size: 28px;
+			}
+
+			.slide-content p {
+				font-size: 16px;
+			}
+		}
+
+		@media (max-width: 768px) {
+			.header-top .container {
+				flex-direction: column;
+				gap: 15px;
+			}
+
+			.search-container {
+				width: 100%;
+				order: 3;
+			}
+
+			.product-grid {
+				grid-template-columns: repeat(2, 1fr);
+			}
+
+			.slide-content {
+				left: 20px;
+				bottom: 20px;
+				max-width: 70%;
+			}
+
+			.slide-content h2 {
+				font-size: 24px;
+			}
+
+			.slide-content p {
+				font-size: 14px;
+			}
+
+			.footer-top {
+				flex-direction: column;
+				gap: 20px;
+				text-align: center;
+			}
+
+			.footer-nav ul {
+				justify-content: center;
+				flex-wrap: wrap;
+			}
+
+			.filter-container {
+				flex-direction: column;
+				align-items: flex-start;
+			}
+
+			.category-filter,
+			.price-filter,
+			.sort-options {
+				width: 100%;
+			}
+		}
+
+		@media (max-width: 576px) {
+			.product-grid {
+				grid-template-columns: 1fr;
+			}
+
+			.main-nav ul {
+				flex-wrap: wrap;
+			}
+
+			.main-nav>ul>li>a {
+				padding: 10px 15px;
+				font-size: 14px;
+			}
+
+			.slide-content {
+				left: 15px;
+				bottom: 15px;
+				max-width: 80%;
+			}
+
+			.slide-content h2 {
+				font-size: 20px;
+				margin-bottom: 5px;
+			}
+
+			.slide-content p {
+				font-size: 12px;
+				margin-bottom: 10px;
+			}
+
+			.slide-btn {
+				padding: 8px 16px;
+				font-size: 12px;
+			}
+
+			.slider-control {
+				width: 30px;
+				height: 30px;
+				font-size: 16px;
+			}
+		}
+	</style>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			// 배너 슬라이더 기능
+			initBannerSlider();
+
+			// 검색 기능
+			initSearchFunctionality();
+
+			// 메뉴 호버 효과
+			initMenuHoverEffects();
+
+			// 상품 필터링 및 정렬
+			initProductFiltering();
+		});
+
+		// 배너 슬라이더 기능 구현
+		function initBannerSlider() {
+			const slides = document.querySelectorAll('.slide');
+			const dots = document.querySelectorAll('.dot');
+			const prevBtn = document.querySelector('.slider-control.prev');
+			const nextBtn = document.querySelector('.slider-control.next');
+			const sliderWrapper = document.querySelector('.slider-wrapper');
+
+			let currentSlide = 0;
+			let slideInterval;
+			let isDragging = false;
+			let startPos = 0;
+
+			// 슬라이드 표시 함수
+			function showSlide(index) {
+				// 현재 활성화된 슬라이드와 닷 비활성화
+				document.querySelector('.slide.active').classList.remove('active');
+				document.querySelector('.dot.active').classList.remove('active');
+
+				// 새 슬라이드와 닷 활성화
+				slides[index].classList.add('active');
+				dots[index].classList.add('active');
+
+				currentSlide = index;
+			}
+
+			// 다음 슬라이드로 이동
+			function nextSlide() {
+				let nextIndex = currentSlide + 1;
+				if (nextIndex >= slides.length) {
+					nextIndex = 0;
+				}
+				showSlide(nextIndex);
+			}
+
+			// 이전 슬라이드로 이동
+			function prevSlide() {
+				let prevIndex = currentSlide - 1;
+				if (prevIndex < 0) {
+					prevIndex = slides.length - 1;
+				}
+				showSlide(prevIndex);
+			}
+
+			// 자동 슬라이드 시작
+			function startSlideInterval() {
+				// 이미 실행 중인 인터벌이 있다면 중지
+				if (slideInterval) {
+					clearInterval(slideInterval);
+				}
+				// 새 인터벌 설정
+				slideInterval = setInterval(nextSlide, 5000);
+			}
+
+			// 자동 슬라이드 정지
+			function stopSlideInterval() {
+				if (slideInterval) {
+					clearInterval(slideInterval);
+					slideInterval = null;
+				}
+			}
+
+			// 드래그 관련 함수
+			function getPositionX(event) {
+				return event.type.includes('mouse') ? event.pageX : event.touches[0].clientX;
+			}
+
+			function dragStart(event) {
+				stopSlideInterval();
+				isDragging = true;
+				startPos = getPositionX(event);
+			}
+
+			function drag(event) {
+				if (isDragging) {
+					const currentPosition = getPositionX(event);
+					const diff = currentPosition - startPos;
+
+					// 드래그 감도 조절
+					if (Math.abs(diff) > 50) {
+						if (diff > 0) {
+							prevSlide();
+						} else {
+							nextSlide();
+						}
+						isDragging = false;
+					}
+				}
+			}
+
+			function dragEnd() {
+				isDragging = false;
+				startSlideInterval();
+			}
+
+			// 이벤트 리스너 설정
+			nextBtn.addEventListener('click', function () {
+				stopSlideInterval();
+				nextSlide();
+				startSlideInterval();
+			});
+
+			prevBtn.addEventListener('click', function () {
+				stopSlideInterval();
+				prevSlide();
+				startSlideInterval();
+			});
+
+			// 닷 클릭 이벤트
+			dots.forEach((dot, index) => {
+				dot.addEventListener('click', function () {
+					stopSlideInterval();
+					showSlide(index);
+					startSlideInterval();
+				});
+			});
+
+			// 마우스 드래그 기능
+			sliderWrapper.addEventListener('mousedown', dragStart);
+			sliderWrapper.addEventListener('touchstart', dragStart);
+			sliderWrapper.addEventListener('mouseup', dragEnd);
+			sliderWrapper.addEventListener('touchend', dragEnd);
+			sliderWrapper.addEventListener('mousemove', drag);
+			sliderWrapper.addEventListener('touchmove', drag);
+			sliderWrapper.addEventListener('mouseleave', dragEnd);
+
+			// 자동 슬라이드 시작
+			startSlideInterval();
+		}
+
+		// 검색 기능 구현
+		function initSearchFunctionality() {
+			const searchInput = document.getElementById('search-input');
+			const searchButton = document.getElementById('search-button');
+			const searchHistory = document.querySelector('.search-history');
+			const searchHistoryList = document.getElementById('search-history-list');
+
+			// 검색 기록 배열 (localStorage에서 가져오거나 비어있는 배열 생성)
+			let searchHistoryItems = JSON.parse(localStorage.getItem('searchHistory')) || [];
+
+			// 검색 기록 표시
+			function displaySearchHistory() {
+				// 기존 목록 초기화
+				searchHistoryList.innerHTML = '';
+
+				// 각 검색어에 대한 항목 생성
+				searchHistoryItems.forEach((item, index) => {
+					const li = document.createElement('li');
+
+					// 검색어 텍스트를 위한 span 요소
+					const span = document.createElement('span');
+					span.textContent = item;
+					li.appendChild(span);
+
+					// 삭제 버튼 - 명확한 이벤트 핸들링을 위해 수정
+					const deleteBtn = document.createElement('button');
+					deleteBtn.classList.add('delete-search-item');
+					deleteBtn.innerHTML = '×';
+					deleteBtn.setAttribute('data-index', index);
+
+					// 이벤트 리스너 직접 할당 방식 수정
+					deleteBtn.addEventListener('click', function (e) {
+						e.stopPropagation(); // 부모 요소 클릭 이벤트 방지
+						const idx = parseInt(this.getAttribute('data-index'));
+						searchHistoryItems.splice(idx, 1);
+						localStorage.setItem('searchHistory', JSON.stringify(searchHistoryItems));
+						displaySearchHistory();
+					});
+
+					li.appendChild(deleteBtn);
+
+					li.addEventListener('click', function (e) {
+						// 삭제 버튼이 아닌 경우에만 검색 실행
+						if (!e.target.classList.contains('delete-search-item')) {
+							const searchTerm = span.textContent;
+							searchInput.value = searchTerm;
+							performSearch(searchTerm);
+						}
+					});
+
+					searchHistoryList.appendChild(li);
+				});
+			}
+
+			// 검색 실행 함수
+			function performSearch(searchTerm) {
+				// 실제 검색 로직은 백엔드와 연결해야 함
+				console.log('검색어:', searchTerm);
+				alert('검색어 "' + searchTerm + '"에 대한 검색 결과 페이지로 이동합니다.');
+
+				// 검색 기록에 추가 (중복 제거)
+				if (searchTerm.trim() !== '') {
+					const existingIndex = searchHistoryItems.indexOf(searchTerm);
+					if (existingIndex > -1) {
+						searchHistoryItems.splice(existingIndex, 1);
+					}
+
+					searchHistoryItems.unshift(searchTerm);
+
+					// 최대 10개까지만 저장
+					if (searchHistoryItems.length > 10) {
+						searchHistoryItems.pop();
+					}
+
+					localStorage.setItem('searchHistory', JSON.stringify(searchHistoryItems));
+					displaySearchHistory();
+				}
+
+				// 검색 후 검색창 초기화 및 검색 기록 숨기기 (선택적)
+				// searchInput.value = '';
+				// searchHistory.style.display = 'none';
+			}
+
+			// 검색창 포커스 이벤트
+			searchInput.addEventListener('focus', function () {
+				searchHistory.style.display = 'block';
+				displaySearchHistory(); // 포커스 시 최신 목록 표시
+			});
+
+			// 검색창 외부 클릭 시 검색 기록 숨김
+			document.addEventListener('click', function (e) {
+				if (!searchInput.contains(e.target) && !searchHistory.contains(e.target) && !searchButton.contains(e.target)) {
+					searchHistory.style.display = 'none';
+				}
+			});
+
+			// 검색 버튼 클릭 이벤트
+			searchButton.addEventListener('click', function () {
+				const searchTerm = searchInput.value.trim();
+				performSearch(searchTerm);
+			});
+
+			// Enter 키 이벤트
+			searchInput.addEventListener('keypress', function (e) {
+				if (e.key === 'Enter') {
+					const searchTerm = this.value.trim();
+					performSearch(searchTerm);
+				}
+			});
+
+			// 초기 검색 기록 표시
+			displaySearchHistory();
+		}
+
+		// 메뉴 호버 효과 구현
+		function initMenuHoverEffects() {
+			const menuItems = document.querySelectorAll('.has-submenu');
+
+			menuItems.forEach(item => {
+				// 모바일 환경에서 터치 이벤트도 처리
+				item.addEventListener('touchstart', function (e) {
+					e.preventDefault();
+
+					// 현재 열린 다른 메뉴 닫기
+					document.querySelectorAll('.submenu.active').forEach(submenu => {
+						if (!this.contains(submenu)) {
+							submenu.classList.remove('active');
+						}
+					});
+
+					// 현재 메뉴 토글
+					const submenu = this.querySelector('.submenu');
+					submenu.classList.toggle('active');
+				});
+			});
+		}
+
+		// 상품 필터링 및 정렬 기능 구현
+		function initProductFiltering() {
+			const categoryFilter = document.getElementById('category-filter');
+			const priceFilter = document.getElementById('price-filter');
+			const discountFilter = document.getElementById('discount-filter');
+			const groupPurchaseFilter = document.getElementById('group-purchase-filter');
+			const sortOption = document.getElementById('sort-option');
+			const loadMoreBtn = document.getElementById('load-more-btn');
+
+			// 필터 변경 이벤트
+			const filterElements = [categoryFilter, priceFilter, discountFilter, groupPurchaseFilter, sortOption];
+
+			filterElements.forEach(element => {
+				element.addEventListener('change', applyFilters);
+			});
+
+			// 필터 적용 함수
+			function applyFilters() {
+				// 실제 필터링은 백엔드에서 처리해야 하지만, 프론트엔드 데모를 위해 간단히 구현
+				const category = categoryFilter.value;
+				const price = priceFilter.value;
+				const onlyDiscount = discountFilter.checked;
+				const onlyGroupPurchase = groupPurchaseFilter.checked;
+				const sort = sortOption.value;
+
+				console.log('필터 적용:', {
+					category,
+					price,
+					onlyDiscount,
+					onlyGroupPurchase,
+					sort
+				});
+
+				// 필터링된 상품을 가져오는 API 호출을 여기에 구현
+				// 예: fetchFilteredProducts(category, price, onlyDiscount, onlyGroupPurchase, sort);
+
+				// 데모를 위한 필터링 시각화
+				const products = document.querySelectorAll('.product-card');
+
+				products.forEach(product => {
+					// 카테고리 필터링 (실제로는 서버에서 처리)
+					let show = true;
+
+					// 가격 필터링
+					if (price !== 'all') {
+						// 가격 정보 가져오기 (실제로는 서버에서 처리)
+						const priceElement = product.querySelector('.discount-price') || product.querySelector('.current-price');
+						const productPrice = parseInt(priceElement.textContent.replace(/[^0-9]/g, ''));
+
+						if (price === 'under-100000' && productPrice > 100000) {
+							show = false;
+						} else if (price === '100000-300000' && (productPrice < 100000 || productPrice > 300000)) {
+							show = false;
+						} else if (price === 'over-300000' && productPrice < 300000) {
+							show = false;
+						}
+					}
+
+					// 할인 상품만 필터링
+					if (onlyDiscount && !product.querySelector('.product-badge.discount')) {
+						show = false;
+					}
+
+					// 공동구매 가능 상품만 필터링
+					if (onlyGroupPurchase && !product.querySelector('.group-purchase-info')) {
+						show = false;
+					}
+
+					// 필터링 결과 적용
+					product.style.display = show ? 'block' : 'none';
+				});
+			}
+
+			// 더 보기 버튼 클릭 이벤트
+			loadMoreBtn.addEventListener('click', function () {
+				// 실제로는 다음 페이지 상품을 가져오는 API 호출을 구현
+				// 예: loadMoreProducts(currentPage + 1);
+
+				// 데모를 위한 간단한 처리
+				alert('더 많은 상품을 로드합니다. (실제 구현 시 API에서 추가 데이터를 가져옵니다)');
+			});
+		}
+	</script>
+</head>
+
+<body>
+	<header>
+		<div class="header-top">
+			<div class="container">
+				<div class="logo">
+					<a href="/">이거어때</a>
+				</div>
+				<div class="search-container">
+					<input type="text" id="search-input" placeholder="상품을 검색해보세요">
+					<button id="search-button"><i class="search-icon">🔍</i></button>
+					<div class="search-history">
+						<h4>최근 검색어</h4>
+						<ul id="search-history-list">
+							<!-- 검색 기록은 JS로 추가됨 -->
+						</ul>
+					</div>
+				</div>
+				<div class="user-menu">
+					<a href="/login" class="login-btn">로그인</a>
+					<a href="/cart" class="cart-btn">장바구니 <span class="cart-count">0</span></a>
+				</div>
+			</div>
+		</div>
+		<div class="header-nav">
+			<div class="container">
+				<nav class="main-nav">
+					<ul>
+						<li class="has-submenu">
+							<a href="/category/clothing">의류</a>
+							<ul class="submenu">
+								<li><a href="/category/clothing/shoes">신발</a></li>
+								<li><a href="/category/clothing/tops">상의</a></li>
+								<li><a href="/category/clothing/outer">아우터</a></li>
+								<li><a href="/category/clothing/bottoms">하의</a></li>
+							</ul>
+						</li>
+						<li class="has-submenu">
+							<a href="/category/food">식품</a>
+							<ul class="submenu">
+								<li><a href="/category/food/bakery">베이커리</a></li>
+								<li><a href="/category/food/vegetables">농산</a></li>
+								<li><a href="/category/food/meat">축산</a></li>
+								<li><a href="/category/food/seafood">수산</a></li>
+								<li><a href="/category/food/snacks">간식</a></li>
+								<li><a href="/category/food/sauce-noodles">양념/면</a></li>
+							</ul>
+						</li>
+						<li class="has-submenu">
+							<a href="/category/electronics">전자기기</a>
+							<ul class="submenu">
+								<li><a href="/category/electronics/appliances">가전/TV</a></li>
+								<li><a href="/category/electronics/computers">컴퓨터/노트북/조립PC</a></li>
+								<li><a href="/category/electronics/mobile">태블릿/모바일</a></li>
+								<li><a href="/category/electronics/camera">카메라</a></li>
+							</ul>
+						</li>
+						<li class="has-submenu">
+							<a href="/group-purchase">공동구매</a>
+							<ul class="submenu">
+								<li><a href="/group-purchase/clothing">의류</a></li>
+								<li><a href="/group-purchase/food">식품</a></li>
+								<li><a href="/group-purchase/electronics">전자기기</a></li>
+							</ul>
+						</li>
+						<li class="has-submenu">
+							<a href="/mypage">마이페이지</a>
+							<ul class="submenu">
+								<li><a href="/mypage/wishlist">관심 목록</a></li>
+								<li><a href="/mypage/orders">주문 내역</a></li>
+								<li><a href="/mypage/coupons">쿠폰함</a></li>
+								<li><a href="/mypage/info">회원 정보</a></li>
+								<li><a href="/mypage/reviews">리뷰 작성/관리</a></li>
+								<li><a href="/mypage/inquiries">문의 내역</a></li>
+								<li><a href="/mypage/withdraw">회원 탈퇴</a></li>
+							</ul>
+						</li>
+					</ul>
+				</nav>
+			</div>
+		</div>
+	</header>
+
+	<!-- 메인 컨텐츠 영역 -->
+	<main>
+		<!-- 배너 슬라이더 -->
+		<section class="banner-slider">
+			<div class="container">
+				<div class="slider-container">
+					<div class="slider-wrapper">
+						<div class="slide active">
+							<img src="/api/placeholder/1200/400" alt="인기 공동구매 상품">
+							<div class="slide-content">
+								<h2>인기 공동구매 상품</h2>
+								<p>함께 구매하고 최대 30% 할인받으세요!</p>
+								<a href="/group-purchase" class="slide-btn">공동구매 바로가기</a>
+							</div>
+						</div>
+						<div class="slide">
+							<img src="/api/placeholder/1200/400" alt="시즌 할인 상품">
+							<div class="slide-content">
+								<h2>시즌 할인 상품</h2>
+								<p>봄맞이 특별 할인 이벤트 진행 중!</p>
+								<a href="/sale" class="slide-btn">할인 상품 보기</a>
+							</div>
+						</div>
+						<div class="slide">
+							<img src="/api/placeholder/1200/400" alt="신규 가입 혜택">
+							<div class="slide-content">
+								<h2>신규 가입 혜택</h2>
+								<p>첫 구매 시 15% 할인 쿠폰 증정!</p>
+								<a href="/register" class="slide-btn">회원가입 하기</a>
+							</div>
+						</div>
+					</div>
+					<button class="slider-control prev">&lt;</button>
+					<button class="slider-control next">&gt;</button>
+					<div class="slider-dots">
+						<span class="dot active" data-index="0"></span>
+						<span class="dot" data-index="1"></span>
+						<span class="dot" data-index="2"></span>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- 제품 목록 섹션 -->
+		<section class="product-section">
+			<div class="container">
+				<div class="section-header">
+					<h2>인기 상품</h2>
+					<div class="filter-container">
+						<div class="category-filter">
+							<select id="category-filter">
+								<option value="all">전체</option>
+								<option value="clothing">의류</option>
+								<option value="food">식품</option>
+								<option value="electronics">전자기기</option>
+							</select>
+						</div>
+						<div class="price-filter">
+							<select id="price-filter">
+								<option value="all">전체 가격대</option>
+								<option value="under-100000">10만원 이하</option>
+								<option value="100000-300000">10-30만원</option>
+								<option value="over-300000">30만원 이상</option>
+							</select>
+						</div>
+						<div class="special-filter">
+							<label><input type="checkbox" id="discount-filter"> 할인상품만</label>
+							<label><input type="checkbox" id="group-purchase-filter"> 공동구매 가능</label>
+						</div>
+						<div class="sort-options">
+							<select id="sort-option">
+								<option value="popularity">인기순</option>
+								<option value="latest">최신순</option>
+								<option value="price-low">낮은 가격순</option>
+								<option value="price-high">높은 가격순</option>
+								<option value="discount">할인율순</option>
+							</select>
+						</div>
+					</div>
+				</div>
+
+				<div class="product-grid">
+					<!-- 상품 카드 샘플 -->
+					<div class="product-card">
+						<div class="product-image">
+							<img src="/api/placeholder/250/250" alt="상품 이미지">
+							<div class="product-badge discount">30%</div>
+							<div class="product-badge group">공동구매</div>
+						</div>
+						<div class="product-info">
+							<h3 class="product-name">프리미엄 가죽 스니커즈</h3>
+							<div class="product-price">
+								<div class="original-price">180,000원</div>
+								<div class="discount-price">126,000원</div>
+							</div>
+							<div class="group-purchase-info">
+								<div class="group-price">공동구매시: 110,000원</div>
+								<div class="group-progress">
+									<div class="progress-bar">
+										<div class="progress" style="width: 60%;"></div>
+									</div>
+									<div class="progress-text">3/5명 참여 중!</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- 상품 카드 샘플 -->
+					<div class="product-card">
+						<div class="product-image">
+							<img src="/api/placeholder/250/250" alt="상품 이미지">
+						</div>
+						<div class="product-info">
+							<h3 class="product-name">유기농 과일 세트</h3>
+							<div class="product-price">
+								<div class="current-price">45,000원</div>
+							</div>
+							<div class="group-purchase-info">
+								<div class="group-price">공동구매시: 35,000원</div>
+								<div class="group-progress">
+									<div class="progress-bar">
+										<div class="progress" style="width: 20%;"></div>
+									</div>
+									<div class="progress-text">1/5명 참여 중!</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- 추가 상품 카드 샘플 -->
+					<div class="product-card">
+						<div class="product-image">
+							<img src="/api/placeholder/250/250" alt="상품 이미지">
+							<div class="product-badge discount">15%</div>
+						</div>
+						<div class="product-info">
+							<h3 class="product-name">무선 이어폰</h3>
+							<div class="product-price">
+								<div class="original-price">220,000원</div>
+								<div class="discount-price">187,000원</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- 추가 상품 카드 샘플 -->
+					<div class="product-card">
+						<div class="product-image">
+							<img src="/api/placeholder/250/250" alt="상품 이미지">
+							<div class="product-badge hot">인기</div>
+						</div>
+						<div class="product-info">
+							<h3 class="product-name">겨울용 패딩 자켓</h3>
+							<div class="product-price">
+								<div class="current-price">289,000원</div>
+							</div>
+							<div class="group-purchase-info">
+								<div class="group-price">공동구매시: 245,000원</div>
+								<div class="group-progress">
+									<div class="progress-bar">
+										<div class="progress" style="width: 80%;"></div>
+									</div>
+									<div class="progress-text">4/5명 참여 중!</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- 추가 상품 카드들 -->
+					<div class="product-card">
+						<div class="product-image">
+							<img src="/api/placeholder/250/250" alt="상품 이미지">
+						</div>
+						<div class="product-info">
+							<h3 class="product-name">고급 원목 식탁 세트</h3>
+							<div class="product-price">
+								<div class="current-price">420,000원</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="product-card">
+						<div class="product-image">
+							<img src="/api/placeholder/250/250" alt="상품 이미지">
+							<div class="product-badge discount">25%</div>
+							<div class="product-badge group">공동구매</div>
+						</div>
+						<div class="product-info">
+							<h3 class="product-name">스마트워치</h3>
+							<div class="product-price">
+								<div class="original-price">320,000원</div>
+								<div class="discount-price">240,000원</div>
+							</div>
+							<div class="group-purchase-info">
+								<div class="group-price">공동구매시: 210,000원</div>
+								<div class="group-progress">
+									<div class="progress-bar">
+										<div class="progress" style="width: 40%;"></div>
+									</div>
+									<div class="progress-text">2/5명 참여 중!</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="load-more">
+					<button id="load-more-btn">더 보기</button>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<footer>
+		<div class="container">
+			<div class="footer-top">
+				<div class="footer-logo">
+					<a href="/">이거어때</a>
+				</div>
+				<div class="footer-nav">
+					<ul>
+						<li><a href="/about">회사소개</a></li>
+						<li><a href="/terms">이용약관</a></li>
+						<li><a href="/privacy">개인정보처리방침</a></li>
+						<li><a href="/contact">고객센터</a></li>
+						<li><a href="/partnership">제휴문의</a></li>
+					</ul>
+				</div>
+			</div>
+			<div class="footer-info">
+				<p>상호명: (주)이거어때 | 대표: 홍길동 | 사업자등록번호: 123-45-67890</p>
+				<p>주소: 서울특별시 강남구 테헤란로 123 이거어때빌딩 8층</p>
+				<p>고객센터: 1234-5678 (평일 09:00-18:00, 주말/공휴일 휴무)</p>
+				<p>이메일: help@howaboutthis.co.kr</p>
+			</div>
+			<div class="footer-copyright">
+				<p>&copy; 2025 이거어때. All rights reserved.</p>
+			</div>
+		</div>
+	</footer>
+
+	<script src="script.js"></script>
+</body>
+
+</html>
