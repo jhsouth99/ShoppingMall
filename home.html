@@ -72,8 +72,18 @@
 
 		.header-top .container {
 			display: flex;
-			align-items: center;
+			flex-direction: row;
 			justify-content: space-between;
+			align-items: center;
+			position: relative;
+		}
+
+		.logo {
+			margin-right: auto;
+			/* 원래 크기 명시적 지정 */
+			font-size: 24px;
+			/* 원래 코드에 있던 크기 */
+			font-weight: 700;
 		}
 
 		.logo a {
@@ -83,8 +93,15 @@
 		}
 
 		.search-container {
-			position: relative;
+			position: absolute;
+			left: 50%;
+			transform: translateX(-50%);
 			width: 40%;
+			z-index: 10;
+		}
+
+		.user-menu {
+			margin-left: auto;
 		}
 
 		.search-container input {
@@ -1111,7 +1128,7 @@
 		<div class="header-top">
 			<div class="container">
 				<div class="logo">
-					<a href="/">이거어때</a>
+					<a href="#">이거어때</a>
 				</div>
 				<div class="search-container">
 					<input type="text" id="search-input" placeholder="상품을 검색해보세요">
@@ -1124,7 +1141,8 @@
 					</div>
 				</div>
 				<div class="user-menu">
-					<a href="/login" class="login-btn">로그인</a>
+					<a href="/mypage" class="mypage-btn">마이페이지</a>
+					<a href="http://localhost:9090/Team_project/login.html" class="login-btn">로그인</a>
 					<a href="/cart" class="cart-btn">장바구니 <span class="cart-count">0</span></a>
 				</div>
 			</div>
@@ -1168,18 +1186,6 @@
 								<li><a href="/group-purchase/clothing">의류</a></li>
 								<li><a href="/group-purchase/food">식품</a></li>
 								<li><a href="/group-purchase/electronics">전자기기</a></li>
-							</ul>
-						</li>
-						<li class="has-submenu">
-							<a href="/mypage">마이페이지</a>
-							<ul class="submenu">
-								<li><a href="/mypage/wishlist">관심 목록</a></li>
-								<li><a href="/mypage/orders">주문 내역</a></li>
-								<li><a href="/mypage/coupons">쿠폰함</a></li>
-								<li><a href="/mypage/info">회원 정보</a></li>
-								<li><a href="/mypage/reviews">리뷰 작성/관리</a></li>
-								<li><a href="/mypage/inquiries">문의 내역</a></li>
-								<li><a href="/mypage/withdraw">회원 탈퇴</a></li>
 							</ul>
 						</li>
 					</ul>
