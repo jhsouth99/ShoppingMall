@@ -80,16 +80,14 @@
 
 		.logo {
 			margin-right: auto;
-			/* 원래 크기 명시적 지정 */
 			font-size: 24px;
-			/* 원래 코드에 있던 크기 */
 			font-weight: 700;
 		}
 
 		.logo a {
 			font-size: 24px;
 			font-weight: 700;
-			color: #000;
+			color: #4f46e5;
 		}
 
 		.search-container {
@@ -135,7 +133,6 @@
 			padding: 10px;
 			margin-top: 5px;
 			z-index: 1001;
-			/* 카테고리 메뉴보다 높게 설정 */
 		}
 
 		.search-history h4 {
@@ -148,7 +145,6 @@
 			max-height: 200px;
 			overflow-y: auto;
 			padding-right: 5px;
-			/* 스크롤바 공간 확보 */
 		}
 
 		.search-history li {
@@ -159,7 +155,6 @@
 			border-bottom: 1px solid #f5f5f5;
 			cursor: pointer;
 			position: relative;
-			/* 상대 위치 설정 */
 		}
 
 		.search-history li:hover {
@@ -297,15 +292,12 @@
 			color: #ff5d5d;
 		}
 
-		/* 배너 슬라이더 스타일 */
-		.banner-slider {
-			margin: 30px 0;
-		}
-
+		/* 배너 슬라이더 관련 CSS */
 		.slider-container {
 			position: relative;
 			overflow: hidden;
-			border-radius: 8px;
+			margin: 20px 0;
+			border-radius: 25px;
 		}
 
 		.slider-wrapper {
@@ -324,42 +316,66 @@
 			display: block;
 		}
 
-		.slide img {
-			width: 100%;
-			height: auto;
+		.custom-banner {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			border-radius: 25px;
+			overflow: hidden;
+			height: 220px;
+			position: relative;
+			background-color: #f8f9fa;
 		}
 
-		.slide-content {
+		.gradient-shape {
 			position: absolute;
-			bottom: 50px;
-			left: 50px;
-			max-width: 50%;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: linear-gradient(135deg, #4f46e5, #3b82f6);
+			clip-path: polygon(0 0, 60% 0, 40% 100%, 0% 100%);
+			z-index: 1;
+		}
+
+		.product-boxes {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 15px;
+			max-width: 60%;
+			position: relative;
+			z-index: 2;
+		}
+
+		.product-box {
+			width: 80px;
+			height: 100px;
+			border-radius: 10px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
 			color: white;
-			text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+			font-weight: bold;
+			font-size: 20px;
+			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 		}
 
-		.slide-content h2 {
-			font-size: 32px;
-			margin-bottom: 10px;
+		.product-box.blue {
+			background-color: #5d7fff;
 		}
 
-		.slide-content p {
-			font-size: 18px;
-			margin-bottom: 20px;
+		.product-box.purple {
+			background-color: #8a63ff;
 		}
 
-		.slide-btn {
-			display: inline-block;
-			padding: 12px 24px;
-			background-color: #ff5d5d;
-			color: white;
-			border-radius: 4px;
-			font-weight: 500;
-			transition: background-color 0.3s;
+		.product-box.yellow {
+			background-color: #ffb84d;
 		}
 
-		.slide-btn:hover {
-			background-color: #ff3a3a;
+		.product-box.white {
+			background-color: #ffffff;
+			border: 1px solid #eee;
+			color: #333;
 		}
 
 		.slider-control {
@@ -368,27 +384,85 @@
 			transform: translateY(-50%);
 			width: 40px;
 			height: 40px;
-			background-color: rgba(255, 255, 255, 0.7);
+			background-color: rgba(255, 255, 255, 0.8);
 			border-radius: 50%;
 			font-size: 20px;
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			color: #333;
-			transition: background-color 0.3s;
+			transition: all 0.3s;
 			z-index: 10;
+			cursor: pointer;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 		}
 
 		.slider-control:hover {
-			background-color: rgba(255, 255, 255, 0.9);
+			background-color: white;
+			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 		}
 
 		.slider-control.prev {
-			left: 20px;
+			left: -20px;
 		}
 
 		.slider-control.next {
-			right: 20px;
+			right: -20px;
+		}
+
+		.slider-dots {
+			position: absolute;
+			bottom: 20px;
+			left: 50%;
+			transform: translateX(-50%);
+			display: flex;
+			gap: 10px;
+			z-index: 10;
+		}
+
+		.dot {
+			width: 12px;
+			height: 12px;
+			border-radius: 50%;
+			background-color: transparent;
+			border: 2px solid white;
+			cursor: pointer;
+			transition: all 0.3s;
+		}
+
+		.dot.active {
+			background-color: white;
+		}
+
+		/* 반응형 조정 */
+		@media (max-width: 768px) {
+			.custom-banner {
+				height: 180px;
+			}
+
+			.product-boxes {
+				max-width: 90%;
+			}
+
+			.product-box {
+				width: 60px;
+				height: 80px;
+				font-size: 16px;
+			}
+
+			.slider-control {
+				width: 30px;
+				height: 30px;
+				font-size: 16px;
+			}
+
+			.slider-control.prev {
+				left: 10px;
+			}
+
+			.slider-control.next {
+				right: 10px;
+			}
 		}
 
 		.slider-dots {
@@ -925,13 +999,12 @@
 					span.textContent = item;
 					li.appendChild(span);
 
-					// 삭제 버튼 - 명확한 이벤트 핸들링을 위해 수정
+					// 삭제 버튼
 					const deleteBtn = document.createElement('button');
 					deleteBtn.classList.add('delete-search-item');
 					deleteBtn.innerHTML = '×';
 					deleteBtn.setAttribute('data-index', index);
 
-					// 이벤트 리스너 직접 할당 방식 수정
 					deleteBtn.addEventListener('click', function (e) {
 						e.stopPropagation(); // 부모 요소 클릭 이벤트 방지
 						const idx = parseInt(this.getAttribute('data-index'));
@@ -1141,7 +1214,7 @@
 					</div>
 				</div>
 				<div class="user-menu">
-					<a href="/mypage" class="mypage-btn">마이페이지</a>
+					<a href="http://localhost:9090/Team_project/login.html" class="mypage-btn">마이페이지</a>
 					<a href="http://localhost:9090/Team_project/login.html" class="login-btn">로그인</a>
 					<a href="/cart" class="cart-btn">장바구니 <span class="cart-count">0</span></a>
 				</div>
@@ -1196,33 +1269,39 @@
 
 	<!-- 메인 컨텐츠 영역 -->
 	<main>
-		<!-- 배너 슬라이더 -->
+		<!-- 배너 슬라이더 섹션 -->
 		<section class="banner-slider">
 			<div class="container">
 				<div class="slider-container">
 					<div class="slider-wrapper">
 						<div class="slide active">
-							<img src="/api/placeholder/1200/400" alt="인기 공동구매 상품">
-							<div class="slide-content">
-								<h2>인기 공동구매 상품</h2>
-								<p>함께 구매하고 최대 30% 할인받으세요!</p>
-								<a href="/group-purchase" class="slide-btn">공동구매 바로가기</a>
+							<div class="custom-banner">
+								<div class="gradient-shape"></div>
+								<div class="product-boxes">
+									<div class="product-box blue">80%</div>
+									<div class="product-box purple">80%</div>
+									<div class="product-box yellow"></div>
+									<div class="product-box white"></div>
+								</div>
 							</div>
 						</div>
 						<div class="slide">
-							<img src="/api/placeholder/1200/400" alt="시즌 할인 상품">
-							<div class="slide-content">
-								<h2>시즌 할인 상품</h2>
-								<p>봄맞이 특별 할인 이벤트 진행 중!</p>
-								<a href="/sale" class="slide-btn">할인 상품 보기</a>
+							<div class="custom-banner">
+								<div class="gradient-shape"></div>
+								<div class="product-boxes">
+									<div class="product-box blue">70%</div>
+									<div class="product-box yellow">60%</div>
+								</div>
 							</div>
 						</div>
 						<div class="slide">
-							<img src="/api/placeholder/1200/400" alt="신규 가입 혜택">
-							<div class="slide-content">
-								<h2>신규 가입 혜택</h2>
-								<p>첫 구매 시 15% 할인 쿠폰 증정!</p>
-								<a href="/register" class="slide-btn">회원가입 하기</a>
+							<div class="custom-banner">
+								<div class="gradient-shape"></div>
+								<div class="product-boxes">
+									<div class="product-box purple">50%</div>
+									<div class="product-box white"></div>
+									<div class="product-box blue">40%</div>
+								</div>
 							</div>
 						</div>
 					</div>
