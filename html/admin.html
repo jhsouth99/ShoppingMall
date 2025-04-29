@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>관리자 페이지</title>
+	<style>
+		body {
+			font-family: sans-serif;
+			margin: 0;
+			background-color: #f4f7f6;
+			color: #333;
+			display: flex;
+			min-height: 100vh;
+		}
+
+		a {
+			color: #007bff;
+			text-decoration: none;
+		}
+
+		a:hover {
+			text-decoration: underline;
+		}
+
+		h1,
+		h2,
+		h3 {
+			margin-top: 0;
+			color: #111;
+		}
+
+		button {
+			cursor: pointer;
+		}
+
+		/* 사이드바 */
+		.admin-sidebar {
+			width: 240px;
+			background-color: #2c3e50;
+			color: #ecf0f1;
+			padding: 20px 0;
+			flex-shrink: 0;
+			display: flex;
+			flex-direction: column;
+		}
+
+		.admin-sidebar h1 {
+			font-size: 1.5em;
+			text-align: center;
+			margin-bottom: 30px;
+			padding: 0 15px;
+			color: #ecf0f1;
+		}
+
+		.admin-sidebar nav ul {
+			list-style: none;
+			padding: 0;
+			margin: 0;
+		}
+
+		.admin-sidebar nav li a {
+			display: block;
+			padding: 15px 25px;
+			color: #bdc3c7;
+			transition: background-color 0.2s ease, color 0.2s ease;
+			border-left: 3px solid transparent;
+		}
+
+		.admin-sidebar nav li a:hover {
+			background-color: #34495e;
+			color: #ecf0f1;
+			text-decoration: none;
+		}
+
+		.admin-sidebar nav li a.active {
+			background-color: #1abc9c;
+			color: white;
+			font-weight: bold;
+			border-left-color: #f1c40f;
+		}
+
+		.admin-sidebar nav li a::before {
+			content: "□ ";
+			margin-right: 10px;
+			font-family: monospace;
+		}
+
+		/* 메인 컨텐츠 영역 */
+		.admin-main {
+			flex-grow: 1;
+			padding: 30px;
+			overflow-y: auto;
+		}
+
+		.content-section {
+			display: none;
+			background-color: #fff;
+			padding: 25px;
+			border-radius: 8px;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+		}
+
+		.content-section.active {
+			display: block;
+		}
+
+		.content-section h2 {
+			margin-bottom: 25px;
+			padding-bottom: 10px;
+			border-bottom: 1px solid #eee;
+		}
+
+		/* 테이블 스타일 */
+		.data-table {
+			width: 100%;
+			border-collapse: collapse;
+			margin-top: 20px;
+			font-size: 0.95em;
+		}
+
+		.data-table th,
+		.data-table td {
+			border: 1px solid #ddd;
+			padding: 10px 12px;
+			text-align: left;
+			vertical-align: middle;
+		}
+
+		.data-table th {
+			background-color: #f2f2f2;
+			font-weight: 600;
+		}
+
+		.data-table tbody tr:hover {
+			background-color: #f5f5f5;
+		}
+
+		.data-table .actions a,
+		.data-table .actions button {
+			margin-right: 8px;
+			padding: 4px 8px;
+			font-size: 0.9em;
+			border-radius: 3px;
+		}
+
+		/* 버튼 및 폼 요소 */
+		.btn {
+			display: inline-block;
+			padding: 8px 15px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			font-size: 0.95em;
+			transition: background-color 0.2s ease;
+			text-align: center;
+		}
+
+		.btn-primary {
+			background-color: #007bff;
+			color: white;
+		}
+
+		.btn-primary:hover {
+			background-color: #0056b3;
+		}
+
+		.btn-secondary {
+			background-color: #6c757d;
+			color: white;
+		}
+
+		.btn-secondary:hover {
+			background-color: #5a6268;
+		}
+
+		.btn-danger {
+			background-color: #dc3545;
+			color: white;
+		}
+
+		.btn-danger:hover {
+			background-color: #c82333;
+		}
+
+		.btn-warning {
+			background-color: #ffc107;
+			color: #212529;
+		}
+
+		.btn-warning:hover {
+			background-color: #e0a800;
+		}
+
+		.btn-success {
+			background-color: #28a745;
+			color: white;
+		}
+
+		.btn-success:hover {
+			background-color: #218838;
+		}
+
+		.btn-sm {
+			padding: 4px 8px;
+			font-size: 0.85em;
+		}
+
+		.filter-controls {
+			margin-bottom: 20px;
+			display: flex;
+			gap: 15px;
+			align-items: center;
+			flex-wrap: wrap;
+		}
+
+		.filter-controls input[type="text"],
+		.filter-controls select {
+			padding: 8px 10px;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+		}
+
+		/* 사용자 관리 탭 */
+		.user-tabs {
+			display: flex;
+			border-bottom: 1px solid #ccc;
+			margin-bottom: 20px;
+		}
+
+		.user-tabs button {
+			background: none;
+			border: none;
+			padding: 10px 15px;
+			cursor: pointer;
+			font-size: 1em;
+			color: #555;
+			border-bottom: 3px solid transparent;
+			margin-bottom: -1px;
+		}
+
+		.user-tabs button.active {
+			color: #007bff;
+			border-bottom-color: #007bff;
+			font-weight: bold;
+		}
+
+		.user-tab-content {
+			display: none;
+		}
+
+		.user-tab-content.active {
+			display: block;
+		}
+
+		/* 대시보드 카드 */
+		.dashboard-cards {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			gap: 20px;
+			margin-bottom: 30px;
+		}
+
+		.card {
+			background-color: #fff;
+			padding: 20px;
+			border-radius: 8px;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+			border-left: 4px solid #007bff;
+		}
+
+		.card h3 {
+			margin-bottom: 10px;
+			font-size: 1em;
+			color: #555;
+		}
+
+		.card .value {
+			font-size: 1.8em;
+			font-weight: bold;
+			color: #333;
+		}
+
+		.card.orders {
+			border-left-color: #ffc107;
+		}
+
+		.card.users {
+			border-left-color: #28a745;
+		}
+
+		.card.reports {
+			border-left-color: #dc3545;
+		}
+
+		/* 판매자 상태 스타일 */
+		.status-pending {
+			color: orange;
+			font-weight: bold;
+		}
+
+		.status-approved {
+			color: green;
+			font-weight: bold;
+		}
+
+		.status-suspended {
+			color: red;
+			font-weight: bold;
+		}
+	</style>
+</head>
+
+<body>
+	<aside class="admin-sidebar">
+		<h1>관리자 시스템</h1>
+		<nav>
+			<ul>
+				<li><a href="#dashboard" class="nav-link active">대시보드</a></li>
+				<li><a href="#product-management" class="nav-link">상품 관리</a></li>
+				<li>
+					<a href="#groupbuy-management" class="nav-link">공동구매 관리</a>
+				</li>
+				<li><a href="#order-management" class="nav-link">주문 관리</a></li>
+				<li><a href="#user-management" class="nav-link">사용자 관리</a></li>
+				<li>
+					<a href="#seller-account-management" class="nav-link">판매자 계정 관리</a>
+				</li>
+			</ul>
+		</nav>
+	</aside>
+
+	<main class="admin-main">
+		<section id="dashboard" class="content-section active">
+			<h2>대시보드</h2>
+			<div class="dashboard-cards">
+				<div class="card group-buys">
+					<h3>진행중인 공동구매</h3>
+					<div class="value">15</div>
+				</div>
+				<div class="card orders">
+					<h3>처리 대기 주문</h3>
+					<div class="value">32</div>
+				</div>
+				<div class="card users">
+					<h3>신규 가입 회원 (오늘)</h3>
+					<div class="value">8</div>
+				</div>
+				<div class="card reports">
+					<h3>미처리 신고</h3>
+					<div class="value">5</div>
+				</div>
+			</div>
+			<p>이곳에 주요 지표나 요약 정보를 표시할 수 있습니다.</p>
+		</section>
+
+		<section id="product-management" class="content-section">
+			<h2>상품 관리</h2>
+			<button class="btn btn-primary" onclick="addProduct()">
+				+ 새 상품 등록
+			</button>
+			<div class="filter-controls">
+				<input type="text" placeholder="상품명 검색..." />
+				<select>
+					<option value="">상태 전체</option>
+					<option value="active">활성</option>
+					<option value="inactive">비활성</option>
+				</select>
+				<button class="btn btn-secondary btn-sm">검색</button>
+				<table class="data-table">
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>이미지</th>
+							<th>상품명</th>
+							<th>가격</th>
+							<th>재고</th>
+							<th>상태</th>
+							<th>등록일</th>
+							<th>작업</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>P1001</td>
+							<td>
+								<img src="https://via.placeholder.com/50" alt="상품 이미지" width="50" />
+							</td>
+							<td>친환경 텀블러</td>
+							<td>15,000원</td>
+							<td>150</td>
+							<td>활성</td>
+							<td>2025-04-20</td>
+							<td class="actions">
+								<button class="btn btn-secondary btn-sm" onclick="editProduct('P1001')">
+									수정
+								</button>
+								<button class="btn btn-danger btn-sm" onclick="deleteProduct('P1001')">
+									삭제
+								</button>
+							</td>
+						</tr>
+						<tr>
+							<td>P1002</td>
+							<td>
+								<img src="https://via.placeholder.com/50" alt="상품 이미지" width="50" />
+							</td>
+							<td>무선 블루투스 이어폰</td>
+							<td>89,000원</td>
+							<td>50</td>
+							<td>활성</td>
+							<td>2025-04-18</td>
+							<td class="actions">
+								<button class="btn btn-secondary btn-sm" onclick="editProduct('P1002')">
+									수정
+								</button>
+								<button class="btn btn-danger btn-sm" onclick="deleteProduct('P1002')">
+									삭제
+								</button>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</section>
+
+		<section id="groupbuy-management" class="content-section">
+			<h2>공동구매 관리</h2>
+			<div class="filter-controls">
+				<input type="text" placeholder="상품명 또는 생성자 검색..." />
+				<select>
+					<option value="">상태 전체</option>
+					<option value="pending">시작 전</option>
+					<option value="ongoing">진행 중</option>
+					<option value="success">성공</option>
+					<option value="failed">실패</option>
+				</select>
+				<button class="btn btn-secondary btn-sm">검색</button>
+			</div>
+			<table class="data-table">
+				<thead>
+					<tr>
+						<th>ID</th>
+						<th>상품명</th>
+						<th>생성자</th>
+						<th>목표/현재</th>
+						<th>시작일</th>
+						<th>종료일</th>
+						<th>상태</th>
+						<th>작업</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>GB201</td>
+						<td>[공동구매] 대용량 보조배터리</td>
+						<td>user_A</td>
+						<td>50 / 55</td>
+						<td>2025-04-15</td>
+						<td>2025-04-25</td>
+						<td><span style="color: green">성공</span></td>
+						<td class="actions">
+							<button class="btn btn-secondary btn-sm" onclick="viewGroupBuy('GB201')">
+								상세
+							</button>
+						</td>
+					</tr>
+					<tr>
+						<td>GB202</td>
+						<td>[공동구매] 스마트 워치</td>
+						<td>admin_01</td>
+						<td>100 / 30</td>
+						<td>2025-04-22</td>
+						<td>2025-05-05</td>
+						<td><span style="color: blue">진행 중</span></td>
+						<td class="actions">
+							<button class="btn btn-secondary btn-sm" onclick="viewGroupBuy('GB202')">
+								상세
+							</button>
+						</td>
+					</tr>
+					<tr>
+						<td>GB200</td>
+						<td>[공동구매] 접이식 키보드</td>
+						<td>user_B</td>
+						<td>30 / 10</td>
+						<td>2025-04-10</td>
+						<td>2025-04-20</td>
+						<td><span style="color: red">실패</span></td>
+						<td class="actions">
+							<button class="btn btn-secondary btn-sm" onclick="viewGroupBuy('GB200')">
+								상세
+							</button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</section>
+
+		<section id="order-management" class="content-section">
+			<h2>주문 관리</h2>
+			<div class="filter-controls">
+				<input type="text" placeholder="주문번호 또는 사용자 검색..." />
+				<select>
+					<option value="">상태 전체</option>
+					<option value="pending_payment">결제 대기</option>
+					<option value="processing">처리중</option>
+					<option value="shipped">배송중</option>
+					<option value="delivered">배송 완료</option>
+					<option value="cancelled">취소</option>
+					<option value="refunded">환불</option>
+				</select>
+				<select>
+					<option value="">유형 전체</option>
+					<option value="solo">단독구매</option>
+					<option value="group">공동구매</option>
+				</select>
+				<button class="btn btn-secondary btn-sm">검색</button>
+			</div>
+			<table class="data-table">
+				<thead>
+					<tr>
+						<th>주문번호</th>
+						<th>사용자</th>
+						<th>주문일</th>
+						<th>상품(개수)</th>
+						<th>총 금액</th>
+						<th>유형</th>
+						<th>상태</th>
+						<th>작업</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>S20250422001</td>
+						<td>홍길동(user_gildong)</td>
+						<td>2025-04-22</td>
+						<td>일반 상품 A (1)</td>
+						<td>55,000원</td>
+						<td>단독</td>
+						<td>배송 준비중</td>
+						<td class="actions">
+							<button class="btn btn-secondary btn-sm" onclick="viewOrder('S20250422001')">
+								상세
+							</button>
+							<button class="btn btn-warning btn-sm" onclick="updateOrderStatus('S20250422001')">
+								상태 변경
+							</button>
+						</td>
+					</tr>
+					<tr>
+						<td>G20250420005</td>
+						<td>김철수(user_chulsu)</td>
+						<td>2025-04-20</td>
+						<td>[공동구매] 특별 상품 D (1)</td>
+						<td>45,000원</td>
+						<td>공동</td>
+						<td>상품 준비중 (성공)</td>
+						<td class="actions">
+							<button class="btn btn-secondary btn-sm" onclick="viewOrder('G20250420005')">
+								상세
+							</button>
+							<button class="btn btn-warning btn-sm" onclick="updateOrderStatus('G20250420005')">
+								상태 변경
+							</button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</section>
+
+		<section id="user-management" class="content-section">
+			<h2>사용자 관리</h2>
+			<div class="user-tabs">
+				<button data-tab="all-users" class="user-tab-button active">
+					전체 사용자
+				</button>
+				<button data-tab="reported-users" class="user-tab-button">
+					신고 관리
+				</button>
+			</div>
+
+			<div id="all-users" class="user-tab-content active">
+				<h3>전체 사용자 목록</h3>
+				<div class="filter-controls">
+					<input type="text" placeholder="아이디, 이름, 이메일 검색..." />
+					<select>
+						<option value="">상태 전체</option>
+						<option value="active">활성</option>
+						<option value="suspended">정지</option>
+					</select>
+					<button class="btn btn-secondary btn-sm">검색</button>
+				</div>
+				<table class="data-table">
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>이름</th>
+							<th>이메일</th>
+							<th>가입일</th>
+							<th>상태</th>
+							<th>작업</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>user_gildong</td>
+							<td>홍길동</td>
+							<td>gildong@email.com</td>
+							<td>2025-01-10</td>
+							<td>활성</td>
+							<td class="actions">
+								<button class="btn btn-secondary btn-sm" onclick="viewUser('user_gildong')">
+									상세
+								</button>
+								<button class="btn btn-warning btn-sm" onclick="suspendUser('user_gildong')">
+									정지
+								</button>
+							</td>
+						</tr>
+						<tr>
+							<td>user_chulsu</td>
+							<td>김철수</td>
+							<td>chulsu@email.com</td>
+							<td>2025-02-15</td>
+							<td>활성</td>
+							<td class="actions">
+								<button class="btn btn-secondary btn-sm" onclick="viewUser('user_chulsu')">
+									상세
+								</button>
+								<button class="btn btn-warning btn-sm" onclick="suspendUser('user_chulsu')">
+									정지
+								</button>
+							</td>
+						</tr>
+						<tr>
+							<td>user_test</td>
+							<td>테스트</td>
+							<td>test@email.com</td>
+							<td>2025-03-01</td>
+							<td><span style="color: red">정지</span></td>
+							<td class="actions">
+								<button class="btn btn-secondary btn-sm" onclick="viewUser('user_test')">
+									상세
+								</button>
+								<button class="btn btn-primary btn-sm" onclick="activateUser('user_test')">
+									활성화
+								</button>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div id="reported-users" class="user-tab-content">
+				<h3>신고된 사용자 및 내용</h3>
+				<div class="filter-controls">
+					<select>
+						<option value="">상태 전체</option>
+						<option value="pending">처리 대기</option>
+						<option value="reviewed">검토 완료</option>
+						<option value="action_taken">조치 완료</option>
+					</select>
+					<button class="btn btn-secondary btn-sm">검색</button>
+				</div>
+				<table class="data-table">
+					<thead>
+						<tr>
+							<th>신고 ID</th>
+							<th>신고된 사용자</th>
+							<th>신고자</th>
+							<th>신고일</th>
+							<th>사유 요약</th>
+							<th>상태</th>
+							<th>작업</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>R101</td>
+							<td>user_abuser</td>
+							<td>user_normal</td>
+							<td>2025-04-21</td>
+							<td>부적절한 언어 사용...</td>
+							<td>처리 대기</td>
+							<td class="actions">
+								<button class="btn btn-secondary btn-sm" onclick="viewReport('R101')">
+									상세 보기
+								</button>
+								<button class="btn btn-warning btn-sm" onclick="processReport('R101')">
+									처리하기
+								</button>
+							</td>
+						</tr>
+						<tr>
+							<td>R102</td>
+							<td>user_spammer</td>
+							<td>user_gildong</td>
+							<td>2025-04-22</td>
+							<td>홍보성 게시글 도배...</td>
+							<td>처리 대기</td>
+							<td class="actions">
+								<button class="btn btn-secondary btn-sm" onclick="viewReport('R102')">
+									상세 보기
+								</button>
+								<button class="btn btn-warning btn-sm" onclick="processReport('R102')">
+									처리하기
+								</button>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</section>
+
+		<section id="seller-account-management" class="content-section">
+			<h2>판매자 계정 관리</h2>
+			<div class="filter-controls">
+				<input type="text" placeholder="판매자 ID, 상점명 검색..." />
+				<select>
+					<option value="">상태 전체</option>
+					<option value="pending">승인 대기</option>
+					<option value="approved">승인 완료 (활동중)</option>
+					<option value="suspended">이용 정지</option>
+				</select>
+				<button class="btn btn-secondary btn-sm">검색</button>
+			</div>
+			<table class="data-table">
+				<thead>
+					<tr>
+						<th>판매자 ID</th>
+						<th>상점명</th>
+						<th>담당자</th>
+						<th>연락처</th>
+						<th>사업자번호</th>
+						<th>가입(신청)일</th>
+						<th>상태</th>
+						<th>작업</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>seller_A</td>
+						<td>A 스토어</td>
+						<td>김판매</td>
+						<td>010-1111-2222</td>
+						<td>111-22-33333</td>
+						<td>2025-04-20</td>
+						<td><span class="status-approved">승인 완료</span></td>
+						<td class="actions">
+							<button class="btn btn-secondary btn-sm" onclick="viewSellerDetails('seller_A')">
+								상세
+							</button>
+							<button class="btn btn-danger btn-sm" onclick="suspendSeller('seller_A')">
+								정지
+							</button>
+						</td>
+					</tr>
+					<tr>
+						<td>seller_B_pending</td>
+						<td>B 스토어 (준비중)</td>
+						<td>박준비</td>
+						<td>010-3333-4444</td>
+						<td>222-33-44444</td>
+						<td>2025-04-22</td>
+						<td><span class="status-pending">승인 대기</span></td>
+						<td class="actions">
+							<button class="btn btn-secondary btn-sm" onclick="viewSellerDetails('seller_B_pending')">
+								상세
+							</button>
+							<button class="btn btn-success btn-sm" onclick="approveSeller('seller_B_pending')">
+								승인
+							</button>
+							<button class="btn btn-danger btn-sm" onclick="rejectSeller('seller_B_pending')">
+								거절
+							</button>
+						</td>
+					</tr>
+					<tr>
+						<td>seller_C_suspended</td>
+						<td>C 스토어</td>
+						<td>최정지</td>
+						<td>010-5555-6666</td>
+						<td>333-44-55555</td>
+						<td>2025-03-10</td>
+						<td><span class="status-suspended">이용 정지</span></td>
+						<td class="actions">
+							<button class="btn btn-secondary btn-sm" onclick="viewSellerDetails('seller_C_suspended')">
+								상세
+							</button>
+							<button class="btn btn-primary btn-sm" onclick="activateSeller('seller_C_suspended')">
+								활성화
+							</button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</section>
+	</main>
+
+	<script>
+		// --- 사이드바 네비게이션 제어 (기존 로직 사용) ---
+		document.addEventListener("DOMContentLoaded", function () {
+			const navLinks = document.querySelectorAll(".admin-sidebar .nav-link");
+			const contentSections = document.querySelectorAll(
+				".admin-main .content-section"
+			);
+
+			function setActiveSection(link, section) {
+				navLinks.forEach((l) => l.classList.remove("active"));
+				contentSections.forEach((s) => s.classList.remove("active"));
+				// 링크나 섹션이 null일 수 있는 경우 방지
+				if (link) link.classList.add("active");
+				if (section) section.classList.add("active");
+			}
+
+			const currentHash = window.location.hash || "#dashboard"; // 기본값 #dashboard
+			let initialLink = document.querySelector(
+				`.admin-sidebar a[href="${currentHash}"]`
+			);
+			let initialSection = document.querySelector(currentHash);
+
+			// 만약 해시에 해당하는 요소가 없으면 대시보드로 강제 이동
+			if (!initialLink || !initialSection) {
+				initialLink = document.querySelector(
+					'.admin-sidebar a[href="#dashboard"]'
+				);
+				initialSection = document.getElementById("dashboard");
+			}
+
+			setActiveSection(initialLink, initialSection);
+
+			navLinks.forEach((link) => {
+				link.addEventListener("click", function (event) {
+					event.preventDefault();
+					const targetId = this.getAttribute("href");
+					const targetSection = document.querySelector(targetId);
+					if (targetSection) {
+						setActiveSection(this, targetSection);
+						history.pushState(null, null, targetId);
+					}
+				});
+			});
+
+			window.addEventListener("popstate", function () {
+				const hash = window.location.hash || "#dashboard";
+				let targetLink = document.querySelector(
+					`.admin-sidebar a[href="${hash}"]`
+				);
+				let targetSection = document.querySelector(hash);
+
+				if (!targetLink || !targetSection) {
+					targetLink = document.querySelector(
+						'.admin-sidebar a[href="#dashboard"]'
+					);
+					targetSection = document.getElementById("dashboard");
+				}
+				setActiveSection(targetLink, targetSection);
+			});
+
+			// --- 사용자 관리 내부 탭 제어 ---
+			const userManagementSection =
+				document.getElementById("user-management");
+			if (userManagementSection) {
+				const userTabButtons = userManagementSection.querySelectorAll(
+					".user-tabs .user-tab-button"
+				);
+				const userTabContents =
+					userManagementSection.querySelectorAll(".user-tab-content");
+
+				function setActiveUserTab(button, content) {
+					userTabButtons.forEach((btn) => btn.classList.remove("active"));
+					userTabContents.forEach((c) => c.classList.remove("active"));
+					if (button) button.classList.add("active");
+					if (content) content.classList.add("active");
+				}
+
+				if (userTabButtons.length > 0 && userTabContents.length > 0) {
+					// 초기 탭 활성화 (첫 번째 탭)
+					const initialActiveTabButton = userManagementSection.querySelector(
+						".user-tabs .user-tab-button"
+					); // 첫번째 버튼 선택
+					const initialActiveTabContentId =
+						initialActiveTabButton?.getAttribute("data-tab");
+					const initialActiveTabContent = initialActiveTabContentId
+						? userManagementSection.querySelector(
+							`#${initialActiveTabContentId}`
+						)
+						: null;
+					setActiveUserTab(initialActiveTabButton, initialActiveTabContent);
+
+					userTabButtons.forEach((button) => {
+						button.addEventListener("click", function () {
+							const targetTabId = this.getAttribute("data-tab");
+							const targetTabContent = userManagementSection.querySelector(
+								`#${targetTabId}`
+							);
+							if (targetTabContent) {
+								setActiveUserTab(this, targetTabContent);
+							}
+						});
+					});
+				}
+			}
+		});
+
+		// --- 기능별 함수 ---
+		// TODO: alert 확인하고 구현할 부분 구현하기!
+		function addProduct() {
+			alert("새 상품 등록 폼 또는 페이지로 이동하는 기능 구현 필요");
+		}
+		function editProduct(productId) {
+			alert(productId + " 상품 수정 기능 구현 필요");
+		}
+		function deleteProduct(productId) {
+			if (confirm(productId + " 상품을 삭제하시겠습니까?"))
+				alert(productId + " 상품 삭제 처리 구현 필요");
+		}
+		function viewGroupBuy(gbId) {
+			alert(gbId + " 공동구매 상세 보기 기능 구현 필요");
+		}
+		function viewOrder(orderId) {
+			alert(orderId + " 주문 상세 보기 기능 구현 필요");
+		}
+		function updateOrderStatus(orderId) {
+			alert(orderId + " 주문 상태 변경 기능 구현 필요 (예: 모달 띄우기)");
+		}
+		function viewUser(userId) {
+			alert(userId + " 사용자 상세 보기 기능 구현 필요");
+		}
+		function suspendUser(userId) {
+			if (confirm(userId + " 사용자를 정지시키겠습니까?"))
+				alert(userId + " 사용자 정지 처리 구현 필요");
+		}
+		function activateUser(userId) {
+			if (confirm(userId + " 사용자를 활성화시키겠습니까?"))
+				alert(userId + " 사용자 활성화 처리 구현 필요");
+		}
+		function viewReport(reportId) {
+			alert(reportId + " 신고 상세 보기 기능 구현 필요");
+		}
+		function processReport(reportId) {
+			alert(reportId + " 신고 처리 기능 구현 필요 (예: 조치 선택 모달)");
+		}
+
+		function viewSellerDetails(sellerId) {
+			alert(sellerId + " 판매자 상세 정보 보기 기능 구현 필요");
+		}
+		function approveSeller(sellerId) {
+			if (confirm(sellerId + " 판매자의 가입을 승인하시겠습니까?"))
+				alert(sellerId + " 판매자 승인 처리 구현 필요");
+		}
+		function rejectSeller(sellerId) {
+			if (
+				confirm(
+					sellerId + " 판매자의 가입을 거절하시겠습니까? (사유 입력 필요)"
+				)
+			)
+				alert(sellerId + " 판매자 거절 처리 구현 필요");
+		}
+		function suspendSeller(sellerId) {
+			if (confirm(sellerId + " 판매자 계정을 정지시키겠습니까?"))
+				alert(sellerId + " 판매자 계정 정지 처리 구현 필요");
+		}
+		function activateSeller(sellerId) {
+			if (confirm(sellerId + " 판매자 계정을 다시 활성화시키겠습니까?"))
+				alert(sellerId + " 판매자 계정 활성화 처리 구현 필요");
+		}
+	</script>
+</body>
+
+</html>

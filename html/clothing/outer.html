@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>Insert title here</title>
+	<link rel="stylesheet" href="../../css/style.css">
+	<script type ="text/javascript" src="../../javascript/mainJs.js"> </script>
+	
+	<style>
+		.product-grid {
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: 30px;
+			margin-top: 30px;
+		}
+
+		#clothes_category {
+			position: sticky;
+			top: 50px;
+			width: 200px;
+			height: fit-content;
+			background-color: white;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			padding: 40px;
+		}
+	</style>
+
+</head>
+
+<body>
+
+	<header>
+		<div class="header-top">
+
+			<div class="container">
+
+				<div class="logo">
+					<a href="#">이거어때</a>
+				</div>
+
+				<div class="search-container">
+					<input type="text" id="search-input" placeholder="상품을 검색해보세요">
+					<button id="search-button"><i class="search-icon">🔍</i></button>
+					<div class="search-history">
+						<h4>최근 검색어</h4>
+						<ul id="search-history-list">
+							<!-- 검색 기록은 JS로 추가됨 -->
+						</ul>
+					</div>
+				</div>
+
+				<div class="user-menu">
+					<a href="http://localhost:9090/Team_project/login.html" class="mypage-btn">마이페이지</a>
+					<a href="http://localhost:9090/Team_project/login.html" class="login-btn">로그인</a>
+					<a href="/cart" class="cart-btn">장바구니 <span class="cart-count">0</span></a>
+				</div>
+
+			</div>
+
+		</div>
+
+		<div class="header-nav">
+
+			<div class="container">
+
+				<nav class="main-nav">
+
+					<ul>
+						<li class="has-submenu">
+							<a href="/category/clothing">의류</a>
+
+							<ul class="submenu">
+								<li><a href="/category/clothing/shoes">신발</a></li>
+								<li><a href="/category/clothing/tops">상의</a></li>
+								<li><a href="/category/clothing/outer">아우터</a></li>
+								<li><a href="/category/clothing/bottoms">하의</a></li>
+							</ul>
+						</li>
+
+						<li class="has-submenu">
+							<a href="/category/food">식품</a>
+
+							<ul class="submenu">
+								<li><a href="/category/food/bakery">베이커리</a></li>
+								<li><a href="/category/food/vegetables">농산</a></li>
+								<li><a href="/category/food/meat">축산</a></li>
+								<li><a href="/category/food/seafood">수산</a></li>
+								<li><a href="/category/food/snacks">간식</a></li>
+								<li><a href="/category/food/sauce-noodles">양념/면</a></li>
+							</ul>
+
+						</li>
+
+						<li class="has-submenu">
+							<a href="/category/electronics">전자기기</a>
+
+							<ul class="submenu">
+								<li><a href="/category/electronics/appliances">가전/TV</a></li>
+								<li><a href="/category/electronics/computers">컴퓨터/노트북/조립PC</a></li>
+								<li><a href="/category/electronics/mobile">태블릿/모바일</a></li>
+								<li><a href="/category/electronics/camera">카메라</a></li>
+							</ul>
+
+						</li>
+
+						<li class="has-submenu">
+							<a href="/group-purchase">공동구매</a>
+							<ul class="submenu">
+								<li><a href="/group-purchase/clothing">의류</a></li>
+								<li><a href="/group-purchase/food">식품</a></li>
+								<li><a href="/group-purchase/electronics">전자기기</a></li>
+							</ul>
+						</li>
+					</ul>
+				</nav>
+			</div>
+		</div>
+	</header>
+	
+
+	<div style="display: flex; margin-top: 20px;">
+
+		<!-- 왼쪽 카테고리 영역 -->
+		<div style="width: 220px; padding: 20px;" id="clothes_category">
+			<h3>카테고리</h3>
+			<ul style="list-style: none; padding: 0;">
+				<li><strong>의류 > 아우터</strong></li>
+				<li>후드 집업</li>
+				<li>블루종/MA-1</li>
+				<li>레더/라이더스 재킷</li>
+				<li>카디건</li>
+				<li>트러커 자켓</li>
+				<li>블레이저</li>
+				<li>바시티 자켓</li>
+				<li>코트</li>
+			</ul>
+		</div>
+
+		<!-- 오른쪽 상품 공간 -->
+		<div style="flex: 1; padding: 20px;">
+			<div style="display: flex; flex-wrap: wrap; gap: 20px;">
+
+				<section class="product-section">
+					<div class="container">
+						<div class="section-header">
+							<h2>인기 상품</h2>
+							<div class="filter-container">
+								<div class="category-filter">
+									<select id="category-filter">
+										<option value="all">전체</option>
+										<option value="clothing">의류</option>
+										<option value="food">식품</option>
+										<option value="electronics">전자기기</option>
+									</select>
+								</div>
+								<div class="price-filter">
+									<select id="price-filter">
+										<option value="all">전체 가격대</option>
+										<option value="under-100000">10만원 이하</option>
+										<option value="100000-300000">10-30만원</option>
+										<option value="over-300000">30만원 이상</option>
+									</select>
+								</div>
+								<div class="special-filter">
+									<label><input type="checkbox" id="discount-filter"> 할인상품만</label>
+									<label><input type="checkbox" id="group-purchase-filter"> 공동구매 가능</label>
+								</div>
+								<div class="sort-options">
+									<select id="sort-option">
+										<option value="popularity">인기순</option>
+										<option value="latest">최신순</option>
+										<option value="price-low">낮은 가격순</option>
+										<option value="price-high">높은 가격순</option>
+										<option value="discount">할인율순</option>
+									</select>
+								</div>
+							</div>
+						</div>
+
+						<!-- 상품 카드 전체 -->
+						<div class="product-grid">
+							<!-- 상품 카드 샘플 -->
+							<div class="product-card">
+								<div class="product-image">
+									<img src="/api/placeholder/250/250" alt="상품 이미지">
+									<div class="product-badge discount">30%</div>
+									<div class="product-badge group">공동구매</div>
+								</div>
+								<div class="product-info">
+									<h3 class="product-name">프리미엄 가죽 스니커즈</h3>
+									<div class="product-price">
+										<div class="original-price">180,000원</div>
+										<div class="discount-price">126,000원</div>
+									</div>
+									<div class="group-purchase-info">
+										<div class="group-price">공동구매시: 110,000원</div>
+										<div class="group-progress">
+											<div class="progress-bar">
+												<div class="progress" style="width: 60%;"></div>
+											</div>
+											<div class="progress-text">3/5명 참여 중!</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- 상품 카드 샘플 -->
+							<div class="product-card">
+								<div class="product-image">
+									<img src="/api/placeholder/250/250" alt="상품 이미지">
+								</div>
+								<div class="product-info">
+									<h3 class="product-name">유기농 과일 세트</h3>
+									<div class="product-price">
+										<div class="current-price">45,000원</div>
+									</div>
+									<div class="group-purchase-info">
+										<div class="group-price">공동구매시: 35,000원</div>
+										<div class="group-progress">
+											<div class="progress-bar">
+												<div class="progress" style="width: 20%;"></div>
+											</div>
+											<div class="progress-text">1/5명 참여 중!</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- 추가 상품 카드 샘플 -->
+							<div class="product-card">
+								<div class="product-image">
+									<img src="/api/placeholder/250/250" alt="상품 이미지">
+									<div class="product-badge discount">15%</div>
+								</div>
+								<div class="product-info">
+									<h3 class="product-name">무선 이어폰</h3>
+									<div class="product-price">
+										<div class="original-price">220,000원</div>
+										<div class="discount-price">187,000원</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- 추가 상품 카드 샘플 -->
+							<div class="product-card">
+								<div class="product-image">
+									<img src="/api/placeholder/250/250" alt="상품 이미지">
+									<div class="product-badge hot">인기</div>
+								</div>
+								<div class="product-info">
+									<h3 class="product-name">겨울용 패딩 자켓</h3>
+									<div class="product-price">
+										<div class="current-price">289,000원</div>
+									</div>
+									<div class="group-purchase-info">
+										<div class="group-price">공동구매시: 245,000원</div>
+										<div class="group-progress">
+											<div class="progress-bar">
+												<div class="progress" style="width: 80%;"></div>
+											</div>
+											<div class="progress-text">4/5명 참여 중!</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- 추가 상품 카드들 -->
+							<div class="product-card">
+								<div class="product-image">
+									<img src="/api/placeholder/250/250" alt="상품 이미지">
+								</div>
+								<div class="product-info">
+									<h3 class="product-name">고급 원목 식탁 세트</h3>
+									<div class="product-price">
+										<div class="current-price">420,000원</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="product-card">
+								<div class="product-image">
+									<img src="/api/placeholder/250/250" alt="상품 이미지">
+									<div class="product-badge discount">25%</div>
+									<div class="product-badge group">공동구매</div>
+								</div>
+								<div class="product-info">
+									<h3 class="product-name">스마트워치</h3>
+									<div class="product-price">
+										<div class="original-price">320,000원</div>
+										<div class="discount-price">240,000원</div>
+									</div>
+									<div class="group-purchase-info">
+										<div class="group-price">공동구매시: 210,000원</div>
+										<div class="group-progress">
+											<div class="progress-bar">
+												<div class="progress" style="width: 40%;"></div>
+											</div>
+											<div class="progress-text">2/5명 참여 중!</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="load-more">
+							<button id="load-more-btn">더 보기</button>
+						</div>
+					</div>
+				</section>
+
+			</div>
+
+		</div>
+
+	</div>
+
+</body>
+
+</html>
