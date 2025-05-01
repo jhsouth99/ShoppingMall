@@ -485,28 +485,3 @@ header {
 .payment-btn:hover {
 	background-color: #e64545;
 }
-
-@media (max-width: 768px) {
-	.payment-options {
-		grid-template-columns: 1fr;
-	}
-
-	.info-row {
-		flex-direction: column;
-	}
-
-	.info-label {
-		width: 100%;
-		margin-bottom: 5px;
-	}
-
-	.coupon-section {
-		flex-direction: column;
-		align-items: flex-start;
-	}
-
-	.coupon-label {
-		width: 100%;
-		margin-bottom: 5px;
-	}
-}
