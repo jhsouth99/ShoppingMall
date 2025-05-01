@@ -30,6 +30,26 @@ const Order = sequelize.define(
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false
     },
+    recipient_name: {
+      type: DataTypes.STRING(100),
+      allowNull: false
+    },
+    recipient_phone: {
+      type: DataTypes.STRING(20),
+      allowNull: false
+    },
+    recipient_address: {
+      type: DataTypes.STRING(255),
+      allowNull: false
+    },
+    recipient_address_detail: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    recipient_zipcode: {
+      type: DataTypes.STRING(20),
+      allowNull: false
+    },
     status: {
       type: DataTypes.ENUM('pending', 'paid', 'shipped', 'cancelled'),
       allowNull: false,

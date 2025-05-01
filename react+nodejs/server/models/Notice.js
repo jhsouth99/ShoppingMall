@@ -30,7 +30,7 @@ const Notice = sequelize.define(
         model: Admin,
         key: 'id'
       },
-      onDelete: 'SET NULL',
+      onDelete: 'CASCADE',
       onUpdate: 'CASCADE'
     }
   },

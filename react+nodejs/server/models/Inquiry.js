@@ -22,7 +22,7 @@ const Inquiry = sequelize.define(
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       references: { model: User, key: 'id' },
-      onDelete: 'SET NULL',
+      onDelete: 'CASCADE',
       onUpdate: 'CASCADE'
     },
     question: {
