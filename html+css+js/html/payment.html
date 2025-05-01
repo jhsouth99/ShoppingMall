@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>결제 페이지 - 이거어때</title>
+	<link rel="stylesheet" href="../css/payment.css">
+	<script type="text/javascript" src="../javascript/paymentJs.js"> </script>
+</head>
+
+<body>
+	<header>
+		<div class="header-top">
+			<div class="container">
+				<div class="logo">
+					<a href="../html/home.html">이거어때</a>
+				</div>
+				<div class="user-menu">
+					<a href="../html/loginMain.html" class="mypage-btn">마이페이지</a>
+					<a href="../html/loginMain.html" class="login-btn">로그인</a>
+					<a href="../html/cart.html" class="cart-btn">장바구니 <span class="cart-count">0</span></a>
+				</div>
+			</div>
+		</div>
+	</header>
+
+	<div class="payment-container">
+		<h2 class="payment-title">배송/결제</h2>
+
+		<div class="payment-content">
+			<!-- 배송주소 -->
+			<div class="payment-section">
+				<h3 class="section-title">배송주소</h3>
+				<div class="delivery-info">
+					<div class="info-row">
+						<div class="info-label">받는 분</div>
+						<div class="info-value">홍길동</div>
+					</div>
+					<div class="info-row">
+						<div class="info-label">연락처</div>
+						<div class="info-value">010-1111-1111</div>
+					</div>
+					<div class="info-row">
+						<div class="info-label">주소</div>
+						<div class="info-value">[우편번호] 주소</div>
+					</div>
+					<div class="info-row">
+						<div class="info-label">배송 요청사항</div>
+						<div class="info-value">
+							<select id="deliveryRequest" class="delivery-select">
+								<option value="">요청사항 없음</option>
+								<option value="문 앞에 놓아주세요">문 앞에 놓아주세요</option>
+								<option value="경비실에 맡겨 주세요">경비실에 맡겨 주세요</option>
+								<option value="파손 위험 상품입니다. 배송 시 주의해주세요">파손 위험 상품입니다. 배송 시 주의해주세요</option>
+								<option value="direct">직접 입력</option>
+							</select>
+							<div class="direct-input-container">
+								<input type="text" id="directDeliveryRequest" class="direct-input"
+									placeholder="배송 요청사항을 입력하세요">
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- 주문 상품 및 쿠폰 -->
+			<div class="payment-section">
+				<h3 class="section-title">주문 상품 및 쿠폰</h3>
+				<div class="order-count">총 1건</div>
+
+				<div class="product-list">
+					<div class="product-item">
+						<div class="product-image">
+							<img src="../image/티셔츠.jpg" alt="상품 이미지">
+						</div>
+						<div class="product-info">
+							<div class="product-name">SafariSpot Roca Basic School Club Tee White</div>
+							<div class="product-option">Size: L / 1개</div>
+							<div class="product-price">57,000원</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="coupon-section">
+					<div class="coupon-label">할인쿠폰</div>
+					<div class="coupon-selector">
+						<select id="couponSelect" class="coupon-select">
+							<option value="">적용 가능한 쿠폰 (1)</option>
+							<option value="10000">☆★첫구매★☆ 10,000원 할인 쿠폰</option>
+						</select>
+					</div>
+				</div>
+
+				<div class="total-amount-preview">
+					<div class="amount-summary">
+						<div class="amount-label">총 결제금액</div>
+						<div class="amount-value">60,000원</div>
+						<button class="toggle-detail" id="toggleDetail">▽</button>
+					</div>
+					<div class="amount-detail" id="amountDetail">
+						<div class="detail-row">
+							<div class="detail-label">상품금액</div>
+							<div class="detail-value">57,000원</div>
+						</div>
+						<div class="detail-row">
+							<div class="detail-label">배송비</div>
+							<div class="detail-value">3,000원</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- 포인트 -->
+			<div class="payment-section">
+				<h3 class="section-title">포인트</h3>
+				<div class="point-section">
+					<div class="point-input-container">
+						<input type="text" id="pointInput" class="point-input" placeholder="0" maxlength="10">
+						<span class="point-unit">P</span>
+						<button id="maxPointBtn" class="max-point-btn">최대사용</button>
+					</div>
+					<div class="available-point">보유 포인트: <span id="userPoint">1,700</span>P</div>
+				</div>
+			</div>
+
+			<!-- 결제 방법 -->
+			<div class="payment-section">
+				<h3 class="section-title">결제 방법</h3>
+				<div class="payment-method-section">
+					<div class="payment-options">
+						<label class="payment-option">
+							<input type="radio" name="paymentMethod" value="card" checked>
+							<span class="radio-custom"></span>
+							<span class="option-label">신용/체크카드</span>
+						</label>
+						<label class="payment-option">
+							<input type="radio" name="paymentMethod" value="account">
+							<span class="radio-custom"></span>
+							<span class="option-label">계좌 간편결제</span>
+						</label>
+						<label class="payment-option">
+							<input type="radio" name="paymentMethod" value="phone">
+							<span class="radio-custom"></span>
+							<span class="option-label">휴대폰 결제</span>
+						</label>
+						<label class="payment-option">
+							<input type="radio" name="paymentMethod" value="virtual">
+							<span class="radio-custom"></span>
+							<span class="option-label">가상계좌</span>
+						</label>
+					</div>
+
+					<!-- 결제 수단 선택시 나타나는 상세 섹션 -->
+					<div class="payment-details" id="cardPaymentDetails">
+						<div class="card-input">
+							<label>카드 번호</label>
+							<input type="text" placeholder="●●●● ●●●● ●●●● ●●●●" readonly>
+							<button class="small-button">변경</button>
+						</div>
+
+						<div class="card-installment">
+							<label>할부 개월수</label>
+							<select>
+								<option>일시불</option>
+								<option>2개월</option>
+								<option>3개월</option>
+							</select>
+						</div>
+					</div>
+
+					<div class="payment-logos">
+						<div class="logo-row">
+							<img src="../image/card-logo.png" alt="신용카드">
+							<img src="../image/naverpay-logo.png" alt="네이버페이">
+							<img src="../image/kakaopay-logo.png" alt="카카오페이">
+							<img src="../image/payco-logo.png" alt="페이코">
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- 최종 주문정보 -->
+			<div class="payment-section">
+				<h3 class="section-title">최종 주문정보</h3>
+				<div class="final-order-info">
+					<div class="info-row">
+						<div class="info-label">구매가</div>
+						<div class="info-value" id="productPrice">57,000원</div>
+					</div>
+					<div class="info-row">
+						<div class="info-label">배송비</div>
+						<div class="info-value" id="shippingFee">3,000원</div>
+					</div>
+					<div class="info-row">
+						<div class="info-label">쿠폰 사용</div>
+						<div class="info-value" id="couponDiscount">-</div>
+					</div>
+					<div class="info-row">
+						<div class="info-label">포인트 사용</div>
+						<div class="info-value" id="pointUsage">-</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- 포인트 혜택 -->
+			<div class="payment-section">
+				<h3 class="section-title">포인트 혜택</h3>
+				<div class="point-benefit-section">
+					<div class="benefit-row">
+						<div class="benefit-label">구매확정 시</div>
+						<div class="benefit-value" id="purchasePointBenefit">1,800P</div>
+					</div>
+					<div class="benefit-row">
+						<div class="benefit-label">계좌 간편결제 시</div>
+						<div class="benefit-value" id="accountPointBenefit">600P</div>
+					</div>
+					<hr class="divider">
+					<div class="benefit-row total-benefit">
+						<div class="benefit-label">적립 예정 포인트</div>
+						<div class="benefit-value" id="totalPointBenefit">2,400P</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- 결제 요약 및 버튼 -->
+		<div class="payment-summary">
+			<div class="summary-row">
+				<span>상품 금액</span>
+				<span class="total-product-price">57,000원</span>
+			</div>
+			<div class="summary-row">
+				<span>배송비</span>
+				<span class="shipping-cost">3,000원</span>
+			</div>
+			<div class="summary-row">
+				<span>할인 금액</span>
+				<span class="discount-price">0원</span>
+			</div>
+			<div class="summary-row total">
+				<span>결제 예정 금액</span>
+				<span class="final-price">60,000원</span>
+			</div>
+			<button class="payment-btn">결제하기</button>
+		</div>
+	</div>
+</body>
+
+</html>
