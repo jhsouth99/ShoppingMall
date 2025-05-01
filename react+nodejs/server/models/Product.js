@@ -1,5 +1,4 @@
-// server/models/Product.js
-const { DataTypes } = require('sequelize');
+const { DataTypes, Sequelize } = require('sequelize');
 const sequelize = require('../config/database.js');
 
 const Product = sequelize.define('Product', {
@@ -8,9 +7,18 @@ const Product = sequelize.define('Product', {
     autoIncrement: true,
     primaryKey: true
   },
+  seller_id: {
+    type: DataTypes.INTEGER.UNSIGNED,
+    allowNull: false,
+    references: { model: User, key: 'id' }
+  },
   name: {
     type: DataTypes.STRING(100),
     allowNull: false
+  },
+  description: {
+    type: DataTypes.TEXT,
+    allowNull: true
   },
   price: {
     type: DataTypes.INTEGER.UNSIGNED,
@@ -20,6 +28,16 @@ const Product = sequelize.define('Product', {
     type: DataTypes.TINYINT.UNSIGNED,
     defaultValue: 0
   },
+  stock: {
+    type: DataTypes.INTEGER.UNSIGNED,
+    allowNull: false,
+    defaultValue: 0
+  },
+  min_order_qty: {
+    type: DataTypes.INTEGER.UNSIGNED,
+    allowNull: false,
+    defaultValue: 1
+  },
   isGroup: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
@@ -27,10 +45,22 @@ const Product = sequelize.define('Product', {
   isHot: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
+  },
+  is_business_only: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
+  },
+  created_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
   }
 }, {
   tableName: 'products',
-  timestamps: false       // createdAt/updatedAt 사용 시 true
+  timestamps: false   // created_at 컬럼을 직접 정의했으므로 true로 두지 않습니다
 });
+
+Product.belongsTo(Seller, { foreignKey: 'seller_id', as: 'seller'});
 
 module.exports = Product;
