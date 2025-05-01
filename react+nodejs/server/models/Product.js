@@ -1,5 +1,6 @@
 const { DataTypes, Sequelize } = require('sequelize');
 const sequelize = require('../config/database.js');
+const Seller = require('./Seller.js')
 
 const Product = sequelize.define('Product', {
   id: {
@@ -10,7 +11,7 @@ const Product = sequelize.define('Product', {
   seller_id: {
     type: DataTypes.INTEGER.UNSIGNED,
     allowNull: false,
-    references: { model: User, key: 'id' }
+    references: { model: Seller, key: 'id' }
   },
   name: {
     type: DataTypes.STRING(100),
