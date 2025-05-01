@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>장바구니 - 이거어때</title>
+	<link rel="stylesheet" href="../css/cart.css">
+	<script type="text/javascript" src="../javascript/cartJs.js"> </script>
+
+</head>
+
+<body>
+	<header>
+		<div class="header-top">
+			<div class="container">
+				<div class="logo">
+					<a href="../html/home.html">이거어때</a>
+				</div>
+				<div class="user-menu">
+					<a href="../html/loginMain.html" class="mypage-btn">마이페이지</a>
+					<a href="../html/loginMain.html" class="login-btn">로그인</a>
+					<a href="../html/cart.html" class="cart-btn">장바구니 <span class="cart-count">0</span></a>
+				</div>
+			</div>
+		</div>
+	</header>
+
+	<div class="cart-container">
+		<h2 class="cart-title">장바구니</h2>
+
+		<div class="cart-content" id="cart-content">
+			<div class="cart-header">
+				<div class="select-all-container">
+					<input type="checkbox" id="select-all">
+					<label for="select-all">전체 선택</label>
+				</div>
+				<div class="cart-header-right">
+					<button class="delete-selected-btn">선택 삭제</button>
+					<button class="soldout-delete-btn">품절 상품 삭제</button>
+				</div>
+			</div>
+
+			<div class="cart-items" id="cart-items">
+				<!-- 장바구니 아이템들 -->
+				<div class="cart-item" data-id="1">
+					<div class="item-check">
+						<input type="checkbox" class="item-checkbox">
+					</div>
+					<div class="item-img">
+						<img src="../image/면티.jpg" alt="상품 이미지">
+					</div>
+					<div class="item-info">
+						<h3 class="item-name">프리미엄 면 티셔츠</h3>
+						<p class="item-option">옵션: 화이트 / M</p>
+					</div>
+					<div class="item-quantity">
+						<div class="quantity-control">
+							<button class="decrease-btn">-</button>
+							<input type="number" class="quantity-input" value="1" min="1">
+							<button class="increase-btn">+</button>
+						</div>
+					</div>
+					<div class="item-price">
+						<p class="current-price">29,000원</p>
+					</div>
+					<div class="item-actions">
+						<button class="remove-item">X</button>
+					</div>
+				</div>
+
+				<div class="cart-item" data-id="2">
+					<div class="item-check">
+						<input type="checkbox" class="item-checkbox">
+					</div>
+					<div class="item-img">
+						<img src="../image/맨투맨.jpg" alt="상품 이미지">
+					</div>
+					<div class="item-info">
+						<h3 class="item-name">오버핏 맨투맨</h3>
+						<p class="item-option">옵션: 블랙 / L</p>
+					</div>
+					<div class="item-quantity">
+						<div class="quantity-control">
+							<button class="decrease-btn">-</button>
+							<input type="number" class="quantity-input" value="1" min="1">
+							<button class="increase-btn">+</button>
+						</div>
+					</div>
+					<div class="item-price">
+						<p class="current-price">39,000원</p>
+					</div>
+					<div class="item-actions">
+						<button class="remove-item">X</button>
+					</div>
+				</div>
+
+				<div class="cart-item" data-id="3">
+					<div class="item-check">
+						<input type="checkbox" class="item-checkbox">
+					</div>
+					<div class="item-img">
+						<img src="../image/청바지.jpg" alt="상품 이미지">
+					</div>
+					<div class="item-info">
+						<h3 class="item-name">슬림핏 청바지</h3>
+						<p class="item-option">옵션: 진청 / 32</p>
+					</div>
+					<div class="item-quantity">
+						<div class="quantity-control">
+							<button class="decrease-btn">-</button>
+							<input type="number" class="quantity-input" value="2" min="1">
+							<button class="increase-btn">+</button>
+						</div>
+					</div>
+					<div class="item-price">
+						<p class="current-price">49,000원</p>
+					</div>
+					<div class="item-actions">
+						<button class="remove-item">X</button>
+					</div>
+				</div>
+			</div>
+
+			<!-- 장바구니 비어있을 때 표시될 내용 -->
+			<div class="empty-cart" id="empty-cart" style="display: none;">
+				<div class="empty-cart-content">
+					<p>장바구니에 담긴 상품이 없습니다.</p>
+					<a href="/" class="go-shopping-btn">쇼핑하러 가기</a>
+				</div>
+			</div>
+		</div>
+
+		<div class="cart-summary">
+			<div class="summary-row">
+				<span>상품 금액</span>
+				<span class="total-price">117,000원</span>
+			</div>
+			<div class="summary-row">
+				<span>배송비</span>
+				<span class="shipping-cost">0원</span>
+			</div>
+			<div class="summary-row total">
+				<span>결제 예정 금액</span>
+				<span class="final-price">117,000원</span>
+			</div>
+			<button class="checkout-btn"><a href="../html/payment.html">주문하기</a></button>
+		</div>
+	</div>
+
+</body>
+
+</html>
