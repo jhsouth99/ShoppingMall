@@ -13,7 +13,7 @@ const Admin = sequelize.define(
       autoIncrement: true,
       primaryKey: true
     },
-    adminname: {
+    username: {
       type: DataTypes.STRING(100),
       allowNull: false,
       unique: true
