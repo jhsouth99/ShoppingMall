@@ -1,6 +1,7 @@
 const { DataTypes, Sequelize } = require('sequelize');
 const sequelize = require('../config/database.js');
-const Seller = require('./Seller.js')
+const Seller = require('./Seller.js');
+const Category = require('./Category.js');
 
 const Product = sequelize.define('Product', {
   id: {
@@ -52,6 +53,21 @@ const Product = sequelize.define('Product', {
     allowNull: false,
     defaultValue: false
   },
+  sold_count: {
+    type: DataTypes.INTEGER.UNSIGNED,
+    allowNull: false,
+    defaultValue: 0
+  },
+  view_count: {
+    type: DataTypes.INTEGER.UNSIGNED,
+    allowNull: false,
+    defaultValue: 0
+  },
+  shipping_fee: {
+    type: DataTypes.INTEGER.UNSIGNED,
+    allowNull: false,
+    defaultValue: 0
+  },
   created_at: {
     type: DataTypes.DATE,
     allowNull: false,
@@ -59,9 +75,17 @@ const Product = sequelize.define('Product', {
   }
 }, {
   tableName: 'products',
-  timestamps: false   // created_at 컬럼을 직접 정의했으므로 true로 두지 않습니다
+  timestamps: false,   // created_at 컬럼을 직접 정의했으므로 true로 두지 않습니다
+  indexes: [
+    {
+      name: 'ft_products_name_description',
+      type: 'FULLTEXT',
+      fields: ['name', 'description']
+    }
+  ]
 });
 
 Product.belongsTo(Seller, { foreignKey: 'seller_id', as: 'seller'});
+//Product.belongsToMany(Category, { through: 'ProductCategory', foreignKey: 'product_id', otherKey: 'category_id', as: 'categories' });
 
 module.exports = Product;

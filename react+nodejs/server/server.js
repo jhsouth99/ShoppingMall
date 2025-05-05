@@ -2,9 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const sequelize = require('./config/database.js');
 const productRoutes = require('./routes/productRoutes.js');
+const userRoutes = require('./routes/userRoutes.js');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const shouldSeed = true;
 
 require('./models');
 
@@ -21,8 +23,12 @@ app.use('/api/users', userRoutes);
     await sequelize.authenticate();
     console.log('✅ DB 연결 성공');
     // 모델에 맞춰 테이블 생성 (운영 시에는 migration 사용 권장)
-    await sequelize.sync();  
-    app.listen(PORT, () => console.log(`Server listening on http://localhost:${PORT}`));
+    sequelize.sync({ force: shouldSeed }).then(async () => {
+      if (shouldSeed) {
+        await require('./config/seed.js')(); // 함수로 내보냈다면
+      }
+      app.listen(PORT, () => console.log(`Server listening on http://localhost:${PORT}`));
+    });
   } catch (err) {
     console.error('❌ DB 연결 실패', err);
   }
