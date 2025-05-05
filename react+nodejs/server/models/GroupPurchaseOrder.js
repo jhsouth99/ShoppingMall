@@ -35,6 +35,28 @@ const GroupPurchaseOrder = sequelize.define(
       allowNull: false,
       defaultValue: 'pending'
     },
+
+    recipient_name: {
+      type: DataTypes.STRING(100),
+      allowNull: false
+    },
+    recipient_phone: {
+      type: DataTypes.STRING(20),
+      allowNull: false
+    },
+    recipient_address: {
+      type: DataTypes.STRING(255),
+      allowNull: false
+    },
+    recipient_address_detail: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    recipient_zipcode: {
+      type: DataTypes.STRING(20),
+      allowNull: false
+    },
+
     ordered_at: {
       type: DataTypes.DATE,
       allowNull: false,

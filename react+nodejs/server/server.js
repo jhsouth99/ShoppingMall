@@ -13,6 +13,7 @@ app.use(express.json());
 
 // 라우트 등록
 app.use('/api/products', productRoutes);
+app.use('/api/users', userRoutes);
 
 // DB 연결 및 서버 시작
 (async () => {
