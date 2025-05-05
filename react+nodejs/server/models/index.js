@@ -6,6 +6,8 @@ const Order   = require('./Order');
 const Payment = require('./Payment');
 const Category = require('./Category');
 const ProductCategory = require('./ProductCategory');
+const Attribute = require('./Attribute');
+const ProductAttribute = require('./ProductAttribute');
 const Review = require('./Review');
 const Inquiry = require('./Inquiry');
 const Wishlist = require('./Wishlist');
@@ -28,6 +30,8 @@ module.exports = {
   Payment,
   Category,
   ProductCategory,
+  Attribute,
+  ProductAttribute,
   Review,
   Inquiry,
   Wishlist,
