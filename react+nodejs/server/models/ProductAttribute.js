@@ -43,9 +43,9 @@ const ProductAttribute = sequelize.define('ProductAttribute', {
 
 // Associations
 Product.hasMany(ProductAttribute, { foreignKey: 'product_id', as: 'attributes' });
-ProductAttribute.belongsTo(Product, { foreignKey: 'product_id' });
+ProductAttribute.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
 Attribute.hasMany(ProductAttribute, { foreignKey: 'attribute_id', as: 'productAttributes' });
-ProductAttribute.belongsTo(Attribute, { foreignKey: 'attribute_id' });
+ProductAttribute.belongsTo(Attribute, { foreignKey: 'attribute_id', as: 'attribute' });
 
 module.exports = ProductAttribute;

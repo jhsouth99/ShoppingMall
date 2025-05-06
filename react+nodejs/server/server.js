@@ -3,6 +3,9 @@ const cors = require('cors');
 const sequelize = require('./config/database.js');
 const productRoutes = require('./routes/productRoutes.js');
 const userRoutes = require('./routes/userRoutes.js');
+const categoryRoutes = require('./routes/categoryRoutes.js');
+const reviewRoutes = require('./routes/reviewRoutes.js');
+const cartRoutes = require('./routes/cartRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -16,6 +19,9 @@ app.use(express.json());
 // 라우트 등록
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/products', reviewRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/cart', cartRoutes);
 
 // DB 연결 및 서버 시작
 (async () => {

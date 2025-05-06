@@ -3,6 +3,8 @@ const { Op, Sequelize } = require('sequelize');
 const sequelize = require("../config/database.js");
 const Product = require("../models/Product.js");
 const Category = require("../models/Category.js");
+const Attribute = require("../models/Attribute.js");
+const ProductAttribute = require("../models/ProductAttribute.js");
 
 const router = express.Router();
 
@@ -19,7 +21,8 @@ router.get("/", async (req, res) => {
       sort_by,               // 'popularity' | 'price_asc' | 'price_desc' | 'latest'
       include_shipping,      // true | false
       page = 1,
-      limit = 20
+      limit = 20,
+      ...queryParams         // attr_<attribute_name>=...
     } = req.query;
 
     
@@ -67,6 +70,26 @@ router.get("/", async (req, res) => {
     }
     include.push(categoryInclude);
 
+    const attributesInclude = {
+      model: ProductAttribute,
+      as: 'attributes',
+      required: false,
+      include: [ { model: Attribute, as: 'attribute' } ]
+    };
+
+    // 속성 필터링: attr_<attribute_name> 방식
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (key.startsWith('attr_')) {
+        const attrName = key.slice(5);
+        const vals = Array.isArray(value) ? value : String(value).split(',').map(v => v.trim());
+        attributesInclude.required = true;
+        attributesInclude.where = { attribute_value: { [Op.in]: vals } };
+        attributesInclude.include[0].where = { name: attrName };
+        attributesInclude.include[0].required = true;
+      }
+    }
+    include.push(attributesInclude);
+
     // 정렬 조건
     let order = [['created_at', 'DESC']];
     if (sort_by === 'price_asc') {
@@ -86,12 +109,12 @@ router.get("/", async (req, res) => {
 
     const { rows, count } = await Product.findAndCountAll({
       distinct: true,
+      subQuery: false,
       where,
       include,
       order,
       offset,
-      limit: limitInt,
-      subQuery: false
+      limit: limitInt
     });
 
     res.json({
@@ -123,6 +146,11 @@ router.get("/:id", async (req, res) => {
         {
           model: require('../models/ProductImage'),
           as: 'images'
+        },
+        {
+          model: ProductAttribute,
+          as: 'attributes',
+          include: [{ model: Attribute, as: 'attribute' }]
         }
       ]
     });
