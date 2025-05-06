@@ -1,10 +1,37 @@
-// src/components/Header.jsx
-import React from 'react';
-import { Link } from 'react-router-dom';
-import SearchBar from './SearchBar';
-import '../style.css';
+import { React, useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import SearchBar from "./SearchBar";
+import "../style.css";
+
+function renderCategory(cat) {
+  return (
+    <li key={cat.id} className={cat.children.length ? "has-submenu" : ""}>
+      <Link to={`/category/${cat.id}`}>{cat.name}</Link>
+      {cat.children.length > 0 && (
+        <ul className="submenu">{cat.children.map(renderCategory)}</ul>
+      )}
+    </li>
+  );
+}
 
 export default function Header({ cartCount = 0 }) {
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/categories")
+      .then((res) => res.json())
+      .then((tree) => setCategories(tree))
+      .catch((err) => console.error("카테고리 로드 실패:", err));
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+    navigate("/");
+  };
+
   return (
     <header>
       <div className="header-top">
@@ -14,57 +41,28 @@ export default function Header({ cartCount = 0 }) {
           </h1>
           <SearchBar />
           <div className="user-menu">
-            <Link to="/mypage">마이페이지</Link>
-            <Link to="/login">로그인</Link>
-            <Link to="/cart" className="cart-btn">
-              장바구니 <span className="cart-count">{cartCount}</span>
-            </Link>
+            {user ? (
+              <>
+                <Link to="/mypage">마이페이지</Link>
+                <button onClick={handleLogout}>로그아웃</button>
+                <Link to="/cart" className="cart-btn">
+                  장바구니 <span className="cart-count">{cartCount}</span>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/login">로그인</Link>
+                <Link to="/register">회원가입</Link>
+              </>
+            )}
           </div>
         </div>
       </div>
       <nav className="header-nav">
         <div className="container main-nav">
-          <ul>
-            <li className="has-submenu">
-              <Link to="/category/clothing">의류</Link>
-              <ul className="submenu">
-                <li><Link to="/category/clothing/shoes">신발</Link></li>
-                <li><Link to="/category/clothing/tops">상의</Link></li>
-                <li><Link to="/category/clothing/outer">아우터</Link></li>
-                <li><Link to="/category/clothing/bottoms">하의</Link></li>
-              </ul>
-            </li>
-            <li className="has-submenu">
-              <Link to="/category/food">식품</Link>
-              <ul className="submenu">
-                <li><Link to="/category/food/bakery">베이커리</Link></li>
-                <li><Link to="/category/food/vegetables">농산</Link></li>
-                <li><Link to="/category/food/meat">축산</Link></li>
-                <li><Link to="/category/food/seafood">수산</Link></li>
-                <li><Link to="/category/food/snacks">간식</Link></li>
-                <li><Link to="/category/food/sauce-noodles">양념/면</Link></li>
-              </ul>
-            </li>
-            <li className="has-submenu">
-              <Link to="/category/electronics">전자기기</Link>
-              <ul className="submenu">
-                <li><Link to="/category/electronics/appliances">가전/TV</Link></li>
-                <li><Link to="/category/electronics/computers">컴퓨터</Link></li>
-                <li><Link to="/category/electronics/mobile">모바일</Link></li>
-                <li><Link to="/category/electronics/camera">카메라</Link></li>
-              </ul>
-            </li>
-            <li className="has-submenu">
-              <Link to="/group-purchase">공동구매</Link>
-              <ul className="submenu">
-                <li><Link to="/group-purchase/clothing">의류</Link></li>
-                <li><Link to="/group-purchase/food">식품</Link></li>
-                <li><Link to="/group-purchase/electronics">전자기기</Link></li>
-              </ul>
-            </li>
-          </ul>
+          <ul>{categories.map(renderCategory)}</ul>
         </div>
       </nav>
     </header>
-  )
+  );
 }

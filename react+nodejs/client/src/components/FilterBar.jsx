@@ -1,8 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from "react";
 
 export default function FilterBar() {
+  const [categories, setCategories] = useState([]);
   useEffect(() => {
     window.initProductFiltering?.();
+  }, []);
+  useEffect(() => {
+    fetch("http://localhost:5000/api/categories")
+      .then((res) => res.json())
+      .then((tree) => setCategories(tree))
+      .catch((err) => console.error("카테고리 로드 실패:", err));
   }, []);
 
   return (
@@ -10,9 +17,11 @@ export default function FilterBar() {
       <div className="category-filter">
         <select id="category-filter">
           <option value="all">전체</option>
-          <option value="clothing">의류</option>
-          <option value="food">식품</option>
-          <option value="electronics">전자기기</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
         </select>
       </div>
       <div className="price-filter">
@@ -24,8 +33,12 @@ export default function FilterBar() {
         </select>
       </div>
       <div className="special-filter">
-        <label><input type="checkbox" id="discount-filter" /> 할인상품만</label>
-        <label><input type="checkbox" id="group-purchase-filter" /> 공동구매 가능</label>
+        <label>
+          <input type="checkbox" id="discount-filter" /> 할인상품만
+        </label>
+        <label>
+          <input type="checkbox" id="group-purchase-filter" /> 공동구매 가능
+        </label>
       </div>
       <div className="sort-options">
         <select id="sort-option">

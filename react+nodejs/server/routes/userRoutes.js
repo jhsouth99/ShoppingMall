@@ -12,7 +12,7 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
 
 // 회원가입
 router.post("/register", async (req, res) => {
-  const { username, password, email } = require.body;
+  const { username, password, email } = req.body;
   try {
     const user = await User.findOne({ where: { username } });
     if (user)
