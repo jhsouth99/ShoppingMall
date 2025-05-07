@@ -16,6 +16,16 @@ function initBannerSlider() {
   const nextBtn = document.querySelector(".slider-control.next");
   const sliderWrapper = document.querySelector(".slider-wrapper");
 
+  if (
+    slides.length === 0 ||
+    dots.length === 0    ||
+    !prevBtn           ||
+    !nextBtn           ||
+    !sliderWrapper
+  ) {
+    return;
+  }
+  
   let currentSlide = 0;
   let slideInterval;
   let isDragging = false;

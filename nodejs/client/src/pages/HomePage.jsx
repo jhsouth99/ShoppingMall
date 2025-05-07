@@ -7,6 +7,7 @@ import ProductCard from '../components/ProductCard';
 import Footer from '../components/Footer';
 import '../style.css';   // 전체 스타일 :contentReference[oaicite:0]{index=0}&#8203;:contentReference[oaicite:1]{index=1}
 import '../mainJs.js';   // 배너/검색/메뉴/필터 기능 :contentReference[oaicite:2]{index=2}&#8203;:contentReference[oaicite:3]{index=3}
+import CategoryNav from '../components/CategoryNav.jsx';
 
 export default function HomePage() {
   const [products, setProducts] = useState([]);
@@ -20,6 +21,7 @@ export default function HomePage() {
   return (
     <>
       <Header />
+      <CategoryNav />
 
       <BannerSlider />
 

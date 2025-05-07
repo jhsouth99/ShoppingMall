@@ -4,6 +4,8 @@ const authenticate = require("../middleware/auth");
 const Order = require("../models/Order");
 const Payment = require("../models/Payment");
 const Product = require("../models/Product");
+const Coupon = require("../models/Coupon");
+const UserCoupon = require("../models/UserCoupon");
 const ShippingAddress = require("../models/ShippingAddress");
 
 const router = express.Router();
@@ -18,7 +20,7 @@ const router = express.Router();
 router.post("/", authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
-    const { items, shipping_address_id } = req.body;
+    const { items, shipping_address_id, coupon_code } = req.body;
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ message: "items 배열을 입력하세요." });
     }
@@ -32,59 +34,111 @@ router.post("/", authenticate, async (req, res) => {
 
     // 트랜잭션으로 묶기
     const result = await Sequelize.transaction(async (t) => {
-      const created = [];
-      for (let { product_id, quantity, cart_item_id } of items) {
+      // 1) 쿠폰 검증 및 UserCoupon 조회
+      let coupon = null,
+        uc = null;
+      if (coupon_code) {
+        coupon = await Coupon.findOne({
+          where: { code: coupon_code, is_active: true },
+          transaction: t,
+        });
+        if (!coupon) throw new Error("존재하지 않거나 비활성화된 쿠폰입니다.");
+
+        // 만료일, 최소주문금액, 사용횟수 체크
+        if (coupon.expires_at && coupon.expires_at < new Date())
+          throw new Error("이미 만료된 쿠폰입니다.");
+        if (coupon.min_order_price > 0)
+          if (coupon.usage_limit !== null) {
+            // will check later against total_before_discount
+
+            // 전역 사용 가능 횟수 제한
+            const usedCount = await UserCoupon.count({
+              where: { coupon_id: coupon.id, used: true },
+              transaction: t,
+            });
+            if (usedCount >= coupon.usage_limit)
+              throw new Error("이미 사용 가능한 횟수를 초과한 쿠폰입니다.");
+          }
+
+        // 사용자 보유 쿠폰(리딤) 기록
+        uc = await UserCoupon.findOne({
+          where: { user_id: userId, coupon_id: coupon.id, used: false },
+          transaction: t,
+        });
+        if (!uc) throw new Error("사용 가능한 쿠폰을 보유하고 있지 않습니다.");
+      }
+
+      const orders = [];
+      for (const { product_id, quantity, cart_item_id } of items) {
         const product = await Product.findByPk(product_id, { transaction: t });
         if (!product) throw new Error(`상품(${product_id})이 없습니다.`);
-        if (quantity < 1 || quantity > product.stock) {
+        if (quantity < 1 || quantity > product.stock)
           throw new Error(`상품(${product_id}) 수량이 올바르지 않습니다.`);
-        }
-        // 총액 = (price × quantity) – 할인
-        const total_price = Math.floor(
+
+        // 2) 기본 총액 계산
+        let total = Math.floor(
           ((product.price * (100 - product.discount)) / 100) * quantity
         );
 
-        // 주문 생성
+        // 3) 쿠폰 할인 적용 (첫 아이템에만 적용하든지, 합계에 대해 한 번만)
+        if (coupon && uc && orders.length === 0) {
+          if (total < coupon.min_order_price)
+            throw new Error("최소 주문 금액 미달로 쿠폰 사용 불가입니다.");
+
+          let discountAmount = 0;
+          if (coupon.discount_type === "percent") {
+            discountAmount = Math.floor((total * coupon.discount_value) / 100);
+          } else {
+            discountAmount = coupon.discount_value;
+          }
+          total = Math.max(0, total - discountAmount);
+
+          // UserCoupon 사용 처리
+          await uc.update(
+            {
+              used: true,
+              used_at: Sequelize.literal("CURRENT_TIMESTAMP"),
+              order_id: null, // 이후 설정
+            },
+            { transaction: t }
+          );
+        }
+
+        // 4) 주문 생성
         const order = await Order.create(
           {
             user_id: userId,
             product_id,
             quantity,
-            total_price,
+            total_price: total,
             status: "pending",
             order_type: "normal",
             recipient_name: addr.recipient_name,
-            recipient_phone: addr.phone,
-            recipient_address: addr.address,
-            recipient_address_detail: addr.address_detail,
-            recipient_zipcode: addr.zipcode,
+            recipient_phone: addr.recipient_phone,
+            recipient_address: addr.recipient_address,
+            recipient_address_detail: addr.recipient_address_detail,
+            recipient_zipcode: addr.recipient_zipcode,
           },
           { transaction: t }
         );
 
-        // (선택) 재고 차감
-        //await product.decrement("stock", { by: quantity, transaction: t });
-
-        // 장바구니 아이템 삭제
-        if (cart_item_id) {
-          await CartItem.destroy({
-            where: { id: cart_item_id, user_id: userId },
-            transaction: t,
-          });
+        // 5) UserCoupon에 주문 ID 기록
+        if (uc) {
+          await uc.update({ order_id: order.id }, { transaction: t });
         }
 
-        // 결제 레코드 생성 (Pending)
+        // 6) 결제 레코드 생성
         await Payment.create(
           {
             order_id: order.id,
-            payment_method: "card", // 실제 환경에 맞춰 동적으로
-            amount: total_price,
+            payment_method: "card",
+            amount: total,
             status: "pending",
           },
           { transaction: t }
         );
 
-        created.push(order);
+        orders.push(order);
       }
       return created;
     });

@@ -3,17 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import "../style.css";
 
-function renderCategory(cat) {
-  return (
-    <li key={cat.id} className={cat.children.length ? "has-submenu" : ""}>
-      <Link to={`/category/${cat.id}`}>{cat.name}</Link>
-      {cat.children.length > 0 && (
-        <ul className="submenu">{cat.children.map(renderCategory)}</ul>
-      )}
-    </li>
-  );
-}
-
 export default function Header({ cartCount = 0 }) {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
@@ -58,11 +47,6 @@ export default function Header({ cartCount = 0 }) {
           </div>
         </div>
       </div>
-      <nav className="header-nav">
-        <div className="container main-nav">
-          <ul>{categories.map(renderCategory)}</ul>
-        </div>
-      </nav>
     </header>
   );
 }

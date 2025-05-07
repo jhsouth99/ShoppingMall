@@ -4,12 +4,10 @@ const authenticate = require("../middleware/auth.js");
 
 const router = express.Router();
 
-// 관리자 권한 확인
-async function requireAdmin(req, res, next) {
-  if (!req.user) return res.status(401).json({ message: "로그인 필요" });
-  const admin = await User.findByPk(req.user.id);
-  if (!admin || admin.type !== 'admin')
-    return res.status(403).json({ message: "관리자 전용 기능입니다." });
+function requireAdmin(req, res, next) {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ message: "관리자 전용입니다." });
+  }
   next();
 }
 
@@ -62,7 +60,7 @@ router.get("/", async (req, res) => {
 });
 
 // 카테고리 추가 (관리자 전용)
-router.post("/", requireAdmin, async (req, res) => {
+router.post("/", authenticate, requireAdmin, async (req, res) => {
   try {
     const { name, parent_id = null } = req.body;
     // name 필수
@@ -77,7 +75,7 @@ router.post("/", requireAdmin, async (req, res) => {
 });
 
 // 카테고리 이름 수정 & 부모 변경
-router.patch("/:id", requireAdmin, async (req, res) => {
+router.patch("/:id", authenticate, requireAdmin, async (req, res) => {
   const id = +req.params.id;
   const { name, parent_id } = req.body;
   const category = await Category.findByPk(id);
@@ -138,7 +136,7 @@ router.patch("/:id", requireAdmin, async (req, res) => {
 });
 
 // 2) 카테고리 삭제
-router.delete("/:id", requireAdmin, async (req, res) => {
+router.delete("/:id", authenticate, requireAdmin, async (req, res) => {
   const id = +req.params.id;
   const category = await Category.findByPk(id);
   if (!category) return res.status(404).json({ message: "카테고리 없음" });
@@ -174,7 +172,7 @@ router.delete("/:id", requireAdmin, async (req, res) => {
 });
 
 // 2) 특정 카테고리의 자식으로 지정 (조상 M:N 연결 추가 포함)
-router.post("/:id/children", requireAdmin, async (req, res) => {
+router.post("/:id/children", authenticate, requireAdmin, async (req, res) => {
   const parentId = +req.params.id;
   const { child_id } = req.body;
   const parent = await Category.findByPk(parentId);
@@ -209,7 +207,7 @@ router.post("/:id/children", requireAdmin, async (req, res) => {
 });
 
 // 3) 특정 카테고리의 부모를 변경 (조상 M:N 연결 제거 & 추가)
-router.post("/:id/parent", requireAdmin, async (req, res) => {
+router.post("/:id/parent", authenticate, requireAdmin, async (req, res) => {
   const childId = +req.params.id;
   const { parent_id } = req.body; // new parent or null
   const child = await Category.findByPk(childId);
