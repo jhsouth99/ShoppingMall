@@ -22,6 +22,7 @@ function initBannerSlider() {
   let startPos = 0;
 
   function showSlide(index) {
+    if (!slides || slides.length === 0 || !dots || dots.length === 0) return;
     const prevS = document.querySelector(".slide.active");
     const prevD = document.querySelector(".dot.active");
     if (prevS) prevS.classList.remove("active");
@@ -33,12 +34,14 @@ function initBannerSlider() {
   }
 
   function nextSlide() {
+    if (!slides || slides.length === 0) return;
     let nextIndex = currentSlide + 1;
     if (nextIndex >= slides.length) nextIndex = 0;
     showSlide(nextIndex);
   }
 
   function prevSlide() {
+    if (!slides || slides.length === 0) return;
     let prevIndex = currentSlide - 1;
     if (prevIndex < 0) prevIndex = slides.length - 1;
     showSlide(prevIndex);

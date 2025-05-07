@@ -8,6 +8,19 @@ const ProductAttribute = require("../models/ProductAttribute.js");
 
 const router = express.Router();
 
+async function getAllSubcategoryIds(categoryId) {
+  const result = [];
+  async function recurse(id) {
+    result.push(id);
+    const children = await Category.findAll({ where: { parent_id: id } });
+    for (const child of children) {
+      await recurse(child.id);
+    }
+  }
+  await recurse(categoryId);
+  return result;
+}
+
 // 전체 상품 조회
 router.get("/", async (req, res) => {
   try {
@@ -65,7 +78,8 @@ router.get("/", async (req, res) => {
       required: false
     };
     if (category_id) {
-      categoryInclude.where = { id: category_id };
+      const categoryIds = await getAllSubcategoryIds(category_id);
+      categoryInclude.where = { id: { [Op.in]: categoryIds } };
       categoryInclude.required = true;
     }
     include.push(categoryInclude);

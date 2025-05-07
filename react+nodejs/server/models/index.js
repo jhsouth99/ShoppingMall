@@ -8,6 +8,7 @@ const Category = require('./Category');
 const ProductCategory = require('./ProductCategory');
 const Attribute = require('./Attribute');
 const ProductAttribute = require('./ProductAttribute');
+const ProductOption = require('./ProductOption');
 const Review = require('./Review');
 const Inquiry = require('./Inquiry');
 const Wishlist = require('./Wishlist');
@@ -19,6 +20,8 @@ const QnA = require('./QnA');
 const ProductImage = require('./ProductImage');
 const GroupPurchase = require('./GroupPurchase');
 const GroupPurchaseOrder = require('./GroupPurchaseOrder');
+const Coupon = require('./Coupon');
+const UserCoupon = require('./UserCoupon');
 
 // (선택) 관계 설정도 여기에 한꺼번에 묶을 수 있음
 
@@ -32,6 +35,7 @@ module.exports = {
   ProductCategory,
   Attribute,
   ProductAttribute,
+  ProductOption,
   Review,
   Inquiry,
   Wishlist,
@@ -42,5 +46,7 @@ module.exports = {
   QnA,
   ProductImage,
   GroupPurchase,
-  GroupPurchaseOrder
+  GroupPurchaseOrder,
+  Coupon,
+  UserCoupon,
 };
