@@ -21,6 +21,10 @@ const UserCoupon = sequelize.define('UserCoupon', {
   order_id: {
     type: DataTypes.INTEGER,
     allowNull: true  // 사용 시 주문 번호 기록
+  },
+  issued_at : {
+    type: DataTypes.DATE,
+    allowNull: false
   }
 });
 

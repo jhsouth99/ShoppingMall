@@ -23,10 +23,6 @@ const Coupon = sequelize.define('Coupon', {
     type: DataTypes.INTEGER,  // 총 사용 가능 횟수
     defaultValue: null
   },
-  used_count: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0
-  },
   expires_at: {
     type: DataTypes.DATE,
     allowNull: true
