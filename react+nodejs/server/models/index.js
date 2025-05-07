@@ -14,7 +14,6 @@ const Inquiry = require('./Inquiry');
 const Wishlist = require('./Wishlist');
 const CartItem = require('./CartItem');
 const ShippingAddress = require('./ShippingAddress');
-const Admin = require('./Admin');
 const Notice = require('./Notice');
 const QnA = require('./QnA');
 const ProductImage = require('./ProductImage');
@@ -41,7 +40,6 @@ module.exports = {
   Wishlist,
   CartItem,
   ShippingAddress,
-  Admin,
   Notice,
   QnA,
   ProductImage,

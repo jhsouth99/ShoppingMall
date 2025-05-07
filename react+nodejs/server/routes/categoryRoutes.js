@@ -1,15 +1,14 @@
 const express = require("express");
 const Category = require("../models/Category");
 const authenticate = require("../middleware/auth.js");
-const Admin = require("../models/Admin.js");
 
 const router = express.Router();
 
 // 관리자 권한 확인
 async function requireAdmin(req, res, next) {
   if (!req.user) return res.status(401).json({ message: "로그인 필요" });
-  const admin = await Admin.findByPk(req.user.id);
-  if (!admin)
+  const admin = await User.findByPk(req.user.id);
+  if (!admin || admin.type !== 'admin')
     return res.status(403).json({ message: "관리자 전용 기능입니다." });
   next();
 }
