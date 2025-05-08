@@ -1,0 +1,149 @@
+/* find_auth.css */
+/* CSS 변수 정의 - styles.css에서 가져오거나 공통 변수 파일 만들어서 사용 */
+:root {
+    --background-color: #f8f8f8;
+    --container-bg-color: #fff;
+    --text-color-dark: #333;
+    --text-color-medium: #555;
+    --border-color: #ccc;
+    --focus-border-color: #2980b9;
+    --focus-shadow-color: rgba(41, 128, 185, 0.3);
+    --required-color: #e74c3c;
+    --button-bg-color: #2ecc71;
+    --button-hover-bg-color: #27ae60;
+    --error-text-color: #e74c3c;
+    --spacing-small: 8px;
+    --spacing-medium: 10px;
+    --spacing-large: 20px;
+    --container-padding: 40px;
+    --input-padding: 12px;
+    --border-radius: 6px;
+    --container-border-radius: 12px;
+    --box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--background-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: var(--spacing-large);
+    box-sizing: border-box;
+}
+
+/* signup-container 대신 auth-container로 변경하여 다른 페이지와 구분 */
+.auth-container {
+    background-color: var(--container-bg-color);
+    padding: var(--container-padding);
+    border-radius: var(--container-border-radius);
+    box-shadow: var(--box-shadow);
+    width: 100%;
+    max-width: 450px;
+    box-sizing: border-box;
+    text-align: center; /* 링크 그룹 가운데 정렬 */
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--text-color-dark);
+}
+
+.form-group {
+    margin-bottom: var(--spacing-large);
+    text-align: left; /* 폼 요소 왼쪽 정렬 */
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--spacing-small);
+    font-weight: bold;
+    color: var(--text-color-medium);
+}
+
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="text"],
+.form-group input[type="tel"], /* tel 타입 추가 */
+.form-group select {
+    width: 100%;
+    padding: var(--input-padding);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--focus-border-color);
+    box-shadow: 0 0 8px var(--focus-shadow-color);
+    outline: none;
+}
+
+.required {
+    color: var(--required-color);
+    margin-left: 4px;
+}
+
+button[type="submit"] {
+    width: 100%;
+    padding: var(--input-padding);
+    background-color: var(--button-bg-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: background-color 0.3s;
+    margin-top: var(--spacing-large);
+}
+
+button[type="submit"]:hover {
+    background-color: var(--button-hover-bg-color);
+}
+
+.error-message {
+    color: var(--error-text-color);
+    font-size: 0.9em;
+    display: block;
+    margin-top: 5px;
+}
+
+/* 페이지 이동 링크 스타일 */
+.link-group {
+    margin-top: var(--spacing-large);
+    font-size: 0.9em;
+}
+
+.link-group a {
+    color: var(--text-color-medium);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.link-group a:hover {
+    color: var(--text-color-dark);
+    text-decoration: underline;
+}
+
+
+/* 모바일 기기를 위한 간단한 반응형 조정 */
+@media (max-width: 600px) {
+    .auth-container {
+        padding: var(--spacing-large);
+    }
+    body {
+        padding: var(--spacing-medium);
+    }
+    .form-group {
+        margin-bottom: var(--spacing-medium);
+    }
+    button[type="submit"] {
+        font-size: 1em;
+        padding: var(--spacing-medium);
+    }
+}
