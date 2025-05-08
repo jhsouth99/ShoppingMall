@@ -27,6 +27,18 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 	});
 
+	// 현금영수증 체크박스 처리
+	const cashReceiptCheckbox = document.getElementById('cashReceipt');
+	const receiptDetails = document.getElementById('receiptDetails');
+
+	cashReceiptCheckbox.addEventListener('change', function() {
+		if (this.checked) {
+			receiptDetails.style.display = 'block';
+		} else {
+			receiptDetails.style.display = 'none';
+		}
+	});
+
 	// 결제 방법 선택
 	const paymentMethodRadios = document.querySelectorAll('input[name="paymentMethod"]');
 	const cardPaymentDetails = document.getElementById('cardPaymentDetails');
@@ -74,6 +86,15 @@ document.addEventListener('DOMContentLoaded', function() {
 	couponSelect.addEventListener('change', function() {
 		updateTotalPrice();
 	});
+
+	// 현금영수증 번호 입력 제한 (숫자만 입력 가능)
+	const receiptNumber = document.getElementById('receiptNumber');
+	if (receiptNumber) {
+		receiptNumber.addEventListener('input', function() {
+			// 숫자만 입력 가능하도록
+			this.value = this.value.replace(/[^0-9]/g, '');
+		});
+	}
 
 	// localStorage에서 장바구니 선택 상품 정보 가져오기
 	function loadSelectedItems() {
@@ -160,15 +181,8 @@ document.addEventListener('DOMContentLoaded', function() {
 		const purchasePointBenefit = Math.floor(orderData.totalProductPrice * 0.03);
 		document.getElementById('purchasePointBenefit').textContent = formatPrice(purchasePointBenefit) + 'P';
 
-		// 계좌 간편결제 시 포인트 (구매금액의 1%)
-		const accountPointBenefit = Math.floor(orderData.totalProductPrice * 0.01);
-		document.getElementById('accountPointBenefit').textContent = formatPrice(accountPointBenefit) + 'P';
-
-		// 계좌 간편결제 선택 시에만 해당 혜택 적용
-		const isAccountPayment = document.querySelector('input[name="paymentMethod"][value="account"]').checked;
-		const totalBenefit = purchasePointBenefit + (isAccountPayment ? accountPointBenefit : 0);
-
-		document.getElementById('totalPointBenefit').textContent = formatPrice(totalBenefit) + 'P';
+		// 총 적립 예정 포인트 (추가적인 계산이 필요한 경우 여기에 더해주세요)
+		document.getElementById('totalPointBenefit').textContent = formatPrice(purchasePointBenefit) + 'P';
 	}
 
 	// 최종 결제 금액 업데이트 함수
@@ -180,11 +194,13 @@ document.addEventListener('DOMContentLoaded', function() {
 		const usedPoint = parseInt(pointInput.value) || 0;
 		document.getElementById('pointUsage').textContent = usedPoint > 0 ? `-${formatPrice(usedPoint)}P` : '-';
 
-		// 쿠폰 할인
+		// 쿠폰 할인 (percentage 방식으로 변경)
 		let couponDiscount = 0;
 		const selectedCoupon = couponSelect.value;
-		if (selectedCoupon) {
-			couponDiscount = parseInt(selectedCoupon);
+		if (selectedCoupon && selectedCoupon !== "") {
+			// 선택된 쿠폰의 value가 할인 퍼센트(%)를 의미
+			const discountPercentage = parseInt(selectedCoupon);
+			couponDiscount = Math.floor(orderData.totalProductPrice * (discountPercentage / 100));
 		}
 		document.getElementById('couponDiscount').textContent = couponDiscount > 0 ? `-${formatPrice(couponDiscount)}원` : '-';
 
@@ -226,6 +242,42 @@ document.addEventListener('DOMContentLoaded', function() {
 			return;
 		}
 
+		// 입금 은행 선택 검증
+		const bankSelect = document.getElementById('bankSelect');
+		const bankSelectError = document.getElementById('bankSelectError');
+
+		if (!bankSelect.value) {
+			bankSelect.classList.add('input-error');
+			bankSelectError.style.display = 'block';
+			isValid = false;
+			bankSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		} else {
+			bankSelect.classList.remove('input-error');
+			bankSelectError.style.display = 'none';
+		}
+
+		// 현금영수증 신청 시 번호 검증
+		if (cashReceiptCheckbox.checked) {
+			const receiptNumber = document.getElementById('receiptNumber');
+			const receiptNumberError = document.getElementById('receiptNumberError');
+
+			if (!receiptNumber.value || receiptNumber.value.length < 10) {
+				receiptNumber.classList.add('input-error');
+				receiptNumberError.style.display = 'block';
+				isValid = false;
+
+				if (bankSelect.value) { // 은행은 선택되었지만 영수증 번호는 없는 경우
+					receiptNumber.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				}
+			} else {
+				receiptNumber.classList.remove('input-error');
+				receiptNumberError.style.display = 'none';
+			}
+		}
+
+		// 유효하지 않으면 제출 중단
+		if (!isValid) return;
+
 		// 결제 처리 로직
 		alert('결제가 완료되었습니다!');
 
@@ -237,6 +289,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		// 홈으로 이동
 		window.location.href = '../html/home.html';
+	});
+
+	// 입력 필드 변경 시 에러 메시지 숨김 처리
+	document.getElementById('bankSelect').addEventListener('change', function() {
+		if (this.value) {
+			this.classList.remove('input-error');
+			document.getElementById('bankSelectError').style.display = 'none';
+		}
+	});
+
+	document.getElementById('receiptNumber').addEventListener('input', function() {
+		if (this.value && this.value.length >= 10) {
+			this.classList.remove('input-error');
+			document.getElementById('receiptNumberError').style.display = 'none';
+		}
 	});
 
 	// 페이지 로드 시 선택된 상품 정보 표시
