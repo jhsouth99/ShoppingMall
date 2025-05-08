@@ -16,20 +16,6 @@ const Order = sequelize.define(
       allowNull: false,
       references: { model: User, key: 'id' }
     },
-    product_id: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false,
-      references: { model: Product, key: 'id' }
-    },
-    quantity: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false,
-      defaultValue: 1
-    },
-    total_price: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false
-    },
     recipient_name: {
       type: DataTypes.STRING(100),
       allowNull: false
@@ -74,6 +60,5 @@ const Order = sequelize.define(
 
 // 관계 설정
 Order.belongsTo(User,    { foreignKey: 'user_id',    as: 'user'    });
-Order.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
 module.exports = Order;

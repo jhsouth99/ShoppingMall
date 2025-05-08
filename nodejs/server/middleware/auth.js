@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 module.exports = function (req, res, next) {
-  const authHeader = req.header["authorization"];
+  const authHeader = req.header("Authorization");
   const token = authHeader?.split(' ')[1];
   
   if (!token) {
@@ -10,7 +10,7 @@ module.exports = function (req, res, next) {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
   } catch (err) {

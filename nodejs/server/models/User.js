@@ -18,7 +18,7 @@ const User = sequelize.define(
       unique: true
     },
     password: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(255),
       allowNull: false,
       // 실제 DB에는 해시된 비밀번호가 저장됩니다.
     },

@@ -69,37 +69,62 @@ router.post("/", authenticate, async (req, res) => {
 
 // 장바구니에서 특정 아이템 삭제
 // DELETE /api/cart/:itemId
-router.delete("/:itemId", authenticate, async (req, res) => {
+router.delete("/", authenticate, async (req, res) => {
   try {
-    const itemIds = req.params.itemIds
-      .split(",")
-      .map((id) => parseInt(id, 10))
-      .filter((id) => !isNaN(id));
-
-    if (itemIds.length === 0) {
+    let { itemIds } = req.query;
+    if (!itemIds) {
       return res
         .status(400)
-        .json({ message: "삭제할 장바구니 아이템 ID를 입력하세요." });
+        .json({ message: "삭제할 장바구니 아이템 ID(itemIds)를 입력하세요." });
     }
 
-    const deletedCount = await CartItem.destroy({
-      where: {
-        id: { [Op.in]: itemIds },
-        user_id: req.user.id,
-      },
-    });
+    // 쿼리파라미터가 배열일 수도, 문자열(콤마 구분)일 수도 있으니 처리
+    if (!Array.isArray(itemIds)) {
+      itemIds = itemIds.split(",");
+    }
+    const ids = itemIds
+      .map((id) => parseInt(id, 10))
+      .filter((id) => !isNaN(id));
+    if (ids.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "유효한 장바구니 아이템 ID가 없습니다." });
+    }
 
-    if (!deletedCount) {
+    // 1) 요청한 ID들이 실제 존재하는지 확인
+    const items = await CartItem.findAll({
+      where: { id: { [Op.in]: ids } },
+      attributes: ["id", "user_id"]
+    });
+    if (items.length !== ids.length) {
       return res
         .status(404)
-        .json({ message: "삭제된 장바구니 아이템이 없습니다." });
+        .json({ message: "존재하지 않는 장바구니 아이템이 있습니다." });
     }
 
-    res.status(204).json({ deleted: deletedCount });
+    // 2) 본인 소유인지 확인
+    const notOwn = items.some((item) => item.user_id !== req.user.id);
+    if (notOwn) {
+      return res
+        .status(403)
+        .json({ message: "본인의 장바구니 아이템만 삭제할 수 있습니다." });
+    }
+
+    // 3) 삭제 수행
+    const deletedCount = await CartItem.destroy({
+      where: {
+        id: { [Op.in]: ids },
+        user_id: req.user.id
+      }
+    });
+
+    // 4) 결과 반환
+    return res.status(200).json({ deleted: deletedCount });
   } catch (err) {
     console.error("장바구니 삭제 실패", err);
-    res.status(500).json({ message: "장바구니 삭제 실패" });
+    return res.status(500).json({ message: "장바구니 삭제 실패" });
   }
 });
+
 
 module.exports = router;

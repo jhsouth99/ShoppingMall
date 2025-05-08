@@ -6,6 +6,8 @@ const userRoutes = require('./routes/userRoutes.js');
 const categoryRoutes = require('./routes/categoryRoutes.js');
 const reviewRoutes = require('./routes/reviewRoutes.js');
 const cartRoutes = require('./routes/cartRoutes');
+const couponRoutes = require('./routes/couponRoutes.js');
+const orderRoutes = require('./routes/orderRoutes.js');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,6 +24,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/products', reviewRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/coupons', couponRoutes);
+app.use('/api/orders', orderRoutes);
 
 // DB 연결 및 서버 시작
 (async () => {

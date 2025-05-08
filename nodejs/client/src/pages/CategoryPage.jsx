@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import Header from "../components/Header";
 import FilterBar from "../components/FilterBar";
 import ProductCard from "../components/ProductCard";
+import CategoryNav from "../components/CategoryNav";
 import "../style.css";
 
 export default function CategoryPage() {
@@ -29,7 +30,6 @@ export default function CategoryPage() {
       .then(res => res.json())
       .then(data => setProducts(data.items || data))  // if you use pagination
       .catch(err => console.error('상품 로드 실패', err));
-    alert(catId, subId);
   }, [catId, subId]);
 
   // 3) 사이드바에 표시할 서브카테고리만 뽑기
@@ -39,6 +39,7 @@ export default function CategoryPage() {
   return (
     <>
       <Header />
+      <CategoryNav />
 
       <div className="container" style={{ display: "flex", marginTop: "20px" }}>
         {/* 왼쪽 사이드바 */}

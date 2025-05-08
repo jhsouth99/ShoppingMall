@@ -1,6 +1,7 @@
 const express = require("express");
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const ShippingAddress = require('../models/ShippingAddress');
 const authenticate = require('../middleware/auth');
 const bcrypt = require("bcrypt");
 
@@ -12,7 +13,7 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
 
 // 회원가입
 router.post("/register", async (req, res) => {
-  const { username, password, email } = req.body;
+  const { username, name, password, phone } = req.body;
   try {
     const user = await User.findOne({ where: { username } });
     if (user)
@@ -29,8 +30,11 @@ router.post("/register", async (req, res) => {
     // 사용자 생성
     await User.create({
       username,
-      email,
-      password: hashedPassword,
+      name,
+      phone,
+      password,
+      user_type: "individual",
+      role: "user",
     });
 
     // 성공 응답
@@ -78,6 +82,66 @@ router.get("/me", authenticate, async (req, res) => {
     res.json(user);
   } catch (err) {
     res.status(500).json({ message: "정보 조회 실패" });
+  }
+});
+
+// 내 배송주소 목록 조회
+// GET /api/users/addresses
+router.get("/addresses", authenticate, async (req, res) => {
+  try {
+    const addresses = await ShippingAddress.findAll({
+      where: { user_id: req.user.id },
+      order: [['is_default', 'DESC'], ['created_at', 'DESC']]
+    });
+    res.json(addresses);
+  } catch (err) {
+    console.error("배송주소 조회 실패", err);
+    res.status(500).json({ message: "배송주소 조회 실패" });
+  }
+});
+
+// 내 배송주소 등록
+// POST /api/users/addresses
+// body: { recipient_name, phone, address, address_detail?, zipcode, is_default? }
+router.post("/addresses", authenticate, async (req, res) => {
+  const userId = req.user.id;
+  const {
+    recipient_name,
+    phone,
+    address,
+    address_detail = null,
+    zipcode,
+    is_default = false
+  } = req.body;
+
+  // 필수값 검증
+  if (!recipient_name || !phone || !address || !zipcode) {
+    return res.status(400).json({ message: "필수 배송정보를 입력하세요." });
+  }
+
+  try {
+    // 기본 주소로 설정 시, 기존 기본주소는 해제
+    if (is_default) {
+      await ShippingAddress.update(
+        { is_default: false },
+        { where: { user_id: userId, is_default: true } }
+      );
+    }
+
+    const newAddr = await ShippingAddress.create({
+     user_id:        userId,
+      recipient_name,
+      phone,
+      address,
+      address_detail,
+      zipcode,
+     is_default
+   });
+
+   res.status(201).json(newAddr);
+  } catch (err) {
+   console.error("배송주소 등록 실패", err);
+    res.status(500).json({ message: "배송주소 등록 실패" });
   }
 });
 

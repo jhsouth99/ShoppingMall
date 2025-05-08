@@ -28,7 +28,7 @@ const Payment = sequelize.define(
       allowNull: false
     },
     status: {
-      type: DataTypes.ENUM('pending', 'completed', 'failed', 'refunded'),
+      type: DataTypes.ENUM('pending', 'completed', 'failed', 'refund_requested', 'refunded'),
       allowNull: false,
       defaultValue: 'pending'
     },
@@ -46,5 +46,6 @@ const Payment = sequelize.define(
 
 // 관계 설정
 Payment.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
+Order.hasMany(Payment, { foreignKey: 'order_id', as: 'payments'});
 
 module.exports = Payment;

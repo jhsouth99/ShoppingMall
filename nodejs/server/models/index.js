@@ -3,6 +3,7 @@ const User    = require('./User');
 const Seller  = require('./Seller');
 const Product = require('./Product');
 const Order   = require('./Order');
+const OrderItem = require('./OrderItem');
 const Payment = require('./Payment');
 const Category = require('./Category');
 const ProductCategory = require('./ProductCategory');
@@ -29,6 +30,7 @@ module.exports = {
   Seller,
   Product,
   Order,
+  OrderItem,
   Payment,
   Category,
   ProductCategory,

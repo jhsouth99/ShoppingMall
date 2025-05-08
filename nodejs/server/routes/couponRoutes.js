@@ -1,8 +1,6 @@
-// server/routes/couponRoutes.js
 const express = require("express");
-const { Op, Sequelize } = require("sequelize");
+const { Sequelize } = require('sequelize');
 const authenticate = require("../middleware/auth");
-const Admin = require("../models/Admin");
 const Coupon = require("../models/Coupon");
 const UserCoupon = require("../models/UserCoupon");
 const User = require("../models/User");
@@ -17,7 +15,7 @@ function requireAdmin(req, res, next) {
 }
 
 // 1) 관리자: 쿠폰 생성
-// POST /api/v1/coupons
+// POST /api/coupons
 // body: { code, discount_type, discount_value, min_order_price, usage_limit, expires_at, is_active }
 router.post("/", authenticate, requireAdmin, async (req, res) => {
   try {
@@ -30,7 +28,7 @@ router.post("/", authenticate, requireAdmin, async (req, res) => {
 });
 
 // 2) 사용자: 쿠폰 리딤(수동 입력)
-// POST /api/v1/coupons/redeem
+// POST /api/coupons/redeem
 // body: { code }
 router.post("/redeem", authenticate, async (req, res) => {
   try {
@@ -66,7 +64,7 @@ router.post("/redeem", authenticate, async (req, res) => {
 });
 
 // 3) 사용자: 내 쿠폰 조회
-// GET /api/v1/coupons
+// GET /api/coupons
 // optional query: ?used=true|false
 router.get("/", authenticate, async (req, res) => {
   try {
@@ -88,7 +86,7 @@ router.get("/", authenticate, async (req, res) => {
 });
 
 // 4) 관리자: 전체 쿠폰 사용 내역 조회
-// GET /api/v1/coupons/history
+// GET /api/coupons/history
 router.get("/history", authenticate, requireAdmin, async (req, res) => {
   try {
     const hist = await UserCoupon.findAll({

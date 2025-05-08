@@ -1,12 +1,16 @@
 const express = require("express");
 const { Op, Sequelize } = require("sequelize");
+const sequelize = require("../config/database.js");
 const authenticate = require("../middleware/auth");
 const Order = require("../models/Order");
+const OrderItem = require("../models/OrderItem");
 const Payment = require("../models/Payment");
 const Product = require("../models/Product");
 const Coupon = require("../models/Coupon");
 const UserCoupon = require("../models/UserCoupon");
 const ShippingAddress = require("../models/ShippingAddress");
+const CartItem = require("../models/CartItem");
+const ProductOption = require("../models/ProductOption.js");
 
 const router = express.Router();
 
@@ -14,16 +18,18 @@ const router = express.Router();
 // 주문 생성
 // POST /api/orders
 // body: {
-//   items: [ { product_id, quantity, cart_item_id } ],       // 필수
+//   items: [ { product_id, quantity } ],       // 필수
 //   shipping_address_id: number               // 필수
 // }
 router.post("/", authenticate, async (req, res) => {
+  const userId = req.user.id;
+  const { items, shipping_address_id, coupon_code } = req.body;
+
+  if (!Array.isArray(items) || !items.length) {
+    return res.status(400).json({ message: "items 배열을 입력하세요." });
+  }
+
   try {
-    const userId = req.user.id;
-    const { items, shipping_address_id, coupon_code } = req.body;
-    if (!Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ message: "items 배열을 입력하세요." });
-    }
     // 배송지 조회 및 복사
     const addr = await ShippingAddress.findOne({
       where: { id: shipping_address_id, user_id: userId },
@@ -33,114 +39,90 @@ router.post("/", authenticate, async (req, res) => {
     }
 
     // 트랜잭션으로 묶기
-    const result = await Sequelize.transaction(async (t) => {
-      // 1) 쿠폰 검증 및 UserCoupon 조회
-      let coupon = null,
-        uc = null;
-      if (coupon_code) {
-        coupon = await Coupon.findOne({
-          where: { code: coupon_code, is_active: true },
-          transaction: t,
-        });
-        if (!coupon) throw new Error("존재하지 않거나 비활성화된 쿠폰입니다.");
+    const result = await sequelize.transaction(async (t) => {
+      // 1) 주문 헤더 생성
+      const order = await Order.create(
+        {
+          user_id: userId,
+          recipient_name: addr.recipient_name,
+          recipient_phone: addr.phone,
+          recipient_address: addr.address,
+          recipient_address_detail: addr.address_detail,
+          recipient_zipcode: addr.zipcode,
+          status: "pending",
+          order_type: "normal",
+        },
+        { transaction: t }
+      );
 
-        // 만료일, 최소주문금액, 사용횟수 체크
-        if (coupon.expires_at && coupon.expires_at < new Date())
-          throw new Error("이미 만료된 쿠폰입니다.");
-        if (coupon.min_order_price > 0)
-          if (coupon.usage_limit !== null) {
-            // will check later against total_before_discount
+      let grandTotal = 0;
 
-            // 전역 사용 가능 횟수 제한
-            const usedCount = await UserCoupon.count({
-              where: { coupon_id: coupon.id, used: true },
-              transaction: t,
-            });
-            if (usedCount >= coupon.usage_limit)
-              throw new Error("이미 사용 가능한 횟수를 초과한 쿠폰입니다.");
-          }
-
-        // 사용자 보유 쿠폰(리딤) 기록
-        uc = await UserCoupon.findOne({
-          where: { user_id: userId, coupon_id: coupon.id, used: false },
-          transaction: t,
-        });
-        if (!uc) throw new Error("사용 가능한 쿠폰을 보유하고 있지 않습니다.");
-      }
-
-      const orders = [];
-      for (const { product_id, quantity, cart_item_id } of items) {
+      // 2) 각 아이템(OrderItem) 생성
+      for (const { product_id, quantity, option_id, cart_item_id } of items) {
+        // 상품 조회
         const product = await Product.findByPk(product_id, { transaction: t });
-        if (!product) throw new Error(`상품(${product_id})이 없습니다.`);
+        if (!product) throw new Error(`상품 ${product_id} 없음.`);
         if (quantity < 1 || quantity > product.stock)
-          throw new Error(`상품(${product_id}) 수량이 올바르지 않습니다.`);
+          throw new Error(`수량 오류: product ${product_id}`);
 
-        // 2) 기본 총액 계산
-        let total = Math.floor(
-          ((product.price * (100 - product.discount)) / 100) * quantity
-        );
-
-        // 3) 쿠폰 할인 적용 (첫 아이템에만 적용하든지, 합계에 대해 한 번만)
-        if (coupon && uc && orders.length === 0) {
-          if (total < coupon.min_order_price)
-            throw new Error("최소 주문 금액 미달로 쿠폰 사용 불가입니다.");
-
-          let discountAmount = 0;
-          if (coupon.discount_type === "percent") {
-            discountAmount = Math.floor((total * coupon.discount_value) / 100);
-          } else {
-            discountAmount = coupon.discount_value;
-          }
-          total = Math.max(0, total - discountAmount);
-
-          // UserCoupon 사용 처리
-          await uc.update(
-            {
-              used: true,
-              used_at: Sequelize.literal("CURRENT_TIMESTAMP"),
-              order_id: null, // 이후 설정
-            },
-            { transaction: t }
-          );
+        // 옵션 가격
+        let mod = 0;
+        if (option_id) {
+          const opt = await ProductOption.findOne({
+            where: { id: option_id, product_id },
+            transaction: t,
+          });
+          if (!opt) throw new Error("잘못된 옵션");
+          mod = opt.price_modifier;
         }
 
-        // 4) 주문 생성
-        const order = await Order.create(
-          {
-            user_id: userId,
-            product_id,
-            quantity,
-            total_price: total,
-            status: "pending",
-            order_type: "normal",
-            recipient_name: addr.recipient_name,
-            recipient_phone: addr.recipient_phone,
-            recipient_address: addr.recipient_address,
-            recipient_address_detail: addr.recipient_address_detail,
-            recipient_zipcode: addr.recipient_zipcode,
-          },
-          { transaction: t }
-        );
+        // 단가 계산 (가격+옵션 → 할인 적용)
+        const base = product.price + mod;
+        const unit = Math.floor((base * (100 - product.discount)) / 100);
+        const sub = unit * quantity;
+        // 배송비
+        const ship = product.shipping_fee * quantity;
+        const total = sub + ship;
 
-        // 5) UserCoupon에 주문 ID 기록
-        if (uc) {
-          await uc.update({ order_id: order.id }, { transaction: t });
-        }
-
-        // 6) 결제 레코드 생성
-        await Payment.create(
+        // OrderItem 생성
+        await OrderItem.create(
           {
             order_id: order.id,
-            payment_method: "card",
-            amount: total,
-            status: "pending",
+            product_id,
+            option_id: option_id || null,
+            unit_price: unit,
+            quantity,
+            total_price: total,
           },
           { transaction: t }
         );
 
-        orders.push(order);
+        grandTotal += total;
+
+        // 장바구니 삭제
+        if (cart_item_id) {
+          await CartItem.destroy({
+            where: { id: cart_item_id, user_id: userId },
+            transaction: t,
+          });
+        }
+
+        // 재고 차감
+        await product.decrement("stock", { by: quantity, transaction: t });
       }
-      return created;
+
+      // 3) Payment 생성 (주문 전체 금액)
+      await Payment.create(
+        {
+          order_id: order.id,
+          payment_method: "card",
+          amount: grandTotal,
+          status: "pending",
+        },
+        { transaction: t }
+      );
+
+      return { orderId: order.id, total: grandTotal };
     });
 
     res.status(201).json(result);
@@ -158,11 +140,14 @@ router.get("/", authenticate, async (req, res) => {
       where: { user_id: req.user.id },
       include: [
         {
-          model: Product,
-          as: "product",
-          attributes: ["id", "name", "price", "discount"],
+          model: OrderItem,
+          as: "items",
+          include: [
+            { model: Product, as: "product" },
+            { model: ProductOption, as: "option" },
+          ],
         },
-        { model: Payment, as: "payment" },
+        { model: Payment, as: "payments" },
       ],
       order: [["created_at", "DESC"]],
     });
@@ -180,8 +165,15 @@ router.get("/:id", authenticate, async (req, res) => {
     const order = await Order.findOne({
       where: { id: req.params.id, user_id: req.user.id },
       include: [
-        { model: Product, as: "product" },
-        { model: Payment, as: "payment" },
+        {
+          model: OrderItem,
+          as: "items",
+          include: [
+            { model: Product, as: "product" },
+            { model: ProductOption, as: "option" },
+          ],
+        },
+        { model: Payment, as: "payments" },
       ],
     });
     if (!order)
@@ -196,21 +188,52 @@ router.get("/:id", authenticate, async (req, res) => {
 // 주문 취소
 // POST /api/orders/:id/cancel
 router.post("/:id/cancel", authenticate, async (req, res) => {
+  const userId = req.user.id;
+  const orderId = parseInt(req.params.id, 10);
+
   try {
-    const order = await Order.findOne({
-      where: { id: req.params.id, user_id: req.user.id },
+    const cancelledOrder = await sequelize.transaction(async (t) => {
+      // 1) 주문 조회
+      const order = await Order.findOne({
+        where: { id: req.params.id, user_id: req.user.id },
+        transaction: t,
+      });
+      if (!order)
+        return res.status(404).json({ message: "주문을 찾을 수 없습니다." });
+      if (order.status !== "pending") {
+        return res
+          .status(400)
+          .json({ message: "취소 가능한 상태가 아닙니다." });
+      }
+
+      // 2) 쿠폰 복구 (해당 주문에 묶인 UserCoupon)
+      const uc = await UserCoupon.findOne({
+        where: { order_id: orderId },
+        transaction: t,
+      });
+      if (uc) {
+        await uc.update(
+          {
+            used: false,
+            used_at: null,
+            order_id: null,
+          },
+          { transaction: t }
+        );
+      }
+
+      // 3) 주문 상태 변경
+      await order.update({ status: "cancelled" }, { transaction: t });
+      return order;
     });
-    if (!order)
-      return res.status(404).json({ message: "주문을 찾을 수 없습니다." });
-    if (order.status !== "pending") {
-      return res.status(400).json({ message: "취소 가능한 상태가 아닙니다." });
+    if (cancelledOrder instanceof Order) {
+      return res.json(cancelledOrder);
     }
-    order.status = "cancelled";
-    await order.save();
-    res.json(order);
   } catch (err) {
     console.error("주문 취소 실패", err);
-    res.status(500).json({ message: "주문 취소 실패" });
+    if (!res.headersSent) {
+      res.status(500).json({ message: err.message || "주문 취소 실패" });
+    }
   }
 });
 
@@ -218,33 +241,67 @@ router.post("/:id/cancel", authenticate, async (req, res) => {
 // POST /api/orders/:id/refund
 // body: { reason: string }
 router.post("/:id/refund", authenticate, async (req, res) => {
+  const userId = req.user.id;
+  const orderId = parseInt(req.params.id, 10);
+
   try {
-    const order = await Order.findOne({
-      where: { id: req.params.id, user_id: req.user.id },
-      include: [{ model: Payment, as: "payment" }],
+    const result = await sequelize.transaction(async (t) => {
+      // 1) 주문 + 결제 조회
+      const order = await Order.findOne({
+        where: { id: orderId, user_id: userId },
+        include: [{ model: Payment, as: "payments" }],
+        transaction: t,
+      });
+      if (!order) {
+        return res.status(404).json({ message: "주문을 찾을 수 없습니다." });
+      }
+      if (!["paid", "shipped"].includes(order.status)) {
+        return res
+          .status(400)
+          .json({ message: "환불 요청 불가능한 상태입니다." });
+      }
+
+      // 2) 쿠폰 복구
+      const uc = await UserCoupon.findOne({
+        where: { order_id: orderId },
+        transaction: t,
+      });
+      if (uc) {
+        await uc.update(
+          {
+            used: false,
+            used_at: null,
+            order_id: null,
+          },
+          { transaction: t }
+        );
+      }
+
+      // 3) 주문 상태 변경 (취소)
+      await order.update({ status: "cancelled" }, { transaction: t });
+
+      // 4) 결제 상태 변경 (환불 요청)
+      const pay = order.payments[0];
+      await pay.update(
+        {
+          status: "refund_requested",
+          paid_at: Sequelize.literal("CURRENT_TIMESTAMP"),
+        },
+        { transaction: t }
+      );
+
+      return { order, payment: pay };
     });
-    if (!order)
-      return res.status(404).json({ message: "주문을 찾을 수 없습니다." });
-    if (!["paid", "shipped"].includes(order.status)) {
-      return res
-        .status(400)
-        .json({ message: "환불 요청 불가능한 상태입니다." });
+
+    // 트랜잭션 콜백에서 res를 보내지 않았다면 여기서
+    if (!res.headersSent) {
+      res.json(result);
     }
-
-    // 주문 상태 변경
-    order.status = "cancelled";
-    await order.save();
-
-    // 결제 레코드 상태 변경
-    const pay = order.payment;
-    pay.status = "refund_requested";
-    pay.paid_at = Sequelize.fn("NOW");
-    await pay.save();
-
-    res.json({ order, payment: pay });
   } catch (err) {
     console.error("환불 요청 실패", err);
-    res.status(500).json({ message: "환불 요청 실패" });
+    if (!res.headersSent) {
+      res.status(500).json({ message: err.message || "환불 요청 실패" });
+    }
   }
 });
 

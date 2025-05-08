@@ -1,6 +1,7 @@
 const express = require("express");
 const Category = require("../models/Category");
 const authenticate = require("../middleware/auth.js");
+const Product = require("../models/Product.js");
 
 const router = express.Router();
 
@@ -87,13 +88,7 @@ router.patch("/:id", authenticate, requireAdmin, async (req, res) => {
   // 부모 변경
   if (parent_id !== undefined) {
     // --- 변경 전 부모·선조 목록 수집 ---
-    const oldAncestors = getAncestors(category.parentId);
-    let cur = category.parent_id;
-    while (cur) {
-      oldAncestors.push(cur);
-      const cat = await Category.findByPk(cur);
-      cur = cat?.parent_id;
-    }
+    const oldAncestors = await getAncestors(category.parentId);
 
     // --- 자식 카테고리 상품들 조회 ---
     const products = await Product.findAll({
@@ -169,41 +164,6 @@ router.delete("/:id", authenticate, requireAdmin, async (req, res) => {
   await category.destroy();
 
   res.status(204).end();
-});
-
-// 2) 특정 카테고리의 자식으로 지정 (조상 M:N 연결 추가 포함)
-router.post("/:id/children", authenticate, requireAdmin, async (req, res) => {
-  const parentId = +req.params.id;
-  const { child_id } = req.body;
-  const parent = await Category.findByPk(parentId);
-  const child = await Category.findByPk(child_id);
-  if (!parent || !child)
-    return res.status(404).json({ message: "카테고리 없음" });
-
-  // child.parent_id 업데이트
-  await child.update({ parent_id: parentId });
-
-  // parent의 조상들도 포함한 리스트
-  const newAncestors = [parentId, ...(await getAncestors(parentId))];
-
-  // child에 속한 상품들
-  const products = await Product.findAll({
-    include: {
-      model: Category,
-      as: "categories",
-      where: { id: child_id },
-      attributes: [],
-    },
-  });
-
-  // 각 상품에 대해 newAncestors M:N 연결 추가
-  for (const p of products) {
-    for (const ancId of newAncestors) {
-      await p.addCategory(ancId);
-    }
-  }
-
-  res.json(child);
 });
 
 // 3) 특정 카테고리의 부모를 변경 (조상 M:N 연결 제거 & 추가)

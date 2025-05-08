@@ -10,7 +10,7 @@ async function seed() {
     // 1. 사용자 생성
     const user = await User.create({
       username: "testuser",
-      password: await bcrypt.hash("1234", 10),
+      password: "1234",
       name: "홍길동",
       phone: "010-1234-5678",
       user_type: "individual",
@@ -74,6 +74,7 @@ async function seed() {
       stock: 50,
       seller_id: seller.id,
     });
+    await runningShoes.addCategories([clothing, shoes]);
 
     const leatherJacket = await Product.create({
       name: "레더 자켓",
