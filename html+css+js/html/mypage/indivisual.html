@@ -1,883 +1,459 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>마이페이지</title>
-    <style>
-      /* 기본 스타일링 */
-      body {
-        font-family: sans-serif;
-        line-height: 1.6;
-        margin: 0; /* body 마진 제거 */
-        background-color: #f9f9f9;
-        color: #333;
-      }
-      h1 {
-        padding: 20px 30px; /* 헤더 패딩 조정 */
-        margin: 0;
-        background-color: #fff;
-        border-bottom: 1px solid #e0e0e0;
-        font-size: 1.8em; /* 제목 크기 조정 */
-      }
-      a {
-        color: #007bff;
-        text-decoration: none;
-      }
-      a:hover {
-        text-decoration: underline;
-      }
 
-      /* 마이페이지 레이아웃 */
-      .mypage-container {
-        display: flex;
-        margin: 20px; /* 컨테이너 외부 여백 */
-        gap: 20px; /* 네비게이션과 컨텐츠 사이 간격 */
-      }
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>마이페이지</title>
+	<link rel="stylesheet" href="../css/indivisual.css">
+	<script type="text/javascript" src="../javascript/indivisual.js"> </script>
+	<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+</head>
 
-      /* 왼쪽 네비게이션 (Wing) */
-      .mypage-nav {
-        width: 200px; /* 네비게이션 너비 */
-        flex-shrink: 0; /* 너비 고정 */
-        background-color: #fff;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 15px 0; /* 위아래 패딩 */
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        height: fit-content; /* 내용물 높이에 맞춤 */
-      }
-      .mypage-nav ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      .mypage-nav li a {
-        display: block;
-        padding: 12px 20px; /* 링크 패딩 */
-        color: #333;
-        border-bottom: 1px solid #f0f0f0; /* 구분선 */
-        transition: background-color 0.2s ease, color 0.2s ease;
-      }
-      .mypage-nav li:last-child a {
-        border-bottom: none; /* 마지막 항목 구분선 제거 */
-      }
-      .mypage-nav li a:hover {
-        background-color: #f8f9fa;
-        text-decoration: none;
-      }
-      .mypage-nav li a.active {
-        /* 활성 메뉴 스타일 */
-        background-color: #007bff;
-        color: white;
-        font-weight: bold;
-      }
+<body>
+	<h1>마이페이지</h1>
 
-      /* 오른쪽 컨텐츠 영역 */
-      .mypage-content {
-        flex-grow: 1; /* 남은 공간 모두 차지 */
-      }
-      .content-section {
-        display: none; /* 기본적으로 모든 섹션 숨김 */
-        background-color: #fff;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 30px; /* 컨텐츠 패딩 증가 */
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-      }
-      .content-section.active {
-        /* 활성 섹션만 보여줌 */
-        display: block;
-      }
-      .content-section h2 {
-        /* 컨텐츠 섹션 제목 */
-        margin-top: 0;
-        margin-bottom: 25px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #eee;
-        font-size: 1.4em;
-        color: #111;
-      }
+	<div class="mypage-container">
+		<nav class="mypage-nav">
+			<ul>
+				<li>
+					<a href="#member-info-content" class="nav-link active">회원 정보 관리</a>
+				</li>
+				<li>
+					<a href="#order-history-content" class="nav-link">주문 내역</a>
+				</li>
+				<li>
+					<a href="#coupon-history-content" class="nav-link">쿠폰 내역</a>
+				</li>
+				<li>
+					<a href="#created-gb-content" class="nav-link">내가 만든 공동구매</a>
+				</li>
+				<li>
+					<a href="#joined-gb-content" class="nav-link">내가 참여한 공동구매</a>
+				</li>
+				<li>
+					<a href="#notifications-content" class="nav-link">알림 설정</a>
+				</li>
+			</ul>
+		</nav>
 
-      /* 기존 스타일 (테이블, 버튼 등) - 일부 조정될 수 있음 */
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 15px;
-      }
-      th,
-      td {
-        border: 1px solid #ddd;
-        padding: 10px 14px;
-        text-align: left;
-        vertical-align: middle;
-      }
-      th {
-        background-color: #f8f8f8;
-        font-weight: 600;
-      }
-      tbody tr:hover {
-        background-color: #f5f5f5;
-      }
+		<main class="mypage-content">
+			<section id="member-info-content" class="content-section active">
+				<h2>회원 정보 관리</h2>
+				<div class="info-display">
+					<h3>기본 정보</h3>
+					<dl>
+						<dt>아이디</dt>
+						<dd>your_user_id</dd>
+						<dt>이름</dt>
+						<dd>홍길동</dd>
+						<dt>이메일</dt>
+						<dd>
+							your_email@example.com
+							<button class="button-style secondary btn-inline" onclick="openEditModal('email')">
+								변경
+							</button>
+						</dd>
+						<dt>휴대폰 번호</dt>
+						<dd>
+							010-****-1234
+							<button class="button-style secondary btn-inline" onclick="openEditModal('phone')">
+								변경
+							</button>
+						</dd>
+					</dl>
+					<button class="button-style secondary" onclick="openPasswordChangeModal()">
+						비밀번호 변경
+					</button>
+				</div>
+				<div class="shipping-addresses">
+					<h3>배송지 관리</h3>
+					<ul>
+						<!--<li>
+							<span class="default-badge">기본 배송지</span><strong>[집]</strong> (홍길동)
+							<div class="address-details">
+								010-****-1234<br />(06123) 서울특별시 강남구 테헤란로 123, A동
+								101호
+							</div>
+							<button class="button-style secondary" onclick="editAddress(1)">
+								수정
+							</button>
+							<button class="button-style danger" onclick="deleteAddress(1)">
+								삭제
+							</button>
+						</li>
+						<li>
+							<strong>[회사]</strong> (홍길동)
+							<div class="address-details">
+								010-****-5678<br />(06789) 서울특별시 서초구 서초대로 456,
+								B빌딩 5층
+							</div>
+							<button class="button-style" onclick="setDefaultAddress(2)">
+								기본 배송지로 설정
+							</button>
+							<button class="button-style secondary" onclick="editAddress(2)">
+								수정
+							</button>
+							<button class="button-style danger" onclick="deleteAddress(2)">
+								삭제
+							</button>
+						</li>-->
+					</ul>
+					<button class="button-style" onclick="addAddress()">
+						새 배송지 추가
+					</button>
+				</div>
+				<div class="consents">
+					<h3>마케팅 정보 수신 동의</h3>
+					<form id="marketing-consent-form" onsubmit="saveConsents(); return false;">
+						<div>
+							<input type="checkbox" id="consent-email" name="consent_email" value="1" checked /><label
+								for="consent-email">이메일 수신 동의 (할인/이벤트 정보)</label>
+						</div>
+						<div>
+							<input type="checkbox" id="consent-sms" name="consent_sms" value="1" /><label
+								for="consent-sms">SMS/MMS 수신 동의 (할인/이벤트 정보)</label>
+						</div>
+						<button type="submit" class="button-style">동의 설정 저장</button>
+					</form>
+				</div>
+				<div class="account-actions">
+					<h3>계정 관리</h3>
+					<a href="#" onclick="confirmAccountDeletion()" class="link-danger">회원 탈퇴</a>
+				</div>
 
-      .status-ongoing {
-        color: #007bff;
-        font-weight: bold;
-      }
-      .status-success {
-        color: #28a745;
-        font-weight: bold;
-      }
-      .status-failed {
-        color: #dc3545;
-        font-weight: bold;
-      }
-      .refund-requested {
-        color: #ffc107;
-        font-weight: bold;
-      }
-      .refund-processing {
-        color: #fd7e14;
-        font-weight: bold;
-      }
-      .refund-completed {
-        color: #6c757d;
-      }
+				<div id="address-modal" class="modal">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h3 id="address-modal-title">새 주소 추가</h3>
+							<span class="close" onclick="closeAddressModal()">&times;</span>
+						</div>
+						<div class="modal-body">
+							<form id="address-form" onsubmit="saveAddress(); return false;">
+								<input type="hidden" id="address-id" value="">
 
-      button,
-      .button-style {
-        display: inline-block;
-        padding: 8px 15px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 14px;
-        text-align: center;
-        vertical-align: middle;
-        margin: 5px 5px 5px 0;
-        transition: background-color 0.2s ease;
-      }
-      button:hover,
-      .button-style:hover {
-        background-color: #0056b3;
-        color: white;
-        text-decoration: none;
-      }
-      button.secondary,
-      .button-style.secondary {
-        background-color: #6c757d;
-      }
-      button.secondary:hover,
-      .button-style.secondary:hover {
-        background-color: #5a6268;
-      }
-      button.danger,
-      .button-style.danger {
-        background-color: #dc3545;
-      }
-      button.danger:hover,
-      .button-style.danger:hover {
-        background-color: #c82333;
-      }
+								<div class="form-group">
+									<label for="address-label">배송지명</label>
+									<input type="text" id="address-label" class="form-control"
+										placeholder="예: 집, 회사, 학교 등">
+								</div>
 
-      .notification-settings div,
-      .consents div {
-        margin-bottom: 12px;
-      }
-      .notification-settings label,
-      .consents label {
-        margin-left: 8px;
-        cursor: pointer;
-      }
+								<div class="form-group">
+									<label for="recipient-name">이름</label>
+									<input type="text" id="recipient-name" class="form-control"
+										placeholder="홍길동">
+									<div class="error-message" id="name-error">올바른 이름을 입력하세요</div>
+								</div>
 
-      #member-info-content h3,
-      #order-history-content h3 {
-        margin-top: 20px;
-        margin-bottom: 10px;
-        padding-bottom: 5px;
-        border-bottom: 1px solid #eee;
-        font-size: 1.1em;
-      }
-      #member-info-content dl {
-        margin-bottom: 15px;
-      }
-      #member-info-content dt {
-        float: left;
-        width: 100px;
-        font-weight: bold;
-        color: #555;
-        margin-bottom: 8px;
-      }
-      #member-info-content dd {
-        margin-left: 110px;
-        margin-bottom: 8px;
-        color: #333;
-      }
-      #member-info-content dd button.btn-inline {
-        margin-left: 10px;
-        padding: 2px 8px;
-        font-size: 12px;
-      }
-      .shipping-addresses ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      .shipping-addresses li {
-        border: 1px solid #eee;
-        padding: 15px;
-        margin-bottom: 15px;
-        border-radius: 4px;
-        background-color: #fdfdfd;
-      }
-      .shipping-addresses li strong {
-        font-size: 1.05em;
-        color: #333;
-        margin-right: 5px;
-      }
-      .shipping-addresses li span.default-badge {
-        background-color: #28a745;
-        color: white;
-        padding: 3px 8px;
-        border-radius: 4px;
-        font-size: 12px;
-        margin-right: 10px;
-      }
-      .shipping-addresses li .address-details {
-        margin: 8px 0;
-        color: #555;
-        font-size: 0.95em;
-        line-height: 1.5;
-      }
-      .shipping-addresses li button {
-        margin-right: 5px;
-        font-size: 13px;
-        padding: 5px 10px;
-      }
-      .account-actions {
-        margin-top: 30px;
-        padding-top: 20px;
-        border-top: 1px solid #eee;
-      }
-      .account-actions a.link-danger {
-        color: #dc3545;
-        font-size: 0.95em;
-      }
-      .account-actions a.link-danger:hover {
-        color: #c82333;
-        text-decoration: underline;
-      }
+								<div class="form-group">
+									<label for="recipient-phone">휴대폰 번호</label>
+									<input type="text" id="recipient-phone" class="form-control"
+										placeholder="-를 제외하고 입력하세요">
+									<div class="error-message" id="phone-error">정확한 휴대폰 번호를 입력하세요</div>
+								</div>
 
-      /* 주문 내역 탭 (필요시) */
-      #order-history-content .tabs {
-        margin-bottom: 20px;
-        border-bottom: 1px solid #ddd;
-      }
-      #order-history-content .tabs button {
-        background: none;
-        border: none;
-        padding: 10px 15px;
-        cursor: pointer;
-        font-size: 1em;
-        color: #555;
-        border-bottom: 3px solid transparent;
-        margin-bottom: -1px;
-      }
-      #order-history-content .tabs button.active {
-        color: #007bff;
-        border-bottom-color: #007bff;
-        font-weight: bold;
-      }
-      #order-history-content .tab-content {
-        margin-top: 20px; /* display: none; 기본 숨김은 JS가 처리 */
-      }
-      /*#order-history-content .tab-content.active { display: block; }*/ /* JS가 처리 */
-    </style>
-  </head>
-  <body>
-    <h1>마이페이지</h1>
+								<div class="form-group">
+									<label for="address-search">주소</label>
+									<div class="address-search-group">
+										<input type="text" id="address-display" class="form-control" readonly
+											placeholder="우편 번호 검색 후, 사용할 수 있습니다">
+										<button type="button" class="button-style secondary"
+											onclick="searchAddress()">우편번호</button>
+									</div>
+									<input type="hidden" id="address-data" value="">
+								</div>
 
-    <div class="mypage-container">
-      <nav class="mypage-nav">
-        <ul>
-          <li>
-            <a href="#member-info-content" class="nav-link active"
-              >회원 정보 관리</a
-            >
-          </li>
-          <li>
-            <a href="#order-history-content" class="nav-link">주문 내역</a>
-          </li>
-          <li>
-            <a href="#created-gb-content" class="nav-link"
-              >내가 만든 공동구매</a
-            >
-          </li>
-          <li>
-            <a href="#joined-gb-content" class="nav-link"
-              >내가 참여한 공동구매</a
-            >
-          </li>
-          <li>
-            <a href="#notifications-content" class="nav-link">알림 설정</a>
-          </li>
-        </ul>
-      </nav>
+								<div class="form-group">
+									<label for="address-detail">상세 주소</label>
+									<input type="text" id="address-detail" class="form-control"
+										placeholder="건물, 아파트, 동/호수 입력">
+								</div>
 
-      <main class="mypage-content">
-        <section id="member-info-content" class="content-section active">
-          <h2>회원 정보 관리</h2>
-          <div class="info-display">
-            <h3>기본 정보</h3>
-            <dl>
-              <dt>아이디</dt>
-              <dd>your_user_id</dd>
-              <dt>이름</dt>
-              <dd>홍길동</dd>
-              <dt>이메일</dt>
-              <dd>
-                your_email@example.com
-                <button
-                  class="button-style secondary btn-inline"
-                  onclick="openEditModal('email')"
-                >
-                  변경
-                </button>
-              </dd>
-              <dt>휴대폰 번호</dt>
-              <dd>
-                010-****-1234
-                <button
-                  class="button-style secondary btn-inline"
-                  onclick="openEditModal('phone')"
-                >
-                  변경
-                </button>
-              </dd>
-            </dl>
-            <button
-              class="button-style secondary"
-              onclick="openPasswordChangeModal()"
-            >
-              비밀번호 변경
-            </button>
-          </div>
-          <div class="shipping-addresses">
-            <h3>배송지 관리</h3>
-            <ul>
-              <li>
-                <span class="default-badge">기본 배송지</span
-                ><strong>[집]</strong> (홍길동)
-                <div class="address-details">
-                  010-****-1234<br />(06123) 서울특별시 강남구 테헤란로 123, A동
-                  101호
-                </div>
-                <button class="button-style secondary" onclick="editAddress(1)">
-                  수정
-                </button>
-                <button class="button-style danger" onclick="deleteAddress(1)">
-                  삭제
-                </button>
-              </li>
-              <li>
-                <strong>[회사]</strong> (홍길동)
-                <div class="address-details">
-                  010-****-5678<br />(06789) 서울특별시 서초구 서초대로 456,
-                  B빌딩 5층
-                </div>
-                <button class="button-style" onclick="setDefaultAddress(2)">
-                  기본 배송지로 설정
-                </button>
-                <button class="button-style secondary" onclick="editAddress(2)">
-                  수정
-                </button>
-                <button class="button-style danger" onclick="deleteAddress(2)">
-                  삭제
-                </button>
-              </li>
-            </ul>
-            <button class="button-style" onclick="addAddress()">
-              새 배송지 추가
-            </button>
-          </div>
-          <div class="consents">
-            <h3>마케팅 정보 수신 동의</h3>
-            <form
-              id="marketing-consent-form"
-              onsubmit="saveConsents(); return false;"
-            >
-              <div>
-                <input
-                  type="checkbox"
-                  id="consent-email"
-                  name="consent_email"
-                  value="1"
-                  checked
-                /><label for="consent-email"
-                  >이메일 수신 동의 (할인/이벤트 정보)</label
-                >
-              </div>
-              <div>
-                <input
-                  type="checkbox"
-                  id="consent-sms"
-                  name="consent_sms"
-                  value="1"
-                /><label for="consent-sms"
-                  >SMS/MMS 수신 동의 (할인/이벤트 정보)</label
-                >
-              </div>
-              <button type="submit" class="button-style">동의 설정 저장</button>
-            </form>
-          </div>
-          <div class="account-actions">
-            <h3>계정 관리</h3>
-            <a href="#" onclick="confirmAccountDeletion()" class="link-danger"
-              >회원 탈퇴</a
-            >
-          </div>
-        </section>
+								<div class="form-group checkbox-group">
+									<input type="checkbox" id="is-default-address" name="is_default">
+									<label for="is-default-address">기본 배송지로 설정</label>
+								</div>
 
-        <section id="order-history-content" class="content-section">
-          <h2>주문 내역</h2>
-          <div class="tabs">
-            <button data-tab="solo-orders" class="tab-button active">
-              단독 구매
-            </button>
-            <button data-tab="group-orders" class="tab-button">
-              공동 구매 참여 (나의 주문)
-            </button>
-          </div>
+								<div class="form-actions">
+									<button type="button" class="button-style" onclick="closeAddressModal()">취소</button>
+									<button type="submit" id="save-address-btn" class="button-style primary"
+										disabled>저장하기</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</section>
 
-          <div id="solo-orders" class="tab-content active">
-            <table>
-              <thead>
-                <tr>
-                  <th>주문번호</th>
-                  <th>상품명</th>
-                  <th>주문일</th>
-                  <th>결제금액</th>
-                  <th>주문상태</th>
-                  <th>환불 상태</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><a href="/orders/solo/12345">S20250422001</a></td>
-                  <td>일반 상품 A</td>
-                  <td>2025-04-22</td>
-                  <td>55,000원</td>
-                  <td>배송 완료</td>
-                  <td>-</td>
-                </tr>
-                <tr>
-                  <td><a href="/orders/solo/12346">S20250420005</a></td>
-                  <td>일반 상품 B</td>
-                  <td>2025-04-20</td>
-                  <td>30,000원</td>
-                  <td>배송 준비중</td>
-                  <td>-</td>
-                </tr>
-                <tr>
-                  <td><a href="/orders/solo/12300">S20250415010</a></td>
-                  <td>일반 상품 C</td>
-                  <td>2025-04-15</td>
-                  <td>20,000원</td>
-                  <td>배송 완료</td>
-                  <td><span class="refund-completed">환불 완료</span></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+			<section id="order-history-content" class="content-section">
+				<h2>주문 내역</h2>
+				<div class="tabs">
+					<button data-tab="solo-orders" class="tab-button active">
+						단독 구매
+					</button>
+					<button data-tab="group-orders" class="tab-button">
+						공동 구매 참여 (나의 주문)
+					</button>
+				</div>
 
-          <div id="group-orders" class="tab-content">
-            <table>
-              <thead>
-                <tr>
-                  <th>주문번호</th>
-                  <th>참여 공동구매</th>
-                  <th>결제일</th>
-                  <th>결제금액</th>
-                  <th>주문상태</th>
-                  <th>환불 상태</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><a href="/orders/group/98765">G20250420005</a></td>
-                  <td>
-                    <a href="/group-buy/detail/gb101">[공동구매] 특별 상품 D</a>
-                  </td>
-                  <td>2025-04-20</td>
-                  <td>45,000원</td>
-                  <td>상품 준비중 (성공)</td>
-                  <td>-</td>
-                </tr>
-                <tr>
-                  <td><a href="/orders/group/98766">G20250421008</a></td>
-                  <td>
-                    <a href="/group-buy/detail/gb102"
-                      >[공동구매] 한정판 상품 E</a
-                    >
-                  </td>
-                  <td>2025-04-21</td>
-                  <td>120,000원</td>
-                  <td>결제 완료 (진행중)</td>
-                  <td>-</td>
-                </tr>
-                <tr>
-                  <td><a href="/orders/group/98700">G20250418002</a></td>
-                  <td>
-                    <a href="/group-buy/detail/gb100"
-                      >[공동구매] 아이디어 상품 F</a
-                    >
-                  </td>
-                  <td>2025-04-18</td>
-                  <td>25,000원</td>
-                  <td>주문 취소 (실패)</td>
-                  <td>
-                    <a href="/refund/status/123"
-                      ><span class="refund-processing">환불 처리중</span></a
-                    >
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+				<div id="solo-orders" class="tab-content active">
+					<table>
+						<thead>
+							<tr>
+								<th>주문번호</th>
+								<th>상품명</th>
+								<th>주문일</th>
+								<th>결제금액</th>
+								<th>주문상태</th>
+								<th>환불 상태</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><a href="/orders/solo/12345">S20250422001</a></td>
+								<td>일반 상품 A</td>
+								<td>2025-04-22</td>
+								<td>55,000원</td>
+								<td>배송 완료</td>
+								<td>-</td>
+							</tr>
+							<tr>
+								<td><a href="/orders/solo/12346">S20250420005</a></td>
+								<td>일반 상품 B</td>
+								<td>2025-04-20</td>
+								<td>30,000원</td>
+								<td>배송 준비중</td>
+								<td>-</td>
+							</tr>
+							<tr>
+								<td><a href="/orders/solo/12300">S20250415010</a></td>
+								<td>일반 상품 C</td>
+								<td>2025-04-15</td>
+								<td>20,000원</td>
+								<td>배송 완료</td>
+								<td><span class="refund-completed">환불 완료</span></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
 
-        <section id="created-gb-content" class="content-section">
-          <h2>내가 만든 공동구매</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>공동구매명</th>
-                <th>개설일</th>
-                <th>목표/현재 인원</th>
-                <th>마감일</th>
-                <th>상태</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <a href="/group-buy/manage/gb201">[내가 만든] 상품 G</a>
-                </td>
-                <td>2025-04-15</td>
-                <td>50 / 55</td>
-                <td>2025-04-25</td>
-                <td><span class="status-success">성공</span></td>
-              </tr>
-              <tr>
-                <td>
-                  <a href="/group-buy/manage/gb202">[내가 만든] 상품 H</a>
-                </td>
-                <td>2025-04-22</td>
-                <td>100 / 30</td>
-                <td>2025-05-05</td>
-                <td><span class="status-ongoing">진행 중</span></td>
-              </tr>
-              <tr>
-                <td>
-                  <a href="/group-buy/manage/gb200">[내가 만든] 상품 I</a>
-                </td>
-                <td>2025-04-10</td>
-                <td>30 / 10</td>
-                <td>2025-04-20</td>
-                <td><span class="status-failed">실패</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
+				<div id="group-orders" class="tab-content">
+					<table>
+						<thead>
+							<tr>
+								<th>주문번호</th>
+								<th>참여 공동구매</th>
+								<th>결제일</th>
+								<th>결제금액</th>
+								<th>주문상태</th>
+								<th>환불 상태</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><a href="/orders/group/98765">G20250420005</a></td>
+								<td>
+									<a href="/group-buy/detail/gb101">[공동구매] 특별 상품 D</a>
+								</td>
+								<td>2025-04-20</td>
+								<td>45,000원</td>
+								<td>상품 준비중 (성공)</td>
+								<td>-</td>
+							</tr>
+							<tr>
+								<td><a href="/orders/group/98766">G20250421008</a></td>
+								<td>
+									<a href="/group-buy/detail/gb102">[공동구매] 한정판 상품 E</a>
+								</td>
+								<td>2025-04-21</td>
+								<td>120,000원</td>
+								<td>결제 완료 (진행중)</td>
+								<td>-</td>
+							</tr>
+							<tr>
+								<td><a href="/orders/group/98700">G20250418002</a></td>
+								<td>
+									<a href="/group-buy/detail/gb100">[공동구매] 아이디어 상품 F</a>
+								</td>
+								<td>2025-04-18</td>
+								<td>25,000원</td>
+								<td>주문 취소 (실패)</td>
+								<td>
+									<a href="/refund/status/123"><span class="refund-processing">환불 처리중</span></a>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</section>
 
-        <section id="joined-gb-content" class="content-section">
-          <h2>내가 참여한 공동구매 (진행 상태)</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>공동구매명</th>
-                <th>참여일</th>
-                <th>마감일</th>
-                <th>현재 상태</th>
-                <th>나의 주문번호</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <a href="/group-buy/detail/gb101">[공동구매] 특별 상품 D</a>
-                </td>
-                <td>2025-04-20</td>
-                <td>2025-04-23</td>
-                <td><span class="status-success">성공</span></td>
-                <td><a href="/orders/group/98765">G20250420005</a></td>
-              </tr>
-              <tr>
-                <td>
-                  <a href="/group-buy/detail/gb102">[공동구매] 한정판 상품 E</a>
-                </td>
-                <td>2025-04-21</td>
-                <td>2025-04-28</td>
-                <td><span class="status-ongoing">진행 중</span></td>
-                <td><a href="/orders/group/98766">G20250421008</a></td>
-              </tr>
-              <tr>
-                <td>
-                  <a href="/group-buy/detail/gb100"
-                    >[공동구매] 아이디어 상품 F</a
-                  >
-                </td>
-                <td>2025-04-18</td>
-                <td>2025-04-22</td>
-                <td><span class="status-failed">실패</span></td>
-                <td><a href="/orders/group/98700">G20250418002</a></td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
+			<section id="coupon-history-content" class="content-section">
+				<h2>쿠폰 내역</h2>
 
-        <section id="notifications-content" class="content-section">
-          <h2>알림 설정</h2>
-          <form
-            id="notification-settings-form"
-            onsubmit="saveNotifications(); return false;"
-          >
-            <div class="notification-settings">
-              <div>
-                <input
-                  type="checkbox"
-                  id="notify-gb-end"
-                  name="notify_gb_end"
-                  value="1"
-                  checked
-                /><label for="notify-gb-end"
-                  >참여 공동구매 마감 1시간 전 알림 받기</label
-                >
-              </div>
-              <div>
-                <input
-                  type="checkbox"
-                  id="notify-gb-success"
-                  name="notify_gb_success"
-                  value="1"
-                  checked
-                /><label for="notify-gb-success"
-                  >참여 공동구매 성공 시 알림 받기</label
-                >
-              </div>
-              <div>
-                <input
-                  type="checkbox"
-                  id="notify-gb-fail"
-                  name="notify_gb_fail"
-                  value="1"
-                /><label for="notify-gb-fail"
-                  >참여 공동구매 실패 시 알림 받기</label
-                >
-              </div>
-              <div>
-                <input
-                  type="checkbox"
-                  id="notify-order-shipped"
-                  name="notify_order_shipped"
-                  value="1"
-                  checked
-                /><label for="notify-order-shipped"
-                  >주문 상품 발송 시 알림 받기</label
-                >
-              </div>
-              <div>
-                <input
-                  type="checkbox"
-                  id="notify-refund-update"
-                  name="notify_refund_update"
-                  value="1"
-                  checked
-                /><label for="notify-refund-update"
-                  >환불 처리 상태 변경 시 알림 받기</label
-                >
-              </div>
-              <div>
-                <input
-                  type="checkbox"
-                  id="notify-my-gb-update"
-                  name="notify_my_gb_update"
-                  value="1"
-                  checked
-                /><label for="notify-my-gb-update"
-                  >내가 만든 공동구매 상태 변경 시 알림 받기</label
-                >
-              </div>
-            </div>
-            <button type="submit" class="button-style">알림 설정 저장</button>
-          </form>
-        </section>
-      </main>
-    </div>
+				<div class="coupon-add-form">
+					<h3>쿠폰 등록</h3>
+					<div class="coupon-input-group">
+						<input type="text" id="coupon-code-input" placeholder="쿠폰 번호를 입력하세요" maxlength="20">
+						<button class="button-style" onclick="addCoupon()">추가</button>
+					</div>
+					<p class="coupon-add-message" id="coupon-add-message"></p>
+				</div>
 
-    <script>
-      // --- 기존 함수들 (openEditModal, openPasswordChangeModal 등) ---
-      function openEditModal(type) {
-        alert(type + " 변경 기능 구현 필요");
-      }
-      function openPasswordChangeModal() {
-        alert("비밀번호 변경 기능 구현 필요");
-      }
-      function addAddress() {
-        alert("새 배송지 추가 기능 구현 필요");
-      }
-      function editAddress(addressId) {
-        alert(addressId + "번 배송지 수정 기능 구현 필요");
-      }
-      function deleteAddress(addressId) {
-        if (confirm(addressId + "번 배송지를 삭제하시겠습니까?")) {
-          alert(addressId + "번 배송지 삭제 처리 구현 필요");
-        }
-      }
-      function setDefaultAddress(addressId) {
-        if (
-          confirm(addressId + "번 배송지를 기본 배송지로 설정하시겠습니까?")
-        ) {
-          alert(addressId + "번 배송지 기본 설정 처리 구현 필요");
-        }
-      }
-      function saveConsents() {
-        alert("마케팅 동의 설정 저장 기능 구현 필요");
-      }
-      function saveNotifications() {
-        alert("알림 설정 저장 기능 구현 필요");
-      }
-      function confirmAccountDeletion() {
-        if (
-          confirm(
-            "정말로 회원 탈퇴를 진행하시겠습니까?\n모든 정보가 삭제되며 복구할 수 없습니다."
-          )
-        ) {
-          alert("회원 탈퇴 처리 구현 필요");
-        }
-      }
+				<div class="coupon-list">
+					<h3>사용 가능한 쿠폰</h3>
+					<table class="coupon-table">
+						<thead>
+							<tr>
+								<th>쿠폰 번호</th>
+								<th>쿠폰명</th>
+								<th>할인율/액</th>
+								<th>발급일자</th>
+								<th>사용기간</th>
+							</tr>
+						</thead>
+						<tbody id="coupon-list-body">
+							<tr>
+								<td>WELCOME2025</td>
+								<td>신규회원 환영 쿠폰</td>
+								<td>5,000원</td>
+								<td>2025-04-01</td>
+								<td>2025-04-01 ~ 2025-05-31</td>
+							</tr>
+							<tr>
+								<td>SPRING25OFF</td>
+								<td>봄맞이 할인 쿠폰</td>
+								<td>25%</td>
+								<td>2025-04-15</td>
+								<td>2025-04-15 ~ 2025-05-15</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</section>
 
-      // --- 왼쪽 네비게이션(Wing) 제어 ---
-      document.addEventListener("DOMContentLoaded", function () {
-        const navLinks = document.querySelectorAll(".mypage-nav .nav-link");
-        const contentSections = document.querySelectorAll(
-          ".mypage-content .content-section"
-        );
+			<section id="created-gb-content" class="content-section">
+				<h2>내가 만든 공동구매</h2>
+				<table>
+					<thead>
+						<tr>
+							<th>공동구매명</th>
+							<th>개설일</th>
+							<th>목표/현재 인원</th>
+							<th>마감일</th>
+							<th>상태</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>
+								<a href="/group-buy/manage/gb201">[내가 만든] 상품 G</a>
+							</td>
+							<td>2025-04-15</td>
+							<td>50 / 55</td>
+							<td>2025-04-25</td>
+							<td><span class="status-success">성공</span></td>
+						</tr>
+						<tr>
+							<td>
+								<a href="/group-buy/manage/gb202">[내가 만든] 상품 H</a>
+							</td>
+							<td>2025-04-22</td>
+							<td>100 / 30</td>
+							<td>2025-05-05</td>
+							<td><span class="status-ongoing">진행 중</span></td>
+						</tr>
+						<tr>
+							<td>
+								<a href="/group-buy/manage/gb200">[내가 만든] 상품 I</a>
+							</td>
+							<td>2025-04-10</td>
+							<td>30 / 10</td>
+							<td>2025-04-20</td>
+							<td><span class="status-failed">실패</span></td>
+						</tr>
+					</tbody>
+				</table>
+			</section>
 
-        // 초기 활성 섹션 설정 (해시가 있으면 해당 섹션, 없으면 첫 번째)
-        const currentHash = window.location.hash;
-        let activeSectionId = "member-info-content"; // 기본값
+			<section id="joined-gb-content" class="content-section">
+				<h2>내가 참여한 공동구매 (진행 상태)</h2>
+				<table>
+					<thead>
+						<tr>
+							<th>공동구매명</th>
+							<th>참여일</th>
+							<th>마감일</th>
+							<th>현재 상태</th>
+							<th>나의 주문번호</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>
+								<a href="/group-buy/detail/gb101">[공동구매] 특별 상품 D</a>
+							</td>
+							<td>2025-04-20</td>
+							<td>2025-04-23</td>
+							<td><span class="status-success">성공</span></td>
+							<td><a href="/orders/group/98765">G20250420005</a></td>
+						</tr>
+						<tr>
+							<td>
+								<a href="/group-buy/detail/gb102">[공동구매] 한정판 상품 E</a>
+							</td>
+							<td>2025-04-21</td>
+							<td>2025-04-28</td>
+							<td><span class="status-ongoing">진행 중</span></td>
+							<td><a href="/orders/group/98766">G20250421008</a></td>
+						</tr>
+						<tr>
+							<td>
+								<a href="/group-buy/detail/gb100">[공동구매] 아이디어 상품 F</a>
+							</td>
+							<td>2025-04-18</td>
+							<td>2025-04-22</td>
+							<td><span class="status-failed">실패</span></td>
+							<td><a href="/orders/group/98700">G20250418002</a></td>
+						</tr>
+					</tbody>
+				</table>
+			</section>
 
-        if (currentHash) {
-          const sectionExists = Array.from(contentSections).some(
-            (section) => "#" + section.id === currentHash
-          );
-          if (sectionExists) {
-            activeSectionId = currentHash.substring(1);
-          }
-        }
+			<section id="notifications-content" class="content-section">
+				<h2>알림 설정</h2>
+				<form id="notification-settings-form" onsubmit="saveNotifications(); return false;">
+					<div class="notification-settings">
+						<div>
+							<input type="checkbox" id="notify-gb-end" name="notify_gb_end" value="1" checked /><label
+								for="notify-gb-end">참여 공동구매 마감 1시간 전 알림 받기</label>
+						</div>
+						<div>
+							<input type="checkbox" id="notify-gb-success" name="notify_gb_success" value="1"
+								checked /><label for="notify-gb-success">참여 공동구매 성공 시 알림 받기</label>
+						</div>
+						<div>
+							<input type="checkbox" id="notify-gb-fail" name="notify_gb_fail" value="1" /><label
+								for="notify-gb-fail">참여 공동구매 실패 시 알림 받기</label>
+						</div>
+						<div>
+							<input type="checkbox" id="notify-order-shipped" name="notify_order_shipped" value="1"
+								checked /><label for="notify-order-shipped">주문 상품 발송 시 알림 받기</label>
+						</div>
+						<div>
+							<input type="checkbox" id="notify-refund-update" name="notify_refund_update" value="1"
+								checked /><label for="notify-refund-update">환불 처리 상태 변경 시 알림 받기</label>
+						</div>
+						<div>
+							<input type="checkbox" id="notify-my-gb-update" name="notify_my_gb_update" value="1"
+								checked /><label for="notify-my-gb-update">내가 만든 공동구매 상태 변경 시 알림 받기</label>
+						</div>
+					</div>
+					<button type="submit" class="button-style">알림 설정 저장</button>
+				</form>
+			</section>
+		</main>
+	</div>
 
-        function setActive(link, section) {
-          navLinks.forEach((l) => l.classList.remove("active"));
-          contentSections.forEach((s) => s.classList.remove("active"));
-          link.classList.add("active");
-          section.classList.add("active");
-        }
+</body>
 
-        // 초기 섹션 활성화
-        const initialLink = document.querySelector(
-          `.mypage-nav a[href="#${activeSectionId}"]`
-        );
-        const initialSection = document.getElementById(activeSectionId);
-        if (initialLink && initialSection) {
-          setActive(initialLink, initialSection);
-        }
-
-        // 네비게이션 링크 클릭 이벤트
-        navLinks.forEach((link) => {
-          link.addEventListener("click", function (event) {
-            event.preventDefault(); // 기본 앵커 동작 방지
-            const targetId = this.getAttribute("href").substring(1); // # 제거
-            const targetSection = document.getElementById(targetId);
-
-            if (targetSection) {
-              setActive(this, targetSection);
-              // URL 해시 변경 (선택 사항 - 뒤로가기/새로고침 시 상태 유지에 도움)
-              history.pushState(null, null, "#" + targetId);
-            }
-          });
-        });
-
-        // 브라우저 뒤로/앞으로 가기 시 상태 변경 처리
-        window.addEventListener("popstate", function () {
-          const hash = window.location.hash;
-          let targetId = "member-info-content"; // 기본값
-          if (hash) {
-            const sectionExists = Array.from(contentSections).some(
-              (section) => "#" + section.id === hash
-            );
-            if (sectionExists) {
-              targetId = hash.substring(1);
-            }
-          }
-          const targetLink = document.querySelector(
-            `.mypage-nav a[href="#${targetId}"]`
-          );
-          const targetSection = document.getElementById(targetId);
-          if (targetLink && targetSection) {
-            setActive(targetLink, targetSection);
-          }
-        });
-
-        // --- 주문 내역 내부 탭 제어 ---
-        const orderHistorySection = document.getElementById(
-          "order-history-content"
-        );
-        if (orderHistorySection) {
-          // 주문 내역 섹션이 있을 경우에만 실행
-          const tabButtons =
-            orderHistorySection.querySelectorAll(".tabs .tab-button");
-          const tabContents =
-            orderHistorySection.querySelectorAll(".tab-content");
-
-          // 초기 탭 설정
-          const initialActiveTabButton = orderHistorySection.querySelector(
-            ".tabs .tab-button.active"
-          );
-          const initialActiveTabContentId =
-            initialActiveTabButton?.getAttribute("data-tab");
-          const initialActiveTabContent = orderHistorySection.querySelector(
-            `#${initialActiveTabContentId}`
-          );
-
-          tabContents.forEach((content) => (content.style.display = "none")); // 모든 컨텐츠 숨김
-          if (initialActiveTabContent) {
-            initialActiveTabContent.style.display = "block"; // 초기 활성 컨텐츠만 표시
-          }
-
-          tabButtons.forEach((button) => {
-            button.addEventListener("click", function () {
-              const targetTabId = this.getAttribute("data-tab");
-              const targetTabContent = orderHistorySection.querySelector(
-                `#${targetTabId}`
-              );
-
-              // 모든 버튼과 컨텐츠 비활성화/숨김
-              tabButtons.forEach((btn) => btn.classList.remove("active"));
-              tabContents.forEach(
-                (content) => (content.style.display = "none")
-              );
-
-              // 클릭된 버튼과 해당 컨텐츠 활성화/표시
-              this.classList.add("active");
-              if (targetTabContent) {
-                targetTabContent.style.display = "block";
-              }
-            });
-          });
-        }
-      });
-    </script>
-  </body>
 </html>
