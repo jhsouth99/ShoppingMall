@@ -12,31 +12,54 @@
 			background-color: #fff;
 		}
 
+		.container {
+			max-width: 1200px;
+			margin: 0 auto;
+			padding: 0 20px;
+		}
+
+		a {
+			text-decoration: none;
+			color: inherit;
+		}
+
 		/* Header */
 
 		header {
-			background-color: #fff;
-			padding: 10px 20px;
-			border-bottom: 1px solid #eee;
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+			font-family: 'Noto Sans KR', sans-serif;
+			background-color: white;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+			position: sticky;
+			top: 0;
+			z-index: 1000;
+		}
+
+		.header-top {
+			padding: 20px 0;
+			border-bottom: 1px solid #f1f1f1;
+		}
+
+		.header-top .container {
 			display: flex;
+			flex-direction: row;
 			justify-content: space-between;
 			align-items: center;
+			position: relative;
 		}
 
 		.logo {
+			margin-right: auto;
 			font-size: 24px;
-			font-weight: bold;
-			color: #000;
+			font-weight: 700;
 		}
 
-		.nav-links {
-			display: flex;
-			gap: 20px;
-		}
-
-		.nav-links a {
-			text-decoration: none;
-			color: #000;
+		.logo a {
+			font-size: 24px;
+			font-weight: 700;
+			color: #4f46e5;
 		}
 
 		/* Main Section */
@@ -52,13 +75,12 @@
 			font-size: 36px;
 			font-weight: bold;
 			margin-bottom: 10px;
-			margin-right: 30px;
+			margin-right: 40px;
 		}
 
 		.yogi-subtitle {
-			font-style: italic;
 			color: #666;
-			margin-right: 30px;
+			margin-right: 40px;
 		}
 
 		.input-group {
@@ -87,7 +109,7 @@
 			cursor: pointer;
 			width: 85%;
 			font-size: 14px;
-			margin-right:40px;
+			margin-right: 40px;
 		}
 
 		.other-options {
@@ -139,10 +161,10 @@
 		#employer,
 		#normal {
 			width: 330px;
-			border: 2px solid #ccc;
 			border-radius: 8px;
 			padding: 10px;
 			box-sizing: border-box;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 		}
 
 		#employer>p,
@@ -157,19 +179,20 @@
 
 <body>
 	<header>
-		<div class="logo">요기어때</div>
-		<div class="nav-links">
-			<a href="#">HOME</a>
-			<a href="#">STYLE</a>
-			<a href="#">SHOP</a>
+		<div class="header-top">
+			<div class="container">
+				<div class="logo">
+					<a href="../html/home.html">이거어때</a>
+				</div>
+			</div>
 		</div>
 	</header>
-	
+
 	<div id="login-form">
 		<div id="employer">
 			<p>자영업자</p>
 			<main>
-				<div class="yogi-title">요기어때</div>
+				<div class="yogi-title">이거어때</div>
 				<div class="yogi-subtitle">자영업자 로그인</div>
 				<div class="input-group">
 					<input type="email" placeholder="이메일">
@@ -177,7 +200,7 @@
 					<button>로그인</button>
 				</div>
 				<div class="other-options">
-					<a href="#">이메일 가입</a> | <a href="#">이메일 찾기</a> | <a href="#">비밀번호 찾기</a>
+					<a href="../html/index.html">이메일 가입</a> | <a href="#">이메일 찾기</a> | <a href="#">비밀번호 찾기</a>
 				</div>
 				<div class="social-login">
 					<div class="social-button naver-button">
@@ -195,7 +218,7 @@
 		<div id="normal">
 			<p>비자영업자</p>
 			<main>
-				<div class="yogi-title">요기어때</div>
+				<div class="yogi-title">이거어때</div>
 				<div class="yogi-subtitle">일반 사용자 로그인</div>
 				<div class="input-group">
 					<input type="email" placeholder="이메일">
@@ -204,7 +227,7 @@
 				</div>
 
 				<div class="other-options">
-					<a href="#">이메일 가입</a> | <a href="#">이메일 찾기</a> | <a href="#">비밀번호 찾기</a>
+					<a href="../html/index.html">이메일 가입</a> | <a href="#">이메일 찾기</a> | <a href="#">비밀번호 찾기</a>
 				</div>
 
 				<div class="social-login">
