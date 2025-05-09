@@ -5,311 +5,16 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>관리자 페이지</title>
-	<style>
-		body {
-			font-family: sans-serif;
-			margin: 0;
-			background-color: #f4f7f6;
-			color: #333;
-			display: flex;
-			min-height: 100vh;
-		}
-
-		a {
-			color: #007bff;
-			text-decoration: none;
-		}
-
-		a:hover {
-			text-decoration: underline;
-		}
-
-		h1,
-		h2,
-		h3 {
-			margin-top: 0;
-			color: #111;
-		}
-
-		button {
-			cursor: pointer;
-		}
-
-		/* 사이드바 */
-		.admin-sidebar {
-			width: 240px;
-			background-color: #2c3e50;
-			color: #ecf0f1;
-			padding: 20px 0;
-			flex-shrink: 0;
-			display: flex;
-			flex-direction: column;
-		}
-
-		.admin-sidebar h1 {
-			font-size: 1.5em;
-			text-align: center;
-			margin-bottom: 30px;
-			padding: 0 15px;
-			color: #ecf0f1;
-		}
-
-		.admin-sidebar nav ul {
-			list-style: none;
-			padding: 0;
-			margin: 0;
-		}
-
-		.admin-sidebar nav li a {
-			display: block;
-			padding: 15px 25px;
-			color: #bdc3c7;
-			transition: background-color 0.2s ease, color 0.2s ease;
-			border-left: 3px solid transparent;
-		}
-
-		.admin-sidebar nav li a:hover {
-			background-color: #34495e;
-			color: #ecf0f1;
-			text-decoration: none;
-		}
-
-		.admin-sidebar nav li a.active {
-			background-color: #1abc9c;
-			color: white;
-			font-weight: bold;
-			border-left-color: #f1c40f;
-		}
-
-		.admin-sidebar nav li a::before {
-			content: "□ ";
-			margin-right: 10px;
-			font-family: monospace;
-		}
-
-		/* 메인 컨텐츠 영역 */
-		.admin-main {
-			flex-grow: 1;
-			padding: 30px;
-			overflow-y: auto;
-		}
-
-		.content-section {
-			display: none;
-			background-color: #fff;
-			padding: 25px;
-			border-radius: 8px;
-			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-		}
-
-		.content-section.active {
-			display: block;
-		}
-
-		.content-section h2 {
-			margin-bottom: 25px;
-			padding-bottom: 10px;
-			border-bottom: 1px solid #eee;
-		}
-
-		/* 테이블 스타일 */
-		.data-table {
-			width: 100%;
-			border-collapse: collapse;
-			margin-top: 20px;
-			font-size: 0.95em;
-		}
-
-		.data-table th,
-		.data-table td {
-			border: 1px solid #ddd;
-			padding: 10px 12px;
-			text-align: left;
-			vertical-align: middle;
-		}
-
-		.data-table th {
-			background-color: #f2f2f2;
-			font-weight: 600;
-		}
-
-		.data-table tbody tr:hover {
-			background-color: #f5f5f5;
-		}
-
-		.data-table .actions a,
-		.data-table .actions button {
-			margin-right: 8px;
-			padding: 4px 8px;
-			font-size: 0.9em;
-			border-radius: 3px;
-		}
-
-		/* 버튼 및 폼 요소 */
-		.btn {
-			display: inline-block;
-			padding: 8px 15px;
-			border: none;
-			border-radius: 4px;
-			cursor: pointer;
-			font-size: 0.95em;
-			transition: background-color 0.2s ease;
-			text-align: center;
-		}
-
-		.btn-primary {
-			background-color: #007bff;
-			color: white;
-		}
-
-		.btn-primary:hover {
-			background-color: #0056b3;
-		}
-
-		.btn-secondary {
-			background-color: #6c757d;
-			color: white;
-		}
-
-		.btn-secondary:hover {
-			background-color: #5a6268;
-		}
-
-		.btn-danger {
-			background-color: #dc3545;
-			color: white;
-		}
-
-		.btn-danger:hover {
-			background-color: #c82333;
-		}
-
-		.btn-warning {
-			background-color: #ffc107;
-			color: #212529;
-		}
-
-		.btn-warning:hover {
-			background-color: #e0a800;
-		}
-
-		.btn-success {
-			background-color: #28a745;
-			color: white;
-		}
-
-		.btn-success:hover {
-			background-color: #218838;
-		}
-
-		.btn-sm {
-			padding: 4px 8px;
-			font-size: 0.85em;
-		}
-
-		.filter-controls {
-			margin-bottom: 20px;
-			display: flex;
-			gap: 15px;
-			align-items: center;
-			flex-wrap: wrap;
-		}
-
-		.filter-controls input[type="text"],
-		.filter-controls select {
-			padding: 8px 10px;
-			border: 1px solid #ccc;
-			border-radius: 4px;
-		}
-
-		/* 사용자 관리 탭 */
-		.user-tabs {
-			display: flex;
-			border-bottom: 1px solid #ccc;
-			margin-bottom: 20px;
-		}
-
-		.user-tabs button {
-			background: none;
-			border: none;
-			padding: 10px 15px;
-			cursor: pointer;
-			font-size: 1em;
-			color: #555;
-			border-bottom: 3px solid transparent;
-			margin-bottom: -1px;
-		}
-
-		.user-tabs button.active {
-			color: #007bff;
-			border-bottom-color: #007bff;
-			font-weight: bold;
-		}
-
-		.user-tab-content {
-			display: none;
-		}
-
-		.user-tab-content.active {
-			display: block;
-		}
-
-		/* 대시보드 카드 */
-		.dashboard-cards {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-			gap: 20px;
-			margin-bottom: 30px;
-		}
-
-		.card {
-			background-color: #fff;
-			padding: 20px;
-			border-radius: 8px;
-			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-			border-left: 4px solid #007bff;
-		}
-
-		.card h3 {
-			margin-bottom: 10px;
-			font-size: 1em;
-			color: #555;
-		}
-
-		.card .value {
-			font-size: 1.8em;
-			font-weight: bold;
-			color: #333;
-		}
-
-		.card.orders {
-			border-left-color: #ffc107;
-		}
-
-		.card.users {
-			border-left-color: #28a745;
-		}
-
-		.card.reports {
-			border-left-color: #dc3545;
-		}
-
-		/* 판매자 상태 스타일 */
-		.status-pending {
-			color: orange;
-			font-weight: bold;
-		}
-
-		.status-approved {
-			color: green;
-			font-weight: bold;
-		}
-
-		.status-suspended {
-			color: red;
-			font-weight: bold;
-		}
-	</style>
+	<link rel="stylesheet" href="../css/admin.css">
+	<script src="../javascript/admin/common.js"></script>
+	<script src="../javascript/admin/modal.js"></script>
+	<script src="../javascript/admin/coupon.js"></script>
+	<script src="../javascript/admin/pagination.js"></script>
+	<script src="../javascript/admin/navigation.js"></script>
+	<script src="../javascript/admin/user.js"></script>
+	<script src="../javascript/admin/seller.js"></script>
+	<script src="../javascript/admin/order.js"></script>
+	<script src="../javascript/admin/report.js"></script>
 </head>
 
 <body>
@@ -318,15 +23,11 @@
 		<nav>
 			<ul>
 				<li><a href="#dashboard" class="nav-link active">대시보드</a></li>
-				<li><a href="#product-management" class="nav-link">상품 관리</a></li>
-				<li>
-					<a href="#groupbuy-management" class="nav-link">공동구매 관리</a>
-				</li>
+				<li><a href="#groupbuy-management" class="nav-link">공동구매 관리</a></li>
 				<li><a href="#order-management" class="nav-link">주문 관리</a></li>
+				<li><a href="#coupon-management" class="nav-link">쿠폰 관리</a></li>
 				<li><a href="#user-management" class="nav-link">사용자 관리</a></li>
-				<li>
-					<a href="#seller-account-management" class="nav-link">판매자 계정 관리</a>
-				</li>
+				<li><a href="#seller-account-management" class="nav-link">판매자 계정 관리</a></li>
 			</ul>
 		</nav>
 	</aside>
@@ -353,76 +54,6 @@
 				</div>
 			</div>
 			<p>이곳에 주요 지표나 요약 정보를 표시할 수 있습니다.</p>
-		</section>
-
-		<section id="product-management" class="content-section">
-			<h2>상품 관리</h2>
-			<button class="btn btn-primary" onclick="addProduct()">
-				+ 새 상품 등록
-			</button>
-			<div class="filter-controls">
-				<input type="text" placeholder="상품명 검색..." />
-				<select>
-					<option value="">상태 전체</option>
-					<option value="active">활성</option>
-					<option value="inactive">비활성</option>
-				</select>
-				<button class="btn btn-secondary btn-sm">검색</button>
-				<table class="data-table">
-					<thead>
-						<tr>
-							<th>ID</th>
-							<th>이미지</th>
-							<th>상품명</th>
-							<th>가격</th>
-							<th>재고</th>
-							<th>상태</th>
-							<th>등록일</th>
-							<th>작업</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td>P1001</td>
-							<td>
-								<img src="https://via.placeholder.com/50" alt="상품 이미지" width="50" />
-							</td>
-							<td>친환경 텀블러</td>
-							<td>15,000원</td>
-							<td>150</td>
-							<td>활성</td>
-							<td>2025-04-20</td>
-							<td class="actions">
-								<button class="btn btn-secondary btn-sm" onclick="editProduct('P1001')">
-									수정
-								</button>
-								<button class="btn btn-danger btn-sm" onclick="deleteProduct('P1001')">
-									삭제
-								</button>
-							</td>
-						</tr>
-						<tr>
-							<td>P1002</td>
-							<td>
-								<img src="https://via.placeholder.com/50" alt="상품 이미지" width="50" />
-							</td>
-							<td>무선 블루투스 이어폰</td>
-							<td>89,000원</td>
-							<td>50</td>
-							<td>활성</td>
-							<td>2025-04-18</td>
-							<td class="actions">
-								<button class="btn btn-secondary btn-sm" onclick="editProduct('P1002')">
-									수정
-								</button>
-								<button class="btn btn-danger btn-sm" onclick="deleteProduct('P1002')">
-									삭제
-								</button>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
 		</section>
 
 		<section id="groupbuy-management" class="content-section">
@@ -496,6 +127,73 @@
 					</tr>
 				</tbody>
 			</table>
+
+			<!-- 공동구매 상세 모달 -->
+			<div id="groupBuyDetailModal" class="modal">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h3>공동구매 상세 정보</h3>
+						<span class="close-modal">&times;</span>
+					</div>
+					<div class="modal-body">
+						<div class="gb-detail-container">
+							<!-- 기본 정보 섹션 -->
+							<div class="gb-info-section">
+								<h4>기본 정보</h4>
+								<p><strong>ID:</strong> <span id="gb-id"></span></p>
+								<p><strong>제목:</strong> <span id="gb-title"></span></p>
+								<p><strong>생성자:</strong> <span id="gb-creator"></span></p>
+								<p><strong>상태:</strong> <span id="gb-status"></span></p>
+
+								<div class="gb-thumbnail">
+									<img src="/api/placeholder/400/320" alt="공동구매 상품 이미지">
+								</div>
+							</div>
+
+							<!-- 구매 정보 섹션 -->
+							<div class="gb-info-section">
+								<h4>공동구매 정보</h4>
+								<p><strong>목표 수량:</strong> <span id="gb-target"></span>개</p>
+								<p><strong>현재 수량:</strong> <span id="gb-current"></span>개</p>
+								<p><strong>시작일:</strong> <span id="gb-start-date"></span></p>
+								<p><strong>종료일:</strong> <span id="gb-end-date"></span></p>
+
+								<!-- 진행률 표시 -->
+								<div class="progress-container">
+									<div id="gb-progress-bar" class="progress-bar"></div>
+									<div id="gb-progress-text" class="progress-text"></div>
+								</div>
+							</div>
+
+							<!-- 가격 정보 섹션 -->
+							<div class="gb-info-section">
+								<h4>가격 정보</h4>
+								<div class="price-comparison">
+									<span class="original-price">정가: <span id="gb-original-price"></span></span>
+									<span class="current-price">판매가: <span id="gb-price"></span></span>
+									<span class="discount-rate"><span id="gb-discount-rate"></span> 할인</span>
+								</div>
+							</div>
+
+							<!-- 옵션 정보 섹션 -->
+							<div class="gb-info-section">
+								<h4>옵션 정보</h4>
+								<div id="gb-options">
+									<!-- 옵션 배지는 JS로 추가됨 -->
+								</div>
+							</div>
+
+							<!-- 상품 설명 섹션 -->
+							<div class="gb-info-section full-width">
+								<h4>상품 설명</h4>
+								<div class="gb-description" id="gb-description">
+									<!-- 설명 내용은 JS로 추가됨 -->
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 		</section>
 
 		<section id="order-management" class="content-section">
@@ -544,9 +242,6 @@
 							<button class="btn btn-secondary btn-sm" onclick="viewOrder('S20250422001')">
 								상세
 							</button>
-							<button class="btn btn-warning btn-sm" onclick="updateOrderStatus('S20250422001')">
-								상태 변경
-							</button>
 						</td>
 					</tr>
 					<tr>
@@ -561,13 +256,237 @@
 							<button class="btn btn-secondary btn-sm" onclick="viewOrder('G20250420005')">
 								상세
 							</button>
-							<button class="btn btn-warning btn-sm" onclick="updateOrderStatus('G20250420005')">
-								상태 변경
-							</button>
 						</td>
 					</tr>
 				</tbody>
 			</table>
+
+			<!-- 주문 상세 모달 -->
+			<div id="orderDetailModal" class="modal">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h3>주문 상세 정보</h3>
+						<span class="close-modal">&times;</span>
+					</div>
+					<div class="modal-body">
+						<div class="order-detail-container">
+							<div class="order-info-section">
+								<h4>주문 정보</h4>
+								<p><strong>주문번호:</strong> <span id="order-id">S20250422001</span></p>
+								<p><strong>주문 일시:</strong> <span id="order-date">2025-04-22 14:30:25</span></p>
+								<p><strong>주문 상태:</strong> <span id="order-status">배송 준비중</span></p>
+								<p><strong>주문 유형:</strong> <span id="order-type">단독</span></p>
+							</div>
+
+							<div class="order-info-section">
+								<h4>구매자 정보</h4>
+								<p><strong>아이디:</strong> <span id="buyer-id">user_gildong</span></p>
+								<p><strong>이름:</strong> <span id="buyer-name">홍길동</span></p>
+								<p><strong>연락처:</strong> <span id="buyer-phone">010-1234-5678</span></p>
+								<p><strong>주소:</strong> <span id="buyer-address">서울특별시 강남구 테헤란로 123, 456동 789호</span>
+								</p>
+							</div>
+
+							<div class="order-info-section full-width">
+								<h4>상품 정보</h4>
+								<div id="order-products">
+									<div class="product-item">
+										<p><strong>상품 번호:</strong> P001</p>
+										<p><strong>상품명:</strong> 일반 상품 A</p>
+										<p><strong>옵션:</strong> 기본 옵션</p>
+										<p><strong>가격:</strong> 55,000원 x 1개 = 55,000원</p>
+									</div>
+								</div>
+							</div>
+
+							<div class="order-info-section">
+								<h4>결제 정보</h4>
+								<p><strong>상품 금액:</strong> <span id="product-price">55,000원</span></p>
+								<p><strong>배송비:</strong> <span id="shipping-fee">3,000원</span></p>
+								<p><strong>할인 금액:</strong> <span id="discount-amount">0원</span></p>
+								<p><strong>총 결제 금액:</strong> <span id="total-amount">58,000원</span></p>
+								<p><strong>결제 방법:</strong> <span id="payment-method">신용카드</span></p>
+								<p><strong>결제 상태:</strong> <span id="payment-status">결제 완료</span></p>
+							</div>
+
+							<div class="order-info-section">
+								<h4>배송 정보</h4>
+								<p><strong>택배사:</strong> <span id="courier-name">CJ대한통운</span></p>
+								<p><strong>운송장 번호:</strong> <span id="tracking-number">12345678901</span></p>
+								<p><strong>배송 상태:</strong> <span id="shipping-status">배송 준비중</span></p>
+								<p><strong>발송일:</strong> <span id="shipping-date">-</span></p>
+								<p><strong>도착 예정일:</strong> <span id="arrival-date">-</span></p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section id="coupon-management" class="content-section">
+			<h2>쿠폰 관리</h2>
+			<button class="btn btn-primary" onclick="addCoupon()">+ 새 쿠폰 등록</button>
+
+			<div class="filter-controls">
+				<input type="text" placeholder="쿠폰명 검색..." />
+				<select>
+					<option value="">상태 전체</option>
+					<option value="active">활성</option>
+					<option value="inactive">비활성</option>
+				</select>
+				<button class="btn btn-secondary btn-sm">검색</button>
+			</div>
+
+			<div class="coupon-table-container">
+				<table class="data-table">
+					<thead>
+						<tr>
+							<th>번호</th>
+							<th>쿠폰번호</th>
+							<th>쿠폰명</th>
+							<th>할인율/액</th>
+							<th>사용횟수</th>
+							<th>발급기간</th>
+							<th>사용기간</th>
+							<th>작업</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+				<div class="pagination">
+					<a href="#" class="prev-page">◀</a>
+					<a href="#" class="page-number active">1</a>
+					<a href="#" class="page-number">2</a>
+					<a href="#" class="page-number">3</a>
+					<a href="#" class="next-page">▶</a>
+				</div>
+			</div>
+
+			<!-- 쿠폰 생성 모달 -->
+			<div id="couponModal" class="modal">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h3>쿠폰 생성</h3>
+						<span class="close-modal">&times;</span>
+					</div>
+					<div class="modal-body">
+						<form id="couponForm">
+							<div class="form-group">
+								<label for="coupon-code">쿠폰 번호</label>
+								<input type="text" id="coupon-code" placeholder="영문, 숫자 조합으로 입력해주세요." required>
+							</div>
+
+							<div class="form-group">
+								<label for="coupon-name">쿠폰이름</label>
+								<input type="text" id="coupon-name" placeholder="20자 이내로 작성해주세요." maxlength="20"
+									required>
+							</div>
+
+							<div class="form-row">
+								<div class="form-group">
+									<label for="coupon-count">쿠폰수량</label>
+									<input type="number" id="coupon-count" min="1" value="1" required>
+								</div>
+								<div class="form-group">
+									<label for="discount-rate">할인율(%)</label>
+									<input type="number" id="discount-rate" min="1" max="100" value="10" required>
+								</div>
+							</div>
+
+							<div class="form-row date-fields">
+								<div class="form-group">
+									<label for="issue-start-date">발급시작일</label>
+									<input type="date" id="issue-start-date" required>
+								</div>
+								<div class="form-group">
+									<label for="issue-end-date">발급종료일</label>
+									<input type="date" id="issue-end-date" required>
+								</div>
+							</div>
+
+							<div class="form-row date-fields">
+								<div class="form-group">
+									<label for="usage-start-date">사용시작일</label>
+									<input type="date" id="usage-start-date" required>
+								</div>
+								<div class="form-group">
+									<label for="usage-end-date">사용종료일</label>
+									<input type="date" id="usage-end-date" required>
+								</div>
+							</div>
+
+							<div class="form-buttons">
+								<button type="submit" class="btn btn-primary">생성</button>
+								<button type="button" class="btn btn-secondary" id="cancelCoupon">취소</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+
+			<!-- 쿠폰 수정 모달 -->
+			<div id="editCouponModal" class="modal">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h3>쿠폰 수정</h3>
+						<span class="close-modal">&times;</span>
+					</div>
+					<div class="modal-body">
+						<form id="editCouponForm">
+							<input type="hidden" id="edit-coupon-id">
+							<div class="form-group">
+								<label for="edit-coupon-code">쿠폰 번호</label>
+								<input type="text" id="edit-coupon-code" placeholder="영문, 숫자 조합으로 입력해주세요." required>
+							</div>
+
+							<div class="form-group">
+								<label for="edit-coupon-name">쿠폰이름</label>
+								<input type="text" id="edit-coupon-name" placeholder="20자 이내로 작성해주세요." maxlength="20"
+									required>
+							</div>
+
+							<div class="form-row">
+								<div class="form-group">
+									<label for="edit-coupon-count">쿠폰수량</label>
+									<input type="number" id="edit-coupon-count" min="1" required>
+								</div>
+								<div class="form-group">
+									<label for="edit-discount-rate">할인율(%)</label>
+									<input type="number" id="edit-discount-rate" min="1" max="100" required>
+								</div>
+							</div>
+
+							<div class="form-row date-fields">
+								<div class="form-group">
+									<label for="edit-issue-start-date">발급시작일</label>
+									<input type="date" id="edit-issue-start-date" required>
+								</div>
+								<div class="form-group">
+									<label for="edit-issue-end-date">발급종료일</label>
+									<input type="date" id="edit-issue-end-date" required>
+								</div>
+							</div>
+
+							<div class="form-row date-fields">
+								<div class="form-group">
+									<label for="edit-usage-start-date">사용시작일</label>
+									<input type="date" id="edit-usage-start-date" required>
+								</div>
+								<div class="form-group">
+									<label for="edit-usage-end-date">사용종료일</label>
+									<input type="date" id="edit-usage-end-date" required>
+								</div>
+							</div>
+
+							<div class="form-buttons">
+								<button type="submit" class="btn btn-primary">수정</button>
+								<button type="button" class="btn btn-secondary" id="cancelEditCoupon">취소</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
 		</section>
 
 		<section id="user-management" class="content-section">
@@ -712,6 +631,59 @@
 					</tbody>
 				</table>
 			</div>
+
+			<!-- 신고 상세 모달 -->
+			<div id="reportDetailModal" class="modal">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h3>신고 상세 정보</h3>
+						<span class="close-modal">&times;</span>
+					</div>
+					<div class="modal-body">
+						<div class="report-detail-container">
+							<div class="report-info-section full-width">
+								<h4>신고 정보</h4>
+								<p><strong>신고 ID:</strong> <span id="report-id">R101</span></p>
+								<p><strong>신고 일시:</strong> <span id="report-date">2025-04-21 14:30:25</span></p>
+								<p><strong>신고 상태:</strong> <span id="report-status" class="status-pending">처리 대기</span>
+								</p>
+							</div>
+
+							<div class="report-info-section">
+								<h4>신고 대상 정보</h4>
+								<p><strong>아이디:</strong> <span id="opponent-id">user_abuser</span></p>
+								<p><strong>이름:</strong> <span id="opponent-name">김불량</span></p>
+								<p><strong>이메일:</strong> <span id="opponent-email">abuser@email.com</span></p>
+								<p><strong>연락처:</strong> <span id="opponent-phone">010-8675-4321</span></p>
+							</div>
+
+							<div class="report-info-section">
+								<h4>신고자 정보</h4>
+								<p><strong>아이디:</strong> <span id="reporter-id">user_normal</span></p>
+								<p><strong>이름:</strong> <span id="reporter-name">이정상</span></p>
+								<p><strong>이메일:</strong> <span id="reporter-email">normal@email.com</span></p>
+								<p><strong>연락처:</strong> <span id="reporter-phone">010-1234-5678</span></p>
+							</div>
+
+							<div class="report-info-section full-width">
+								<h4>신고 사유</h4>
+								<p><strong>요약:</strong> <span>부적절한 언어 사용</span></p>
+								<p><strong>상세 내용:</strong> <span>커뮤니티 게시판에서 지속적으로 타 사용자에게 욕설과 비하 발언을 하고 있습니다. 특히 특정 사용자를
+										지속적으로 괴롭히는 행동이 목격되었습니다.</span></p>
+							</div>
+
+							<div class="report-info-section full-width">
+								<h4>증거 자료</h4>
+								<ul>
+									<li>게시판 댓글 #1254에서 욕설 사용</li>
+									<li>채팅방에서 부적절한 발언 스크린샷</li>
+									<li>다수의 사용자가 유사한 내용으로 신고</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 		</section>
 
 		<section id="seller-account-management" class="content-section">
@@ -798,176 +770,6 @@
 			</table>
 		</section>
 	</main>
-
-	<script>
-		// --- 사이드바 네비게이션 제어 (기존 로직 사용) ---
-		document.addEventListener("DOMContentLoaded", function () {
-			const navLinks = document.querySelectorAll(".admin-sidebar .nav-link");
-			const contentSections = document.querySelectorAll(
-				".admin-main .content-section"
-			);
-
-			function setActiveSection(link, section) {
-				navLinks.forEach((l) => l.classList.remove("active"));
-				contentSections.forEach((s) => s.classList.remove("active"));
-				// 링크나 섹션이 null일 수 있는 경우 방지
-				if (link) link.classList.add("active");
-				if (section) section.classList.add("active");
-			}
-
-			const currentHash = window.location.hash || "#dashboard"; // 기본값 #dashboard
-			let initialLink = document.querySelector(
-				`.admin-sidebar a[href="${currentHash}"]`
-			);
-			let initialSection = document.querySelector(currentHash);
-
-			// 만약 해시에 해당하는 요소가 없으면 대시보드로 강제 이동
-			if (!initialLink || !initialSection) {
-				initialLink = document.querySelector(
-					'.admin-sidebar a[href="#dashboard"]'
-				);
-				initialSection = document.getElementById("dashboard");
-			}
-
-			setActiveSection(initialLink, initialSection);
-
-			navLinks.forEach((link) => {
-				link.addEventListener("click", function (event) {
-					event.preventDefault();
-					const targetId = this.getAttribute("href");
-					const targetSection = document.querySelector(targetId);
-					if (targetSection) {
-						setActiveSection(this, targetSection);
-						history.pushState(null, null, targetId);
-					}
-				});
-			});
-
-			window.addEventListener("popstate", function () {
-				const hash = window.location.hash || "#dashboard";
-				let targetLink = document.querySelector(
-					`.admin-sidebar a[href="${hash}"]`
-				);
-				let targetSection = document.querySelector(hash);
-
-				if (!targetLink || !targetSection) {
-					targetLink = document.querySelector(
-						'.admin-sidebar a[href="#dashboard"]'
-					);
-					targetSection = document.getElementById("dashboard");
-				}
-				setActiveSection(targetLink, targetSection);
-			});
-
-			// --- 사용자 관리 내부 탭 제어 ---
-			const userManagementSection =
-				document.getElementById("user-management");
-			if (userManagementSection) {
-				const userTabButtons = userManagementSection.querySelectorAll(
-					".user-tabs .user-tab-button"
-				);
-				const userTabContents =
-					userManagementSection.querySelectorAll(".user-tab-content");
-
-				function setActiveUserTab(button, content) {
-					userTabButtons.forEach((btn) => btn.classList.remove("active"));
-					userTabContents.forEach((c) => c.classList.remove("active"));
-					if (button) button.classList.add("active");
-					if (content) content.classList.add("active");
-				}
-
-				if (userTabButtons.length > 0 && userTabContents.length > 0) {
-					// 초기 탭 활성화 (첫 번째 탭)
-					const initialActiveTabButton = userManagementSection.querySelector(
-						".user-tabs .user-tab-button"
-					); // 첫번째 버튼 선택
-					const initialActiveTabContentId =
-						initialActiveTabButton?.getAttribute("data-tab");
-					const initialActiveTabContent = initialActiveTabContentId
-						? userManagementSection.querySelector(
-							`#${initialActiveTabContentId}`
-						)
-						: null;
-					setActiveUserTab(initialActiveTabButton, initialActiveTabContent);
-
-					userTabButtons.forEach((button) => {
-						button.addEventListener("click", function () {
-							const targetTabId = this.getAttribute("data-tab");
-							const targetTabContent = userManagementSection.querySelector(
-								`#${targetTabId}`
-							);
-							if (targetTabContent) {
-								setActiveUserTab(this, targetTabContent);
-							}
-						});
-					});
-				}
-			}
-		});
-
-		// --- 기능별 함수 ---
-		// TODO: alert 확인하고 구현할 부분 구현하기!
-		function addProduct() {
-			alert("새 상품 등록 폼 또는 페이지로 이동하는 기능 구현 필요");
-		}
-		function editProduct(productId) {
-			alert(productId + " 상품 수정 기능 구현 필요");
-		}
-		function deleteProduct(productId) {
-			if (confirm(productId + " 상품을 삭제하시겠습니까?"))
-				alert(productId + " 상품 삭제 처리 구현 필요");
-		}
-		function viewGroupBuy(gbId) {
-			alert(gbId + " 공동구매 상세 보기 기능 구현 필요");
-		}
-		function viewOrder(orderId) {
-			alert(orderId + " 주문 상세 보기 기능 구현 필요");
-		}
-		function updateOrderStatus(orderId) {
-			alert(orderId + " 주문 상태 변경 기능 구현 필요 (예: 모달 띄우기)");
-		}
-		function viewUser(userId) {
-			alert(userId + " 사용자 상세 보기 기능 구현 필요");
-		}
-		function suspendUser(userId) {
-			if (confirm(userId + " 사용자를 정지시키겠습니까?"))
-				alert(userId + " 사용자 정지 처리 구현 필요");
-		}
-		function activateUser(userId) {
-			if (confirm(userId + " 사용자를 활성화시키겠습니까?"))
-				alert(userId + " 사용자 활성화 처리 구현 필요");
-		}
-		function viewReport(reportId) {
-			alert(reportId + " 신고 상세 보기 기능 구현 필요");
-		}
-		function processReport(reportId) {
-			alert(reportId + " 신고 처리 기능 구현 필요 (예: 조치 선택 모달)");
-		}
-
-		function viewSellerDetails(sellerId) {
-			alert(sellerId + " 판매자 상세 정보 보기 기능 구현 필요");
-		}
-		function approveSeller(sellerId) {
-			if (confirm(sellerId + " 판매자의 가입을 승인하시겠습니까?"))
-				alert(sellerId + " 판매자 승인 처리 구현 필요");
-		}
-		function rejectSeller(sellerId) {
-			if (
-				confirm(
-					sellerId + " 판매자의 가입을 거절하시겠습니까? (사유 입력 필요)"
-				)
-			)
-				alert(sellerId + " 판매자 거절 처리 구현 필요");
-		}
-		function suspendSeller(sellerId) {
-			if (confirm(sellerId + " 판매자 계정을 정지시키겠습니까?"))
-				alert(sellerId + " 판매자 계정 정지 처리 구현 필요");
-		}
-		function activateSeller(sellerId) {
-			if (confirm(sellerId + " 판매자 계정을 다시 활성화시키겠습니까?"))
-				alert(sellerId + " 판매자 계정 활성화 처리 구현 필요");
-		}
-	</script>
 </body>
 
 </html>
