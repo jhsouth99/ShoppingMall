@@ -1,22 +1,29 @@
 // src/pages/HomePage.jsx
-import React, { useEffect, useState } from 'react';
-import Header from '../components/Header';
-import BannerSlider from '../components/BannerSlider';
-import FilterBar from '../components/FilterBar';
-import ProductCard from '../components/ProductCard';
-import Footer from '../components/Footer';
-import '../style.css';   // 전체 스타일 :contentReference[oaicite:0]{index=0}&#8203;:contentReference[oaicite:1]{index=1}
-import '../mainJs.js';   // 배너/검색/메뉴/필터 기능 :contentReference[oaicite:2]{index=2}&#8203;:contentReference[oaicite:3]{index=3}
-import CategoryNav from '../components/CategoryNav.jsx';
+import React, { useEffect, useState } from "react";
+import Header from "../components/Header";
+import BannerSlider from "../components/BannerSlider";
+import FilterBar from "../components/FilterBar";
+import ProductCard from "../components/ProductCard";
+import Footer from "../components/Footer";
+import CategoryNav from "../components/CategoryNav.jsx";
 
 export default function HomePage() {
   const [products, setProducts] = useState([]);
+  const [filters, setFilters] = useState({});
 
-  useEffect(() => {
-    fetch('http://localhost:5000/api/products')
-        .then(res => res.json())
-        .then(data => setProducts(data));
-  }, []);
+  const API_BASE = process.env.REACT_APP_API_BASE_URL;
+
+    useEffect(() => {
+           // build query string from filters object
+                const qs = new URLSearchParams(filters).toString();
+            fetch(`${API_BASE}/products${qs ? `?${qs}` : ""}`)
+              .then((res) => res.json())
+              .then((data) => {
+                   // if your API returns { items: [...] }
+                       setProducts(Array.isArray(data.items) ? data.items : data);
+              })
+             .catch(console.error);
+         }, [filters]);
 
   return (
     <>
@@ -29,12 +36,14 @@ export default function HomePage() {
         <div className="container">
           <div className="section-header">
             <h2>인기 상품</h2>
-            <FilterBar />
+            <FilterBar
+              onFilter={(f) => setFilters((prev) => ({ ...prev, ...f }))}
+            />
           </div>
 
           <div className="product-grid">
             {products.length > 0 ? (
-              products.map(product => (
+              products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))
             ) : (

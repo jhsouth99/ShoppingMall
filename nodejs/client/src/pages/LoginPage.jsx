@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { UserContext } from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
-import '../style.css'; // 로그인 페이지용 CSS가 포함되어 있다고 가정
+import Header from '../components/Header';
 
 export default function LoginPage() {
   const [employerEmail, setEmployerEmail] = useState('');
@@ -8,13 +9,14 @@ export default function LoginPage() {
   const [normalEmail, setNormalEmail] = useState('');
   const [normalPassword, setNormalPassword] = useState('');
   const navigate = useNavigate();
+  const { setUser } = useContext(UserContext);
 
   const handleLogin = async (type) => {
     const username = type === 'employer' ? employerEmail : normalEmail;
     const password = type === 'employer' ? employerPassword : normalPassword;
 
     try {
-      const res = await fetch('/api/users/login', {
+      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/users/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -26,6 +28,7 @@ export default function LoginPage() {
       }
 
       localStorage.setItem('token', data.token);
+      setUser(data.user);
       // 필요하다면 user.user_type 에 따라 리다이렉트 경로를 분기할 수 있습니다.
       navigate('/');
     } catch (err) {
@@ -36,14 +39,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <header>
-        <div className="logo">요기어때</div>
-        <div className="nav-links">
-          <a href="/">HOME</a>
-          <a href="/style">STYLE</a>
-          <a href="/shop">SHOP</a>
-        </div>
-      </header>
+      <Header />
 
       <div id="login-form">
         {/* 자영업자 로그인 */}
@@ -55,7 +51,7 @@ export default function LoginPage() {
             <div className="input-group">
               <input
                 type="email"
-                placeholder="이메일"
+                placeholder="아이디"
                 value={employerEmail}
                 onChange={e => setEmployerEmail(e.target.value)}
               />

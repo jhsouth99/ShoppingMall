@@ -1,10 +1,10 @@
-import { React, useState, useEffect } from "react";
+import { React, useState, useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
-import "../style.css";
+import { UserContext } from '../contexts/UserContext';
 
 export default function Header({ cartCount = 0 }) {
-  const [user, setUser] = useState(null);
+  const { user, setUser } = useContext(UserContext);
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
 
@@ -40,7 +40,7 @@ export default function Header({ cartCount = 0 }) {
               </>
             ) : (
               <>
-                <Link to="/login">로그인</Link>
+                <Link to="/login" >로그인</Link>
                 <Link to="/register">회원가입</Link>
               </>
             )}

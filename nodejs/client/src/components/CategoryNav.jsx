@@ -1,23 +1,30 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-export default function CategoryNav({ baseLink = "/category" }) {
-  const [categories, setCategories] = useState([]);
+export default function CategoryNav() {
+  const [cats, setCats] = useState([]);
   useEffect(() => {
-    fetch("http://localhost:5000/api/categories")
-      .then((res) => res.json())
-      .then((tree) => setCategories(tree))
-      .catch((err) => console.error("카테고리 로드 실패:", err));
+    fetch(`${process.env.REACT_APP_API_BASE_URL}/categories`)
+      .then((r) => r.json())
+      .then(setCats);
   }, []);
-  // 재귀 렌더링 헬퍼
-  const renderCategory = (cat, baseTo) => (
-    <li key={cat.id} className={cat.children.length ? "has-submenu" : ""}>
-      <Link to={`${baseTo}/${cat.id}`}>{cat.name}</Link>
-      {cat.children.length > 0 && (
+
+  // 열린 메뉴 ID 배열
+  const [openIds, setOpenIds] = useState([]);
+  const toggle = (id) => {
+    setOpenIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const render = (c, base = "/category") => (
+    <li key={c.id} className={c.children.length ? "has-submenu" : ""}>
+      <div onClick={() => toggle(c.id)}>
+        <Link to={`${base}/${c.id}`}>{c.name}</Link>
+      </div>
+      {c.children.length > 0 && (
         <ul className="submenu">
-          {cat.children.map((child) =>
-            renderCategory(child, `${baseTo}/${cat.id}`)
-          )}
+          {c.children.map((ch) => render(ch, `${base}/${c.id}`))}
         </ul>
       )}
     </li>
@@ -26,7 +33,7 @@ export default function CategoryNav({ baseLink = "/category" }) {
   return (
     <nav className="header-nav">
       <div className="container main-nav">
-        <ul>{categories.map((cat) => renderCategory(cat, baseLink))}</ul>
+        <ul>{cats.map((c) => render(c))}</ul>
       </div>
     </nav>
   );

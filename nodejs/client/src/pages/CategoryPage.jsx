@@ -4,7 +4,6 @@ import Header from "../components/Header";
 import FilterBar from "../components/FilterBar";
 import ProductCard from "../components/ProductCard";
 import CategoryNav from "../components/CategoryNav";
-import "../style.css";
 
 export default function CategoryPage() {
   const { categorySlug, subcategorySlug } = useParams();
@@ -13,9 +12,11 @@ export default function CategoryPage() {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
 
+  const API_BASE = process.env.REACT_APP_API_BASE_URL;
+
   // 1) 전체 카테고리 트리 가져오기
   useEffect(() => {
-    fetch("http://localhost:5000/api/categories")
+    fetch(`${API_BASE}/categories`)
       .then((res) => res.json())
       .then((tree) => setCategories(tree))
       .catch((err) => console.error("카테고리 로드 실패", err));
@@ -24,11 +25,11 @@ export default function CategoryPage() {
   // 2) 선택된 카테고리/서브카테고리 상품 가져오기
   useEffect(() => {
     if (!catId) return;
-    const url = `http://localhost:5000/api/products`
+    const url = `${API_BASE}/products`
               + `?category_id=${ subId || catId }`;
     fetch(url)
       .then(res => res.json())
-      .then(data => setProducts(data.items || data))  // if you use pagination
+      .then(data => setProducts(data.items || data))
       .catch(err => console.error('상품 로드 실패', err));
   }, [catId, subId]);
 
@@ -96,7 +97,9 @@ export default function CategoryPage() {
               <div className="product-grid">
                 {products.length
                   ? products.map(p => (
-                      <ProductCard key={p.id} product={p} />
+                      <Link to={"/products/" + p.id}>
+                        <ProductCard key={p.id} product={p} />
+                      </Link>
                     ))
                   : <p>상품이 없습니다.</p>
                 }
