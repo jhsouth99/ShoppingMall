@@ -117,6 +117,7 @@ button[type="submit"]:hover {
 .link-group {
     margin-top: var(--spacing-large);
     font-size: 0.9em;
+    text-align: center; /* auth-container에 text-align: center; 추가했으니 이건 빼도 됨 */
 }
 
 .link-group a {
@@ -128,6 +129,30 @@ button[type="submit"]:hover {
 .link-group a:hover {
     color: var(--text-color-dark);
     text-decoration: underline;
+}
+
+/* 회원가입 페이지 전용 스타일 (terms 섹션) - styles.css에 남아있거나 여기에 병합 */
+.terms {
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--spacing-medium);
+    text-align: left; /* 폼 그룹과 통일 */
+}
+
+.terms-details {
+    margin-top: 0;
+    margin-left: 0;
+    text-align: left; /* 폼 그룹과 통일 */
+}
+
+.terms-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--spacing-medium);
+}
+
+.terms-item input[type="checkbox"] {
+    margin-right: var(--spacing-small);
 }
 
 
