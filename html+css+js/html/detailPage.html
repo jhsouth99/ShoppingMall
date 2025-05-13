@@ -4,12 +4,20 @@
 	    <meta charset="UTF-8">
 	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 	    <title>제품 상세 페이지</title>
+	    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+		<link rel='stylesheet' href='https://cdn-uicons.flaticon.com/uicons-solid-rounded/css/uicons-solid-rounded.css'>
+		<link rel='stylesheet' href='https://cdn-uicons.flaticon.com/uicons-bold-rounded/css/uicons-bold-rounded.css'>
 	    
 	    <script>
-	        // 전역 변수
+			// 전역 변수
 	        let selectedColor = '블랙';
 	        let selectedSize = '';
 	        let basePrice = 62300;
+	        
+	        // 페이지 로드 시 초기화 영역
+	        document.addEventListener('DOMContentLoaded', function(){
+				updateImgNum();
+			});
 	        
 	        // 탭 메뉴(상세 설명, 사양, 리뷰 등) 기능
 	        function openTab(evt, tabName) {
@@ -27,31 +35,52 @@
 	            evt.currentTarget.classList.add("active");
 	        }
 	        
-	        // 이미지 변경 기능
-	        function changeImage(thumbnail, imageSrc) {
-	            let thumbnails = document.getElementsByClassName("thumbnail");
-	            for (let i = 0; i < thumbnails.length; i++) {
-	                thumbnails[i].classList.remove("active");
-	            }
-	            
-	            thumbnail.classList.add("active");
-	            document.getElementById("mainImage").src = imageSrc;
-	        }
+	        // 공유 링크 복사
+	        function copyLink() {
+				alert("링크가 복사되었습니다(링크 복사 기능 구현 필요)");
+			}
 	        
-	        // 이미지 확대 모달(이미지 선택 시 확대)
-	        const mainImage = document.getElementById("mainImage");
-	        const imageModal = document.getElementById("imageModal");
-	        const modalImage = document.getElementById("modalImage");
+	        // 이미지 변경 기능(moveImg)
+	        let imgNum = 1; // 이미지 순서에 따른 숫자
+	        let imgPath = 'image_project/f'
+	        function prevImg(){ // 이전 버튼
+				imgNum--;
+				if( imgNum < 1 ){ 
+					imgNum = 5; 
+				}
+				let gallery = document.getElementById("gallery");
+				gallery.src = imgPath + imgNum + ".jpg";
+				updateImgNum();		
+			}
 	        
-	        mainImage.addEventListener("click", function() {
-	            modalImage.src = this.src;
-	            imageModal.style.display = "flex";
-	        });
+	        function nextImg() { // 다음 버튼
+				imgNum++;
+				if( imgNum > 5 ){ 
+					imgNum = 1;   
+				}
+				let gallery = document.getElementById("gallery");
+				gallery.src = imgPath + imgNum + ".jpg";			
+				updateImgNum();
+			}
+			
+			// 숫자 업데이트
+			function updateImgNum(){
+				let img_count = document.getElementById("img-count");
+				img_count.innerHTML = imgNum;
+			}
 	        
-	        function closeModal() {
-	            imageModal.style.display = "none";
-	        }
-	        
+	        // 옵션------------------------------------------------------------------
+	        // 옵션 창 열고 닫기
+	        function showOptionPage() {
+				let optionPage = document.getElementById("product-options");
+				let cancelOption_btn = document.getElementById("cancel-optionPage");
+				optionPage.style.display = "block";
+				
+				cancelOption_btn.addEventListener("click", function(){
+					optionPage.style.display = "none";
+				});	
+			}
+	       
 	        // 색상 선택 기능
 	        function selectColor(element, color) {
 	            let colorOptions = document.getElementsByClassName("color-option");
@@ -92,6 +121,17 @@
 	            selectedSize = this.value;
 	        });
 	        
+	        // 결제하기 버튼 클릭 이벤트
+	        function clickPaymentBtn(){
+				alert('결제하기 페이지로 이동');
+			}
+			
+			// 공동구매 열기 버튼 클릭 이벤트
+			function clickOpenTeam(){
+				alert('공동구매 등록 페이지로 이동');
+			}
+	        
+	        
 	        // 창 크기가 변경될 때 모달 위치 조정
 	        window.addEventListener("resize", function() {
 	            if (imageModal.style.display === "flex") {
@@ -114,23 +154,14 @@
 	        });
 	        
 	        // 찜 버튼(공동구매, 제품) 클릭 시 색상 유지
+	        let isClick = false;
 	        function fillWish(){
-				let wish_btn = document.getElementById("wish-button");
-				
-			
-				if( wish_btn.style.color == "#212529" ){
-					wish_btn.style.color = "#e64980";
-					
-				}else if( wish_btn.style.color === "#e64980" ){
-					wish_btn.style.color = "#212529";
-				
-				}
-	
+				alert('찜 목록 추가 기능 구현 필요');
 			} 
 			
 			// 장바구니 알림
 			function cartAlert(){
-				alert('장바구니에 추가되었습니다');
+				alert('장바구니에 추가되었습니다(장바구니 추가 기능 구현 필요)');
 			}
 		
 	        // 공유 버튼 바 보여주기/ 숨기기
@@ -145,9 +176,9 @@
 				} );
 				
 			}
-	        
-	    </script>
-
+		</script>
+		
+	    
 	    <style>
 	        * { margin: 0; padding: 0;
 	            box-sizing: border-box;
@@ -158,7 +189,7 @@
 	               color: #212529;
 	               line-height: 1.6; }
 	        
-	        button{ cursor:pointer; }
+	        button, i{ cursor:pointer; }
 	        
 	        .container {
 				max-width: 1200px;
@@ -185,13 +216,17 @@
 	            border: 1px solid #e9ecef;
 	            border-radius: 4px;
 	            cursor: zoom-in; }
+	            
+	        .moving-img{ text-align:center; }
+			 
+			.moving-img b{ font-size:20px; }
 	        
 	        .thumbnail-container { display: flex;
 	            				   margin-top: 10px;
 	            			   	   gap: 10px;
 	            				   overflow-x: auto; }
 	        
-	        .thumbnail { width: 80px;
+	        /* .thumbnail { width: 80px;
 	            		 height: 80px;
 	            		 object-fit: cover;
 	            		 border: 1px solid #e9ecef;
@@ -199,7 +234,7 @@
 	            		 cursor: pointer;
 	            		 transition: border-color 0.3s; }
 	        
-	        .thumbnail:hover, .thumbnail.active { border-color: #007bff; }
+	        .thumbnail:hover, .thumbnail.active { border-color: #007bff; } */
 	        
 	        
 	        
@@ -235,6 +270,8 @@
 				cursor:pointer;
 			}
 			
+			.link-button{ height:38px; }
+			
 			a{ text-decoration:none;
 			   color:#adb5bd;
 			   font:bold 20px sans-serif; 
@@ -242,7 +279,7 @@
 			
 			.share-sns-buttons ul li:hover { background:#ced4da; }
 			
-			a:hover { color:#212529; }
+			#cancel:hover { color:#212529; background:#ced4da; }
 			
 			#cancel{
 				padding-bottom:5px;
@@ -263,13 +300,13 @@
 	        
 	        .product-title { font-size: 24px;
 	            font-weight: 700;
-	            margin-bottom: 10px;
+	            margin-bottom: 30px;
 	        }
 	   
 	        .product-price { font-size: 22px;
 	            			 font-weight: 700;
 	            			 color: #343a40;
-	            			 margin-bottom: 5px; }
+	            			 margin-bottom: 15px; }
 	        
 	        .original-price { font-size: 16px;
 	            			  color: #adb5bd;
@@ -282,23 +319,86 @@
 	        
 	        .product-description { font-size: 16px;
 	            				   color: #495057;
-	            				   margin: 20px 0;
+	            				   margin: 30px 0 35px 0;
 	            				   line-height: 1.8; }
 	        
-	        .product-options { margin: 20px 0; }
+	        
+	        .buy-now-button, 
+	        .buy-team-button{ flex: 1;
+	            			   padding: 15px;
+	            			   background-color: #6366f1;
+	            			   color: #fff;
+	            			   border: none;
+	            			   border-radius: 4px;
+	            		 	   font-size: 20px;
+	            			   font-weight: 700;
+	            			   cursor: pointer;
+	            			   transition: background-color 0.3s; }
+				
+	        
+	        .buy-now-button:hover, 
+	        .buy-team-button:hover { background-color: #4263eb; }
+	        
+	        .add-to-cart-button {
+	            flex: 0.5;
+	            padding: 15px;
+	            background-color: #f8f9fa;
+	            color: #212529;
+	            border: 1px solid #ced4da;
+	            border-radius: 4px;
+	            font-size: 16px;
+	            font-weight: 700;
+	            cursor: pointer;
+	            transition: background-color 0.3s; }
+	        
+	        .add-to-cart-button:hover { background-color: #e9ecef; }
+	        
+	        #wish-button { flex:0.5;
+	            		   border: 1px solid #ced4da;
+	            		   border-radius: 4px;
+	            		   background-color: #fff;
+	            		   cursor: pointer;
+	            		   display: flex;
+	            		   align-items: center;
+	            		   justify-content: center;
+	            		   font-size: 20px;
+	            		   transition: all 0.3s; }
+	        
+	        #wish-button:hover, #wish-team-button:hover { 
+				background-color: #ffdeeb;
+	            border-color: #f783ac;
+	            color: #e64980; }
+	            
+	        
+	        /* 옵션 선택 영역 --------------------------------------------------------------------------------*/
+			.product-options { 
+				margin:20px 0;
+				position:relative;
+				display:none; }
+			
+			.product-options h4{ margin-top:10px; }
+			
+			.cancel-button{ 
+				position:absolute;
+				top:20px; right:20px;
+				border:none;
+			    text-decoration:none;
+			    background:none; }
 	        
 	        .option-label { display: block;
 	            			font-size: 16px;
 	            			font-weight: 500;
-	            			margin-bottom: 5px; }
+	            			margin-bottom: 5px;
+	            			margin-top:10px; }
 	        
-	        .option-select { width: 100%;
-	            			 padding: 10px;
-	            			 border: 1px solid #ced4da;
-	            			 border-radius: 4px;
-	            			 font-size: 16px;
-	            			 margin-bottom: 15px;
-	            			 background-color: #fff; }
+	        .size-select, #color-select{ 
+				width: 100%;
+	            padding: 10px;
+	            border: 1px solid #ced4da;
+	            border-radius: 4px;
+	            font-size: 16px;
+	            margin-bottom: 15px;
+	            background-color: #fff; }
 	        
 	        .quantity-container { display: flex;
 	            				  align-items: center;
@@ -331,69 +431,32 @@
 	            		   font-weight: 700;
 	           		   	   margin: 20px 0;
 	            		   text-align: right; }
+	            		   
+	        .payment-button{
+				width:100%;
+				padding:10px;
+				border:none;
+	            border-radius:4px;
+	            font-size:16px;
+	            margin-bottom:15px;
+	            background-color:#6366f1; }
+			
+			.payment-button a{ color:#fff; }
+			
+			.payment-button:hover{ background:#4263eb; }
 	        
 	        .button-group { display: flex;
 	            			gap: 10px;
-	            			margin-top: 20px; }
-	        
-	        .buy-now-button, 
-	        .buy-team-button { flex: 1;
-	            			   padding: 15px;
-	            			   background-color: #6366f1;
-	            			   color: #fff;
-	            			   border: none;
-	            			   border-radius: 4px;
-	            		 	   font-size: 16px;
-	            			   font-weight: 700;
-	            			   cursor: pointer;
-	            			   transition: background-color 0.3s; }
-				
-	        
-	        .buy-now-button:hover, 
-	        .buy-team-button:hover { background-color: #4263eb; }
-	        
-	        .add-to-cart-button {
-	            flex: 1;
-	            padding: 15px;
-	            background-color: #f8f9fa;
-	            color: #212529;
-	            border: 1px solid #ced4da;
-	            border-radius: 4px;
-	            font-size: 16px;
-	            font-weight: 700;
-	            cursor: pointer;
-	            transition: background-color 0.3s; }
-	        
-	        .add-to-cart-button:hover { background-color: #e9ecef; }
-	        
-	        #wish-button { flex:0.5;
-	            		   border: 1px solid #ced4da;
-	            		   border-radius: 4px;
-	            		   background-color: #fff;
-	            		   cursor: pointer;
-	            		   display: flex;
-	            		   align-items: center;
-	            		   justify-content: center;
-	            		   font-size: 20px;
-	            		   transition: all 0.3s; }
-	        
-	        #wish-button:hover, #wish-team-button:hover { 
-				background-color: #ffdeeb;
-	            border-color: #f783ac;
-	            color: #e64980; }
-	        
-	        
-	        
-	        
-	        /* 공동구매 목록 ---------------------------------------------------------------------------------------------*/
-	        .buy-team-state { 	
+	            			margin-top: 35px; }/* 전체 버튼 */
+
+	        /* 공동구매 목록 현황 ---------------------------------------------------------------------------------------------*/
+	        .buy-team-state, .product-options{ 
+				padding:10px 15px;	
 	            margin-top:20px;
 	            background-color:#fff;
 	            border-radius:8px;
 	            box-shadow:0 2px 10px rgba(0, 0, 0, 0.1);
 	        }
-	        
-	        .buy-team-state h4{ padding:10px 15px; }
 	        
 	        .buy-team-state table{ margin:0 auto; }
 	        
@@ -522,7 +585,7 @@
 	         					   font-weight: 700;
 	            				   margin-bottom: 20px; }
 	        
-	        .product-grid {
+	        .product-grid {/* 관련 상품 그리드 형식으로 조정 */
 	            display: grid;
 	            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 	            gap: 20px;
@@ -646,10 +709,11 @@
 	                		  font-size: 14px; }
 	            
 	            .product-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-	        }
-	    </style>
+	        }/* 반응형 스타일 */
+		</style>
+	    
 	</head>
-	
+
 	
 	<body>
 	    <div class="container">
@@ -658,13 +722,21 @@
 	        <div class="product-container">
 	            <!-- 제품 이미지 영역 -->
 	            <div class="product-images">
-	                <img id="mainImage" class="main-image" src="/api/placeholder/600/600" alt="제품 메인 이미지">
-	                <div class="thumbnail-container"><!-- 이미지 선택 -->
+					<img class="main-image" id="gallery" src="image_project/f1.jpg" alt="제품 이미지">
+					<div class="moving-img">
+						<a href="#" onclick="prevImg();"><i class="fi fi-br-angle-left" title="이전"></i></a>
+						<b><span id="img-count">1</span>/5</b>
+	                	<a href="#" onclick="nextImg();"><i class="fi fi-br-angle-right" title="다음"></i></a>
+					</div>
+					
+	                
+	                <!--
+					<div class="thumbnail-container">
 	                    <img class="thumbnail active" src="/api/placeholder/600/600" alt="썸네일 1" onclick="changeImage(this, '/api/placeholder/600/600')">
 	                    <img class="thumbnail" src="/api/placeholder/600/600" alt="썸네일 2" onclick="changeImage(this, '/api/placeholder/600/600')">
 	                    <img class="thumbnail" src="/api/placeholder/600/600" alt="썸네일 3" onclick="changeImage(this, '/api/placeholder/600/600')">
 	                    <img class="thumbnail" src="/api/placeholder/600/600" alt="썸네일 4" onclick="changeImage(this, '/api/placeholder/600/600')">
-	                </div>
+	                </div>	-->
 	            </div>
 	            
 	            <!-- 제품 정보 영역 -->
@@ -672,15 +744,14 @@
 	                <h1 class="product-title">프리미엄 울 니트 스웨터</h1>
 	                
 	                <div class="share-sns-buttons"><!-- 링크 공유 버튼 영역 -->
-						<button class="share-button" onclick="showShareBar();"><img src="image_project/share.png"></button>
+						<button class="share-button" onclick="showShareBar();"><i class="fi fi-sr-share"></i></button>
 						<ul id="sns-buttons">
 							<li><a href="#"><img src="image_project/kakao_32_bold.png"></a></li>
-							<li><a href="#"><img src="image_project/instar_32_bold.png"></a></li>
-							<li><img src="image_project/link_black_32.png" onclick="copyLink();"></li>
+							<li><img src="image_project/instar_32_bold.png"></li>
+							<li class="link-button" onclick="copyLink();"><i class="fi fi-br-link-alt"></i></li>
 							<li id="cancel" onclick="showShareBar();">X</li>
 						</ul>
 					</div>
-	                
 	                
 	                <div class="product-price"><!-- 가격 정보 -->
 	                    <span class="original-price">89,000원</span>
@@ -692,59 +763,65 @@
 	                    100% 프리미엄 양모로 제작된 고급 니트 스웨터입니다. 부드러운 감촉과 뛰어난 보온성을 자랑하며, 클래식한 디자인으로 어떤 스타일에도 잘 어울립니다.
 	                </p>
 	                
-	                
-	                <div class="product-options"><!-- 상품 옵션(색상, 사이즈 등) -->
-	                    <label class="option-label">색상</label>
-	                    <div class="color-swatch">
-	                        <div class="color-option active" style="background-color: #343a40;" onclick="selectColor(this, '블랙')"></div>
-	                        <div class="color-option" style="background-color: #f8f9fa;" onclick="selectColor(this, '화이트')"></div>
-	                        <div class="color-option" style="background-color: #868e96;" onclick="selectColor(this, '그레이')"></div>
-	                        <div class="color-option" style="background-color: #1971c2;" onclick="selectColor(this, '네이비')"></div>
-	                    </div>
-	                    
-	                    <label class="option-label">사이즈</label>
-	                    <select id="sizeSelect" class="option-select">
-	                        <option value="">사이즈를 선택하세요</option>
-	                        <option value="S">S</option>
-	                        <option value="M">M</option>
-	                        <option value="L">L</option>
-	                        <option value="XL">XL</option>
-	                    </select>
-	                    
-	                    <label class="option-label">수량</label>
-	                    <div class="quantity-container">
-	                        <div class="quantity-button" onclick="decreaseQuantity()">-</div>
-	                        <input id="quantityInput" type="number" min="1" value="1" class="quantity-input" onchange="updateTotalPrice()">
-	                        <div class="quantity-button" onclick="increaseQuantity()">+</div>
-	                    </div>
-	                </div>
-	                
-	                <div class="total-price">총 금액: <span id="totalPrice">62,300원</span></div>
-	                
 	                <div class="button-group">
-	                    <button class="buy-now-button">
-							<a href="#" style="color:#f8f9fa; text-decoration:none;">62,300원<br>혼자구매</a>
+	                    <button class="buy-now-button" onclick="showOptionPage();">
+							62,300원<br>혼자구매
 						</button>
-	                    <button class="buy-team-button">
-							<a href="#" style="color:#f8f9fa; text-decoration:none;"><p>42,000원</p>공동구매</a>  <!-- 스크립트로 퍼센테이지에 따라 가격이 바뀌도록 조정? -->
+	                    <button class="buy-team-button" onclick="clickOpenTeam();">
+							<a href="#" style="color:#f8f9fa; text-decoration:none;">공동구매 열기<br>(2인)</a>  <!-- 스크립트로 퍼센테이지에 따라 가격이 바뀌도록 조정? -->
 						</button><!-- 공동구매 만들기 창으로 이동 -->
-	                    <button class="add-to-cart-button" onclick="cartAlert();">장바구니</button>
+	                    <button class="add-to-cart-button" onclick="cartAlert();"><i class="fi fi-br-basket-shopping-simple"></i></button>
 	                    <button id="wish-button" onclick="fillWish();">♡</button>
 	                </div>
 	            </div>
 	        </div>
 	        
 	        
-	        <!-- 옵션 선택 -->
-	        <div class="select-option-container">
-				<div></div>
-			</div>
-	        
+	        <!-- 옵션 선택(사이즈, 색상, 수량 등) -->
+	        <div class="product-options" id="product-options">
+				<h4>옵션 선택</h4>
+				<button class="cancel-button" id="cancel-optionPage"><i class="fi fi-br-cross"></i></button>
+				<hr>
+		        	
+		        <label class="option-label">색상</label>
+		        <div>
+					<select id="color-select">
+						<option value="">색상을 선택하세요</option>
+						<option value="black">블랙</option>
+						<option value="white">화이트</option>
+						<option value="gray">그레이</option>
+						<option value="navy">네이비</option>
+					</select>
+				</div>
+				     
+		        <label class="option-label">사이즈</label>
+		        <select id="sizeSelect" class="size-select">
+		            <option value="">사이즈를 선택하세요</option>
+		            <option value="S">S</option>
+		            <option value="M">M</option>
+		            <option value="L">L</option>
+		            <option value="XL">XL</option>
+		        </select>
+		                    
+		        <label class="option-label">수량</label>
+		        <div class="quantity-container">
+		            <div class="quantity-button" onclick="decreaseQuantity()">-</div>
+		            <input id="quantityInput" type="number" min="1" value="1" class="quantity-input" onchange="updateTotalPrice()">
+		            <div class="quantity-button" onclick="increaseQuantity()">+</div>
+		        </div>
+		        
+		        <div class="total-price">총 금액: <span id="totalPrice">62,300원</span></div>
+		        
+		        <button class="payment-button" onclick="clickPaymentBtn();">
+					<a href="#">결제하기</a>
+				</button><!-- 선택한 옵션 정보 가지고 결제 페이지로 이동 -->
+		        
+		    </div>
+			
 	        
 	        <!-- 제품 공동구매 현황 -->
 	        <div class="buy-team-state">
-				<h4>진행 중인 공동구매 목록</h4>
-				<hr>
+				<h4>진행 중인 공동구매 목록</h4><hr>
 				<table>	
 					<tr>
 						<th>번호</th>
@@ -760,13 +837,13 @@
 					<tr class="team-list-1">
 						<th>1</th>
 						<td class="leader"><span>홍길동</span></td>
-						<td class="personnel-state">3/5</td>
-						<td class="rest-personnel"><span>2명</span> 남음 </td>
+						<td class="personnel-state">1/2</td>
+						<td class="rest-personnel"><span>1명</span> 남음 </td>
 						<td class="rest-time"> 96일 22:20:01 </td>
 						<td class="deadline">2025-08-03</td>
 						<td class="team-buttons">
 							<button class="join-team-button">참여하기</button>
-							<button class="share-team-button"><img src="image_project/share.png"></button>
+							<button class="share-team-button"><i class="fi fi-sr-share"></i></button>
 							<button id="wish-team-button" onclick="fillWishTeam();">♡</button>
 						</td>
 
@@ -943,6 +1020,7 @@
 	        </div>
 	    </div>
 	
-	    
 	</body>
+	
+	
 </html>
