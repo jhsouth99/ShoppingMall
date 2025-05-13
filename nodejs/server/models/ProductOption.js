@@ -1,54 +1,35 @@
-const { DataTypes, Sequelize } = require('sequelize');
-const sequelize = require('../config/database.js');
+// models/productOption.js
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 const Product = require('./Product');
+const ProductOptionValue = require('./ProductOptionValue');
+const ProductVariantOptionValue = require('./ProductVariantOptionValue');
 
 const ProductOption = sequelize.define('ProductOption', {
   id: {
-    type: DataTypes.INTEGER.UNSIGNED,
+    type: DataTypes.BIGINT.UNSIGNED,
     autoIncrement: true,
     primaryKey: true
   },
   product_id: {
-    type: DataTypes.INTEGER.UNSIGNED,
+    type: DataTypes.BIGINT.UNSIGNED,
     allowNull: false,
-    references: {
-      model: Product,
-      key: 'id'
-    }
+    references: { model: 'products', key: 'id' },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
   },
-  option_name: {
-    type: DataTypes.STRING(50),
+  name: {
+    type: DataTypes.STRING,
     allowNull: false
-    // 예: 'size', 'color'
   },
-  option_value: {
-    type: DataTypes.STRING(50),
-    allowNull: false
-    // 예: '250', 'red'
-  },
-  price_modifier: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    defaultValue: 0
-    // 기본 가격에서 +/− 변경분
-  },
-  stock: {
-    type: DataTypes.INTEGER.UNSIGNED,
-    allowNull: false,
-    defaultValue: 0
-  },
-  created_at: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+  sku: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    unique: true
   }
 }, {
   tableName: 'product_options',
   timestamps: false
 });
-
-// 관계 설정
-Product.hasMany(ProductOption, { foreignKey: 'product_id', as: 'options' });
-ProductOption.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
 module.exports = ProductOption;

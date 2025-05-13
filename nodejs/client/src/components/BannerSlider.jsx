@@ -20,7 +20,38 @@ export default function BannerSlider({ images = [] }) {
 
   return (
     <section className="banner-slider">
+      
       <div className="slider-wrapper">
+        <div class="slide active">
+							<div class="custom-banner">
+								<div class="gradient-shape"></div>
+								<div class="product-boxes">
+									<div class="product-box blue">80%</div>
+									<div class="product-box purple">80%</div>
+									<div class="product-box yellow"></div>
+									<div class="product-box white"></div>
+								</div>
+							</div>
+						</div>
+						<div class="slide">
+							<div class="custom-banner">
+								<div class="gradient-shape"></div>
+								<div class="product-boxes">
+									<div class="product-box blue">70%</div>
+									<div class="product-box yellow">60%</div>
+								</div>
+							</div>
+						</div>
+						<div class="slide">
+							<div class="custom-banner">
+								<div class="gradient-shape"></div>
+								<div class="product-boxes">
+									<div class="product-box purple">50%</div>
+									<div class="product-box white"></div>
+									<div class="product-box blue">40%</div>
+								</div>
+							</div>
+						</div>
         {images.map((img, i) => (
           <div key={i} className={`slide${i===current?' active':''}`}>
             {img /* src={img.url}… */}

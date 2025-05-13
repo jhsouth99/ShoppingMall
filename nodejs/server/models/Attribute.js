@@ -1,9 +1,13 @@
+// models/attribute.js
 const { DataTypes, Sequelize } = require('sequelize');
-const sequelize = require('../config/database.js');
+const sequelize = require('../config/database');
+const { AttributeDataType } = require('../enums');
+const CategoryAttribute = require('./CategoryAttribute');
+const ProductAttributeValue = require('./ProductAttributeValue');
 
 const Attribute = sequelize.define('Attribute', {
   id: {
-    type: DataTypes.INTEGER.UNSIGNED,
+    type: DataTypes.BIGINT.UNSIGNED,
     autoIncrement: true,
     primaryKey: true
   },
@@ -13,9 +17,10 @@ const Attribute = sequelize.define('Attribute', {
     unique: true
   },
   data_type: {
-    type: DataTypes.ENUM('string', 'integer', 'float', 'boolean', 'date'),
+    type: DataTypes.ENUM,
+    values: Object.values(AttributeDataType), // ['TEXT', 'NUMBER', 'BOOLEAN', 'DATE']
     allowNull: false,
-    defaultValue: 'string'
+    defaultValue: AttributeDataType.TEXT, // 혹은 가장 일반적인 타입으로 기본값 설정
   },
   created_at: {
     type: DataTypes.DATE,

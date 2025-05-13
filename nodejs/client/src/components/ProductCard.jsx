@@ -18,13 +18,13 @@ export default function ProductCard({ product }) {
       <div className="product-info">
         <h3 className="product-name">{product.name}</h3>
         <div className="product-price">
-          {product.originalPrice && (
+          {product.base_price && (
             <span className="original-price">
-              {product.originalPrice.toLocaleString()}원
+              {product.base_price.toLocaleString()}원
             </span>
           )}
           <span className="current-price">
-            {product.price.toLocaleString()}원
+            {product.representative_price.toLocaleString()}원
           </span>
         </div>
         {product.isGroup && (

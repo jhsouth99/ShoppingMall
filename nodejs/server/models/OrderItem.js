@@ -1,50 +1,64 @@
-const { DataTypes, Sequelize } = require('sequelize');
+// models/orderItem.js
+const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Order   = require('./Order');
-const Product = require('./Product');
-const Option  = require('./ProductOption'); // 옵션 가격 반영 시 사용
+const { OrderItemStatus } = require('../enums');
+const Order = require('./Order');
+const ProductVariant = require('./ProductVariant');
+const Review = require('./Review');
+const ShipmentItem = require('./ShipmentItem');
+const RefundItem = require('./RefundItem');
 
 const OrderItem = sequelize.define('OrderItem', {
-  id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
+  id: {
+    type: DataTypes.BIGINT.UNSIGNED,
+    autoIncrement: true,
+    primaryKey: true
+  },
   order_id: {
-    type: DataTypes.INTEGER.UNSIGNED, allowNull: false,
-    references: { model: Order, key: 'id' }
+    type: DataTypes.BIGINT.UNSIGNED,
+    allowNull: false,
+    references: { model: 'orders', key: 'id' }
   },
-  product_id: {
-    type: DataTypes.INTEGER.UNSIGNED, allowNull: false,
-    references: { model: Product, key: 'id' }
+  product_variant_id: {
+    type: DataTypes.BIGINT.UNSIGNED,
+    allowNull: false,
+    references: { model: 'product_variants', key: 'id' }
   },
-  option_id: {
-    type: DataTypes.INTEGER.UNSIGNED, allowNull: true,
-    references: { model: Option, key: 'id' }
-  },
-  unit_price: {
-    type: DataTypes.INTEGER.UNSIGNED, allowNull: false,
-    comment: '옵션·할인 적용된 단가'
+  comment: { // ProductOptionValue.comment_needed = true 일 때 사용
+    type: DataTypes.STRING,
+    allowNull: true
   },
   quantity: {
-    type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 1
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
-  total_price: {
-    type: DataTypes.INTEGER.UNSIGNED, allowNull: false,
-    comment: 'unit_price × quantity'
+  price_at_purchase: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false
   },
-  created_at: {
-    type: DataTypes.DATE, allowNull: false,
-    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+  total_price_at_purchase: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false
+  },
+  status: {
+    type: DataTypes.ENUM,
+    values: Object.values(OrderItemStatus),
+    allowNull: false
   }
-},{
+}, {
   tableName: 'order_items',
-  timestamps: false
+  timestamps: false,
+  indexes: [
+    { fields: ['order_id'] },
+    { fields: ['product_variant_id'] }
+  ],
+  hooks: { // total_price_at_purchase 자동 계산
+    beforeValidate: (orderItemInstance) => {
+      if (orderItemInstance.quantity && orderItemInstance.price_at_purchase) {
+        orderItemInstance.total_price_at_purchase = (parseFloat(orderItemInstance.quantity) * parseFloat(orderItemInstance.price_at_purchase)).toFixed(2);
+      }
+    }
+  }
 });
-
-// Association
-OrderItem.belongsTo(Order,   { foreignKey: 'order_id',   as: 'order'   });
-Order.hasMany(OrderItem,     { foreignKey: 'order_id',   as: 'items'   });
-
-OrderItem.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
-Product.hasMany(OrderItem,   { foreignKey: 'product_id', as: 'orderItems' });
-
-OrderItem.belongsTo(Option,  { foreignKey: 'option_id',  as: 'option'  });
 
 module.exports = OrderItem;

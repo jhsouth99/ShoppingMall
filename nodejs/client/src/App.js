@@ -20,10 +20,7 @@ function App() {
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/cart" element={<CartPage />} />
       <Route path="/payment" element={<PaymentPage />} />
-      <Route
-        path="/category/:categorySlug/:subcategorySlug?"
-        element={<CategoryPage />}
-      />
+      <Route path="/category/:categorySlug" element={<CategoryPage />} />
       <Route path="/products/:id" element={<ProductDetailPage />} />
       {/* 앞으로 추가할 다른 라우트들 */}
       {/* <Route path="*" element={<NotFoundPage />} /> */}

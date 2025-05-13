@@ -24,7 +24,7 @@ export default function CategoryNav() {
       </div>
       {c.children.length > 0 && (
         <ul className="submenu">
-          {c.children.map((ch) => render(ch, `${base}/${c.id}`))}
+          {c.children.map((ch) => render(ch, `${base}`))}
         </ul>
       )}
     </li>

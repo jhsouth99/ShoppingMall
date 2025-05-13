@@ -1,0 +1,574 @@
+/* ProductDetailPage.css */
+
+/* 기본 & 컨테이너 */
+.product-detail-page-container {
+  max-width: 1200px; /* 전체 페이지 최대 너비 */
+  margin: 20px auto;
+  padding: 20px;
+  font-family: 'Noto Sans KR', sans-serif; /* 예시 폰트 */
+  color: #333;
+  background-color: #fff;
+}
+
+.product-main-layout {
+  display: flex;
+  gap: 40px; /* 이미지 영역과 정보 영역 사이 간격 */
+  margin-bottom: 40px;
+}
+
+/* 1. 이미지 영역 */
+.product-images-section {
+  flex: 1; /* 비율 조정 가능, 예: flex: 0 0 45%; */
+  max-width: 500px; /* 이미지 영역 최대 너비 */
+}
+
+.main-image-wrapper {
+  margin-bottom: 15px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.main-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1; /* 정사각형 비율 유지 */
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.thumbnail-container {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-start; /* 이미지에서 중앙 정렬처럼 보이기도 함, 필요시 center */
+}
+
+.thumbnail-item-wrapper {
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  overflow: hidden;
+  width: 80px; /* 썸네일 크기 */
+  height: 80px;
+}
+
+.thumbnail-item-wrapper.active {
+  border-color: #5e25c6; /* 활성 썸네일 테두리 색상 (이미지 참고) */
+}
+
+.thumbnail-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 2. 정보 영역 */
+.product-info-section {
+  flex: 1; /* 비율 조정 가능, 예: flex: 1; */
+  display: flex;
+  flex-direction: column;
+}
+
+.product-title {
+  font-size: 28px; /* 제품명 크기 */
+  font-weight: 600;
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+
+.product-price-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  font-size: 20px;
+}
+
+.original-price {
+  text-decoration: line-through;
+  color: #aaa;
+  font-size: 0.9em;
+}
+
+.final-price {
+  font-size: 1.4em; /* 28px 정도 */
+  font-weight: 700;
+  color: #333; /* 최종 가격 색상 */
+}
+
+.discount-badge {
+  background-color: #ff4d4f; /* 할인율 배경색 (예시) */
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8em; /* 16px 정도 */
+  font-weight: bold;
+}
+
+.product-short-description {
+  font-size: 15px;
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.product-options-area {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* 각 옵션 그룹 사이 간격 */
+  margin-bottom: 20px;
+}
+
+.option-group {
+  display: flex;
+  align-items: center; /* 세로 중앙 정렬 */
+  gap: 10px;
+}
+
+.option-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  width: 60px; /* 레이블 너비 고정 */
+  flex-shrink: 0;
+}
+
+.option-control {
+  flex-grow: 1;
+}
+
+.color-swatch-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.color-swatch-item {
+  width: 28px; /* 색상 견본 크기 */
+  height: 28px;
+  border-radius: 50%; /* 원형 */
+  border: 2px solid #e0e0e0;
+  cursor: pointer;
+  padding: 0; /* 버튼 기본 패딩 제거 */
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.color-swatch-item:hover {
+  transform: scale(1.1);
+}
+
+.color-swatch-item.active {
+  border-color: #000; /* 활성 색상 테두리 */
+  /* transform: scale(1.15); */
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #000; /* 좀 더 눈에 띄는 효과 */
+}
+
+.option-select-dropdown {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 15px;
+  background-color: white;
+  cursor: pointer;
+}
+.option-select-dropdown:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  overflow: hidden;
+  width: fit-content; /* 내용물에 맞게 너비 조절 */
+}
+
+.quantity-button {
+  background-color: #f7f7f7;
+  border: none;
+  color: #333;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 8px 12px;
+  font-weight: bold;
+  line-height: 1; /* 버튼 높이 일관성 */
+}
+.quantity-button:hover {
+  background-color: #e9e9e9;
+}
+.quantity-button.decrease {
+  border-right: 1px solid #ccc;
+}
+.quantity-button.increase {
+  border-left: 1px solid #ccc;
+}
+
+
+.quantity-input-field, .quantity-input /* 이전 코드 클래스 호환 */ {
+  width: 50px;
+  text-align: center;
+  border: none;
+  font-size: 15px;
+  padding: 8px 0;
+  appearance: textfield; /* Firefox에서 number input 화살표 제거 */
+}
+.quantity-input-field::-webkit-outer-spin-button,
+.quantity-input-field::-webkit-inner-spin-button {
+  -webkit-appearance: none; /* Chrome, Safari 등에서 number input 화살표 제거 */
+  margin: 0;
+}
+
+
+.total-price-summary {
+  margin-top: auto; /* 정보 영역 하단으로 밀착 */
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f0;
+  text-align: right;
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.total-amount-value {
+  font-size: 1.3em; /* 24px 정도 */
+  font-weight: bold;
+  color: #d32f2f; /* 총 금액 색상 (강조) */
+  margin-left: 8px;
+}
+
+/* 이전 코드의 .total-price는 필요 없을 경우 display: none; 처리 */
+.total-price {
+ display: none;
+}
+
+.action-buttons-group {
+  display: flex;
+  gap: 10px;
+}
+
+.action-button {
+  flex-grow: 1;
+  padding: 12px 15px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+  text-align: center;
+}
+.action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+.action-button.primary-button.buy-now {
+  background-color: #5e25c6; /* 주 구매 버튼 색상 (이미지 참고) */
+  color: white;
+  line-height: 1.2; /* 버튼 내 줄바꿈 고려 */
+}
+.action-button.primary-button.buy-now:hover:not(:disabled) {
+  background-color: #4a1da0; /* 호버 시 약간 어둡게 */
+}
+
+.action-button.secondary-button.add-to-cart {
+  background-color: #f0f0f0; /* 장바구니 버튼 배경색 */
+  color: #333;
+  border: 1px solid #ddd;
+}
+.action-button.secondary-button.add-to-cart:hover:not(:disabled) {
+  background-color: #e0e0e0;
+}
+
+.wishlist-button {
+  flex-grow: 0; /* 크기 고정 */
+  width: 50px; /* 정사각형에 가깝게 */
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  color: #555; /* 아이콘 색상 */
+  padding: 10px; /* 아이콘 크기 고려 */
+}
+.wishlist-button svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor; /* 버튼 color에 따라 SVG 색상 변경 */
+}
+.wishlist-button:hover:not(:disabled) {
+  background-color: #e0e0e0;
+}
+.wishlist-button.active {
+  color: #ff4d4f; /* 찜 활성 시 아이콘 색상 (빨간색) */
+  border-color: #ff4d4f;
+}
+
+
+/* 3. 탭 영역 */
+.product-tabs-section {
+  margin-top: 40px;
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+}
+
+.tab-buttons-container, .tab-buttons /* 이전 코드 클래스 호환 */ {
+  display: flex;
+  border-bottom: 2px solid #eee;
+  margin-bottom: 20px;
+}
+
+.tab-button-item, .tab-button /* 이전 코드 클래스 호환 */ {
+  padding: 12px 20px;
+  cursor: pointer;
+  border: none;
+  background-color: transparent;
+  font-size: 16px;
+  font-weight: 500;
+  color: #555;
+  position: relative;
+  bottom: -2px; /* 활성 탭 테두리와 이어지도록 */
+  border-bottom: 2px solid transparent;
+}
+.tab-button-item:hover, .tab-button:hover {
+  color: #000;
+}
+.tab-button-item.active, .tab-button.active {
+  color: #5e25c6; /* 활성 탭 텍스트 색상 */
+  border-bottom-color: #5e25c6; /* 활성 탭 하단 테두리 */
+  font-weight: 600;
+}
+
+.tab-content-area {
+  padding: 20px 0;
+}
+
+.tab-content-panel, .tab-content /* 이전 코드 클래스 호환 */ {
+  display: none; /* 기본적으로 숨김 */
+  animation: fadeIn 0.5s; /* 간단한 페이드인 효과 */
+}
+.tab-content-panel.active, .tab-content.active {
+  display: block; /* 활성 탭 내용만 표시 */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.detail-image-item {
+  max-width: 100%;
+  margin: 0 auto 20px auto; /* 중앙 정렬 및 하단 마진 */
+  display: block;
+}
+.detail-text-item {
+  font-size: 16px;
+  line-height: 1.7;
+  color: #444;
+}
+
+.spec-table-view, .spec-table /* 이전 코드 클래스 호환 */ {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+.spec-table-view th, .spec-table-view td,
+.spec-table th, .spec-table td {
+  border: 1px solid #e0e0e0;
+  padding: 10px 12px;
+  text-align: left;
+}
+.spec-table-view th, .spec-table th {
+  background-color: #f9f9f9;
+  font-weight: 500;
+  width: 150px; /* 사양 이름 칸 너비 */
+}
+
+.shipping-refund-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+.shipping-refund-title:first-child {
+  margin-top: 0;
+}
+.shipping-refund-list {
+  list-style-type: disc;
+  padding-left: 20px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.shipping-refund-list li {
+  margin-bottom: 8px;
+}
+
+.review-item-card, .review-item /* 이전 코드 클래스 호환 */ {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 15px 0;
+}
+.review-item-card:last-child {
+  border-bottom: none;
+}
+.review-author-rating {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.review-author-name {
+  font-weight: 600;
+  font-size: 15px;
+}
+.review-rating-stars {
+  color: #fadb14; /* 별점 색상 */
+  font-size: 16px;
+}
+.review-comment-text {
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 8px;
+  color: #444;
+}
+.review-date-text {
+  font-size: 13px;
+  color: #888;
+}
+.reviews-no-data, .spec-no-data { /* 공통 "데이터 없음" 스타일 */
+  text-align: center;
+  padding: 30px;
+  color: #777;
+  font-size: 16px;
+}
+
+
+/* 4. 관련 상품 영역 */
+.related-products-section {
+  margin-top: 50px;
+  padding-top: 30px;
+  border-top: 1px solid #eee;
+}
+.related-products-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.related-product-grid, .product-grid /* 이전 코드 클래스 호환 */ {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* 반응형 그리드 */
+  gap: 20px;
+}
+/* ProductCard 내부 스타일은 ProductCard.css 에서 정의 */
+
+
+/* 5. 모달 */
+.modal-overlay, .modal /* 이전 코드 클래스 호환 */ {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7); /* 반투명 배경 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* 다른 요소들 위에 표시 */
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal-dialog-content, .modal-content /* 이전 코드 클래스 호환 */ {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  position: relative;
+  max-width: 90vw; /* 화면 너비의 90% */
+  max-height: 90vh; /* 화면 높이의 90% */
+  overflow: auto; /* 내용 많을 시 스크롤 */
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.modal-close-button, .close-modal /* 이전 코드 클래스 호환 */ {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #555;
+  background: none;
+  border: none;
+  cursor: pointer;
+  line-height: 1;
+}
+.modal-close-button:hover, .close-modal:hover {
+  color: #000;
+}
+
+.modal-main-image, .modal-image /* 이전 코드 클래스 호환 */ {
+  display: block;
+  max-width: 100%;
+  max-height: calc(90vh - 80px); /* 모달 패딩, 닫기 버튼 공간 고려 */
+  margin: auto;
+  object-fit: contain;
+}
+
+/* 수량 조절 버튼 내부 input 스타일 (이전 코드의 quantity-container) */
+.quantity-container { /* 이전 JSX의 클래스명에 대한 스타일 */
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  overflow: hidden;
+  width: fit-content; /* 내용물에 맞게 너비 조절 */
+}
+.quantity-container .quantity-button { /* 이전 JSX의 클래스명에 대한 스타일 */
+  background-color: #f7f7f7;
+  border: none;
+  color: #333;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 8px 12px;
+  font-weight: bold;
+  line-height: 1;
+}
+.quantity-container .quantity-button:hover {
+  background-color: #e9e9e9;
+}
+.quantity-container .quantity-button:first-child { /* '-' 버튼 */
+  border-right: 1px solid #ccc;
+}
+.quantity-container .quantity-button:last-child { /* '+' 버튼 */
+  border-left: 1px solid #ccc;
+}
+.quantity-container .quantity-input { /* 이전 JSX의 클래스명에 대한 스타일 */
+  width: 50px;
+  text-align: center;
+  border: none;
+  font-size: 15px;
+  padding: 8px 0;
+  appearance: textfield;
+}
+.quantity-container .quantity-input::-webkit-outer-spin-button,
+.quantity-container .quantity-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* 이미지에 있는 공동구매 버튼 스타일 (제외 요청으로 주석 처리 또는 삭제) */
+.action-button.tertiary-button.team-buy {
+  background-color: #e8f4fd;
+  color: #1976d2;
+  border: 1px solid #bbdefb;
+}
+.action-button.tertiary-button.team-buy:hover:not(:disabled) {
+  background-color: #d0e8fa;
+}

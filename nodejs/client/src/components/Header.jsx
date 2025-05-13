@@ -33,7 +33,7 @@ export default function Header({ cartCount = 0 }) {
             {user ? (
               <>
                 <Link to="/mypage">마이페이지</Link>
-                <button onClick={handleLogout}>로그아웃</button>
+                <Link onClick={handleLogout}>로그아웃</Link>
                 <Link to="/cart" className="cart-btn">
                   장바구니 <span className="cart-count">{cartCount}</span>
                 </Link>
@@ -41,6 +41,7 @@ export default function Header({ cartCount = 0 }) {
             ) : (
               <>
                 <Link to="/login" >로그인</Link>
+                &nbsp;&nbsp;&nbsp;&nbsp;
                 <Link to="/register">회원가입</Link>
               </>
             )}

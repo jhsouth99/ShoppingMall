@@ -1,0 +1,46 @@
+{
+  "development": {
+    "username": "root",
+    "password": "1234",
+    "database": "ecommerce",
+    "host": "127.0.0.1",
+    "dialect": "mysql",
+    "timezone": "+09:00",
+    "dialectOptions": {
+      "charset": "utf8mb4",
+      "collate": "utf8mb4_unicode_ci"
+    }
+  },
+  "test": {
+    "username": "root",
+    "password": "1234",
+    "database": "ecommerce",
+    "host": "127.0.0.1",
+    "dialect": "mysql",
+    "logging": false,
+    "timezone": "+09:00",
+    "dialectOptions": {
+      "charset": "utf8mb4",
+      "collate": "utf8mb4_unicode_ci"
+    }
+  },
+  "production": {
+    "username": "root",
+    "password": "1234",
+    "database": "ecommerce",
+    "host": "YOUR_DB_HOST_PROD",
+    "dialect": "mysql",
+    "logging": false,
+    "timezone": "+09:00",
+    "dialectOptions": {
+      "charset": "utf8mb4",
+      "collate": "utf8mb4_unicode_ci"
+    },
+    "pool": {
+      "max": 5,
+      "min": 0,
+      "acquire": 30000,
+      "idle": 10000
+    }
+  }
+}

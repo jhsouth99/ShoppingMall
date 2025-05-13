@@ -1,49 +1,36 @@
+// models/cartItem.js
 const { DataTypes, Sequelize } = require('sequelize');
 const sequelize = require('../config/database');
 const User = require('./User');
-const Product = require('./Product');
+const ProductVariant = require('./ProductVariant');
 
-const CartItem = sequelize.define(
-  'CartItem',
-  {
-    id: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      autoIncrement: true,
-      primaryKey: true
-    },
-    user_id: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false,
-      references: { model: User, key: 'id' },
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE'
-    },
-    product_id: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false,
-      references: { model: Product, key: 'id' },
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE'
-    },
-    quantity: {
-      type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false,
-      defaultValue: 1
-    },
-    added_at: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-    }
+const CartItem = sequelize.define('CartItem', {
+  user_id: {
+    type: DataTypes.BIGINT.UNSIGNED,
+    primaryKey: true,
+    allowNull: false,
+    references: { model: 'users', key: 'id' },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
   },
-  {
-    tableName: 'cart_items',
-    timestamps: false
+  product_variant_id: {
+    type: DataTypes.BIGINT.UNSIGNED,
+    primaryKey: true,
+    allowNull: false,
+    references: { model: 'product_variants', key: 'id' }
+  },
+  quantity: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  added_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
   }
-);
-
-// 관계 설정
-CartItem.belongsTo(User,    { foreignKey: 'user_id',    as: 'user'    });
-CartItem.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
+}, {
+  tableName: 'cart_items',
+  timestamps: false // added_at 수동 정의
+});
 
 module.exports = CartItem;
