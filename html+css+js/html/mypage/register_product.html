@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>이거 어때 - 제품 등록</title>
+		<link rel='stylesheet' href='https://cdn-uicons.flaticon.com/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+		<link rel='stylesheet' href='https://cdn-uicons.flaticon.com/uicons-solid-rounded/css/uicons-solid-rounded.css'>
+		<link rel='stylesheet' href='https://cdn-uicons.flaticon.com/uicons-bold-rounded/css/uicons-bold-rounded.css'>
+		
+		<script>
+			
+			// 드래그한 텍스트를 문자열로 반환
+			let sel = window.getSelection();
+			//
+			let input_detail = document.getElementById("input-detail");
+
+			// onChange 함수
+			// 카테고리에 따른 제품 사양 사항 등록
+			function selCategory(){ 
+				let categoryVal = document.getElementById("sel-category").value;
+				let addTitle = document.getElementById("addTitle");
+				let addInput = document.getElementById("addInput");
+				
+				addTitle.innerHTML = "";
+				addInput.innerHTML = "";
+				
+				if( categoryVal === 'clothing' ){
+					let newTitle = document.createElement("td");
+					let newInput = document.createElement("td");
+					newTitle.innerHTML = "세탁방법";
+					addTitle.appendChild(newTitle);
+					
+					newInput.innerHTML = "<input id='laundry' placeholder='ex)드라이클리닝 권장'>";
+					addInput.appendChild(newInput);
+					
+				}else if( categoryVal === 'food' ){
+					let newTitle = document.createElement("td");
+					let newInput = document.createElement("td");
+					newTitle.innerHTML = "제조연월/유통기한";
+					addTitle.appendChild(newTitle);
+					
+					newInput.innerHTML = "<input id='manufacturing-date' placeholder='ex)20XX-XX-XX제조, 20XX-XX-XX까지'>";
+					addInput.appendChild(newInput);
+					
+				}else if( categoryVal === 'electronics' ){
+					let newTitle = document.createElement("td");
+					let newInput = document.createElement("td");
+					newTitle.innerHTML = "전자제품 사양";
+					addTitle.appendChild(newTitle);
+					
+					newInput.innerHTML = "<input id='electronics-spec' placeholder='ex)운영체제, CPU, RAM...'>";
+					addInput.appendChild(newInput);
+				}
+			}
+			
+			// 상품 상세 설명 글꼴, 폰트 크기 설정
+			function editFont() {
+				let = document.getElementById("");
+			} // editFont()
+			
+			
+			// onClick 함수
+			// 취소 버튼 클릭 시 창 닫기
+			function showPage(){
+				
+			} // 
+			
+			
+			// 카테고리 선택 시 카테고리에 따른 하위 카테고리 생성
+			function createSubCtg(){
+				// 카테고리 선택과 동시에 해당 카테고리에 따른 상품 사양 추가
+				selCategory();
+				
+				let categories = document.getElementById("sel-category").value;
+				let sub_ctg = document.getElementById("sub-category");
+				
+				sub_ctg.innerHTML = "";
+				// 상위 카테고리 별 하위 카테고리의 배열
+				let sub_clothing = ["신발", "상의", "하의", "아우터"];
+				let sub_food = ["베이커리", "농산", "축산", "수산", "간식", "양념/면"];
+				let sub_electronics = ["가전/TV", "컴퓨터/노트북/조립PC","태블릿/모바일", "카메라"];
+				
+				if( categories === "clothing" ){
+					
+					for(let i = 0; i < sub_clothing.length; i++){ 
+						let newOption = document.createElement("option");
+						newOption.innerHTML = sub_clothing[i];
+						newOption.value = sub_clothing[i];
+						
+						sub_ctg.appendChild(newOption);
+					}
+				}else if( categories === "food"){
+					for(let i = 0; i < sub_food.length; i++){
+						let newOption = document.createElement("option");
+						newOption.innerHTML = sub_food[i];
+						newOption.value = sub_food[i];
+						
+						sub_ctg.appendChild(newOption);
+					}
+				}else if( categories === "electronics" ){
+					for(let i = 0; i < sub_electronics.length; i++){
+						let newOption = document.createElement("option");
+						newOption.innerHTML = sub_electronics[i];
+						newOption.value = sub_electronics[i];
+						
+						sub_ctg.appendChild(newOption);
+					}
+				}else{
+					let newOption = document.createElement("option");
+					newOption.innerHTML = ":: 하위 카테고리 ::";
+					newOption.value = "";
+					sub_ctg.appendChild(newOption);
+				}
+				
+			} // createSubCtg()
+			
+			// 할인여부 체크박스 클릭 시 할인율 입력 필드 활성화
+			function activeTextfield(){
+				let discount_cb = document.getElementById("discount-checkbox");
+				const discount_tf = document.getElementById("discount-textfield");
+				
+				discount_cb.addEventListener('change', function() {
+					
+				
+				});
+			} // activeTextfield()
+			
+			// 저장 버튼 클릭 이벤트
+			function clickSaveBnt(){
+				alert('저장되었습니다(저장 기능 구현 필요)');
+			}
+			
+			// 등록 버튼 클릭 이벤트(가장 마지막 등록 날짜 출력)
+			function updateDateTime() {
+				let now = new Date();
+				let post_btn = document.getElementById("register-post");
+				let now_time = document.getElementById("now-time");
+            
+	            // 날짜 포맷팅 (년-월-일 요일)
+	            const year = now.getFullYear();
+	            const month = String(now.getMonth() + 1).padStart(2, '0');
+	            const day = String(now.getDate()).padStart(2, '0');
+	            const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+	            const weekday = weekdays[now.getDay()];
+	            
+	            // 시간 포맷팅 (시:분:초)
+	            const hours = String(now.getHours()).padStart(2, '0');
+	            const minutes = String(now.getMinutes()).padStart(2, '0');
+	            const seconds = String(now.getSeconds()).padStart(2, '0');
+	            
+	            // HTML 요소에 삽입
+	            now_time.textContent = 
+	                `${year}년 ${month}월 ${day}일 (${weekday})`+ " " +`${hours}:${minutes}:${seconds}`
+	                + ' 에 마지막으로 수정됨';
+			} // updateDateTime()
+			
+			// 상품 상세 설명 편집기 버튼 클릭 이벤트 
+			function editDetail() {
+				let selText = sel.rangeCount;
+				
+				let bold = document.getElementById("bold");
+				let italic = document.getElementById("italic");
+				let underline = document.getElementById("underline");
+				let strikethrough = document.getElementById("strikethrough");
+				let text_color = document.getElementById("color");
+				let text_background = document.getElementById("background");
+				let align_left = document.getElementById("align-left");
+				let align_center = document.getElementById("align-center");
+				let align_right = document.getElementById("align-right");
+				
+				input_detail.focus();
+
+			} // editDetail()
+			
+		</script>
+		
+		
+		<style>
+			*{ margin:0; padding:0; }
+			
+			#header img, button, select{ cursor:pointer; }
+			
+			.add-img{ 
+				border:none;
+				background:none; }
+			
+			#register-container{
+				max-width: 1000px;
+	            margin: 0 auto;
+	            padding: 20px;
+	            background:#fff;
+	            position:relative;
+	            /* border:1px solid red; */
+	            position:relative;
+			}
+			
+			/* header 영역 */
+			#header{ position:relative; }
+			
+			#header h3{ margin-bottom:15px; }
+			
+			#header img{ position:absolute;
+			             top:5px; right:10px;
+			             cursor:pointer; }
+			             
+			/* content 영역 */            
+			#content div{ padding:5px 0; }
+			
+			#content h4{ margin-bottom:10px; margin-top:5px; }
+			
+			p{ margin-bottom:5px; }
+			
+			/* 상품 정보(detail-info) */
+			table{ margin:5px;}
+			
+			table td{ padding:5px 0; }
+			#head{ width: 3%; }
+			#cont{ width:50%; }
+						
+			input, select, button{ 
+            	 padding: 5px;
+            	 margin:0 5px;
+            	 background:#fff;
+            	 border: 1px solid #ddd;
+            	 border-radius: 4px;
+            	 font-size: 15px; 
+			 }
+			 
+			 input{ 
+				 outline:none;
+				 width:300px;
+			 }
+			 
+			 #product-name{ width:500px; }
+			 
+			 #discount-checkbox, #radio-act, #radio-unact, #keyword{
+				 width:auto;
+			 }
+			
+			
+			
+			/* 상품 상세 설명 */       
+			#input-container{
+				border-radius:5px;
+				padding:0;
+			}
+			
+			#tool-bar{
+				border:1px solid #696969;
+				border-top-left-radius:5px;
+				border-top-right-radius:5px;
+				background:#A5B4FC;
+			}
+
+			#input-detail{
+				border-bottom:1px solid #696969;
+				border-left:1px solid #696969;
+				border-right:1px solid #696969;
+				border-bottom-left-radius:5px;
+				border-bottom-right-radius:5px;
+				outline:none;
+				height:500px;
+				overflow:auto;
+			}
+			
+			#spec-info tr:nth-child(2){ padding-left:10px; }
+
+			 select{
+				 margin-left:10px;
+				 width:10%;
+			 }
+			 
+			 #sub-category{ width:15%; }
+			 
+			 button{ width:3%; }
+			 
+			 textarea{
+				 resize:none;
+				 width:99%;
+				 height:200px;
+				 outline:none;
+				 border: 1px solid #ddd;
+				 font-size:16px;
+			 }
+			 
+			 .img-limit{ 
+				 font-size:16px; 
+				 font-weight:normal;
+				 color:#808080; }
+			 
+			 
+			 /* footer 영역 */
+			 .footer{ 
+				 margin:15px 5px; 
+				 /* border:1px solid red; */
+				 position:relative;
+			 }
+			 
+			 .footer-buttons{ 
+				 /* border:1px solid blue; */
+				 padding:20px;
+				 margin-bottom:15px;
+				 position:relative;
+	          } 
+	          
+			 .footer-buttons button{ 
+				 width:8%;
+	             padding:10px 0;
+	             background-color:#6366f1;
+	             color:#fff;
+	             border-radius:4px;
+	             font-size:16px;
+	             font-weight:bold;
+	             transition:background-color 0.3s;
+	             position:absolute;
+	         }
+
+	         #register-save:hover, #register-post:hover{ background:#4263eb; }
+	         
+	         #register-save{ left:40%; top:0; }
+			 
+			 #register-post{ left:50%; top:0; }
+			 
+			 
+			
+			
+		</style>
+	</head>
+	
+	
+	<body>
+		<div id="register-container">
+			<div id="header">
+				<h3>제품 등록</h3>
+				<img src="image_project/cancel_16.png" onclick="showPage();"></img>
+			</div>
+			
+			<hr>
+			
+			<div id="content">
+				<h4>상품 정보</h4>
+				<table id="detail-info">
+					<tr>
+						<td id="head">상품명</td>
+						<td id="cont"><input id="product-name" placeholder="상품명을 입력해주세요"></td>
+					</tr>
+					<tr>
+						<td id="head">ID</td>
+						<td id="cont"><input id="product-id" placeholder="상품 id를 입력해주세요"></td>
+					</tr>
+					<tr>
+						<td id="head">가격</td>
+						<td id="cont"><input id="price" placeholder="상품 가격을 입력하세요">원</td>
+					</tr>
+					<tr>
+						<td id="head">할인율</td>
+						<td id="cont">
+							<input id="discount-textfield" placeholder="할인율을 입력하세요" disabled>%
+							<input type="checkbox" id="discount-checkbox" onchange="activeTextfield();">할인 여부</input>
+						</td>
+					</tr>
+					<tr>
+						<td id="head">재고</td>
+						<td id="cont"><input id="inventory" placeholder="재고량을 입력하세요"></td>
+					</tr>
+					<tr>
+						<td id="head">상태</td>
+						<td id="cont">
+							<input type="radio" id="radio-act" value="active" name="state">활성</input>
+							<input type="radio" id="radio-unact" value="unactive" name="state">비활성</input>
+						</td>
+					</tr>
+					<tr>
+						<td id="head">등록일</td>
+						<td id="cont"><div id="now-time"></div></td>
+					</tr>
+				</table>
+				
+				<hr>
+				
+				<div id="categories"><!-- 카테고리 -->
+					<h4>카테고리</h4>
+					<select id="sel-category" onchange="createSubCtg();">
+						<option value="">:: 카테고리 ::</option>
+						<option value="clothing">의류</option>
+						<option value="food">식품</option>
+						<option value="electronics">전자기기</option>
+					</select>
+					
+					<select id="sub-category">
+						<option>:: 하위 카테고리 ::</option>
+					</select>	
+				</div>
+				
+				<hr>
+				
+				<!--  
+				<div id="keyword">
+					<h4>키워드</h4>
+					<input type="checkbox">
+				</div>
+
+				<hr>	
+				-->
+				
+				<div><!-- 대표/썸네일 이미지 추가 -->
+					<h4>상품 이미지<span class="img-limit">(최대 5장)</span></h4>
+					<input type="file" class="add-img" id="center-img" multiple>
+				</div>
+				
+				<hr>
+				
+				<div id="detail-container">
+					<h4>상품 상세 설명</h4>
+					
+					<div id="input-container">
+						<div id="tool-bar">
+							<select id="font-family" onchange="">
+								<option id="">기본서체</option>
+								<option id="">나눔고딕</option>
+								<option id="">나눔바른고딕</option>
+								<option id="">나눔스퀘어</option>
+							</select>
+							
+							<select id="font-size" title="글자크기" onchange="">
+								<option value="11">11</option>
+								<option value="13">13</option>
+								<option value="16" selected>16</option>
+								<option value="19">19</option>
+								<option value="24">24</option>
+								<option value="28">28</option>
+								<option value="28">30</option>
+								<option value="28">34</option>
+								<option value="38">38</option>
+							</select>
+							
+							<button id="bold" title="굵게"><i class="fi fi-br-bold" ></i></button>
+							<button id="italic" title="기울기"><i class="fi fi-br-italic"></i></button>
+							<button id="underline" title="밑줄"><i class="fi fi-br-underline"></i></button>
+							<button id="strikethrough" title="취소선"><i class="fi fi-br-strikethrough"></i></button>
+							<button id="color" title="글자색" style="font-weight:bold; font-size:16px;">T</button>
+							<button id="background" title="배경색" style="font-weight:bold; font-size:16px;">T</button>
+							
+							<button id="align-left" title="왼쪽정렬"><i class="fi fi-br-align-left"></i></button>
+							<button id="align-center" title="가운데정렬"><i class="fi fi-br-align-center"></i></button>
+							<button id="align-right" title="오른쪽정렬"><i class="fi fi-br-symbol"></i></button>
+								
+							<input class="add-img" type="file" title="이미지삽입">
+						</div>
+						
+						<div id="input-detail" contenteditable="true"></div>
+							
+					</div>
+				</div>
+				
+				<hr>
+				
+				<div id="product-spec"><!-- 의류, 식품, 전자기기 별 상품 사양 등록-> 라디오 선택 후 등록? -->
+					<h4>상품 사양</h4>
+					
+					<table id="spec-info">
+						<tr>
+							<td>소재/재질</td>
+							<td><input id="meterial" placeholder="ex)울 100%"></td>
+						</tr>
+						<tr>
+							<td>제조국</td>
+							<td><input id="manufacture-country" placeholder="ex)대한민국"></td>
+						</tr>
+						<tr>
+							<td>제조사</td>
+							<td><input id="manufacture-company" placeholder="ex)(주)OOOO"></td>
+						</tr>
+						<tr>
+							<td id="addTitle"></td>
+							<td id="addInput"></td>
+						</tr>
+						<tr>
+							<td>취급시 주의사항</td>
+							<td><input id="caution" placeholder="ex)화기 엄금"></td>
+						</tr>
+						<tr>
+							<td>품질보증기준</td>
+							<td><input id="qas" placeholder="ex)관련 법 및 소비자 분쟁해결 규정에 따름"></td>
+						</tr>
+						<tr>
+							<td>a/s 책임자(전화번호)</td>
+							<td><input id="as-manager" placeholder="ex)홍길동(010-0000-0000)"></td>
+						</tr>
+					</table>
+			</div>
+			
+			<hr>
+			
+			<div class="footer">
+				<div class="footer-buttons">
+					<button id="register-save" onclick="clickSaveBnt();">저장</button>
+					<button id="register-post" onclick="updateDateTime();">등록</button>
+					<!-- 중간 저장 버튼..? 미리보기 버튼 -->
+				</div>
+			</div>
+			
+			
+		</div><!-- container -->
+		
+		
+	</body>
+	
+	
+</html>
