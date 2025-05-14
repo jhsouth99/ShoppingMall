@@ -10,7 +10,7 @@
 	<script src="../javascript/admin/modal.js"></script>
 	<script src="../javascript/admin/coupon.js"></script>
 	<script src="../javascript/admin/pagination.js"></script>
-	<script src="../javascript/admin/navigate.js"></script>
+	<script src="../javascript/admin/navigation.js"></script>
 	<script src="../javascript/admin/user.js"></script>
 	<script src="../javascript/admin/seller.js"></script>
 	<script src="../javascript/admin/order.js"></script>
@@ -202,17 +202,11 @@
 				<input type="text" placeholder="주문번호 또는 사용자 검색..." />
 				<select>
 					<option value="">상태 전체</option>
-					<option value="pending_payment">결제 대기</option>
-					<option value="processing">처리중</option>
-					<option value="shipped">배송중</option>
+					<option value="pending">결제 대기</option>
+					<option value="processing">처리 중</option>
+					<option value="shipping">배송 중</option>
 					<option value="delivered">배송 완료</option>
 					<option value="cancelled">취소</option>
-					<option value="refunded">환불</option>
-				</select>
-				<select>
-					<option value="">유형 전체</option>
-					<option value="solo">단독구매</option>
-					<option value="group">공동구매</option>
 				</select>
 				<button class="btn btn-secondary btn-sm">검색</button>
 			</div>
@@ -220,161 +214,114 @@
 				<thead>
 					<tr>
 						<th>주문번호</th>
-						<th>사용자</th>
-						<th>주문일</th>
-						<th>상품(개수)</th>
+						<th>상품명</th>
+						<th>수량</th>
 						<th>총 금액</th>
-						<th>유형</th>
+						<th>주문자</th>
+						<th>주문일시</th>
 						<th>상태</th>
 						<th>작업</th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr>
-						<td>S20250422001</td>
-						<td>홍길동(user_gildong)</td>
-						<td>2025-04-22</td>
-						<td>일반 상품 A (1)</td>
-						<td>55,000원</td>
-						<td>단독</td>
-						<td>배송 준비중</td>
+						<td>ORD1001</td>
+						<td>[공동구매] 대용량 보조배터리</td>
+						<td>1</td>
+						<td>25,000</td>
+						<td>홍길동</td>
+						<td>2025-04-25 10:30</td>
+						<td><span style="color: blue;">배송 중</span></td>
 						<td class="actions">
-							<button class="btn btn-secondary btn-sm" onclick="viewOrder('S20250422001')">
-								상세
-							</button>
+							<button class="btn btn-secondary btn-sm">상세</button>
+							<button class="btn btn-warning btn-sm">상태 변경</button>
 						</td>
 					</tr>
 					<tr>
-						<td>G20250420005</td>
-						<td>김철수(user_chulsu)</td>
-						<td>2025-04-20</td>
-						<td>[공동구매] 특별 상품 D (1)</td>
-						<td>45,000원</td>
-						<td>공동</td>
-						<td>상품 준비중 (성공)</td>
+						<td>ORD1002</td>
+						<td>[일반] 스마트 워치</td>
+						<td>1</td>
+						<td>150,000</td>
+						<td>김철수</td>
+						<td>2025-05-01 14:00</td>
+						<td><span style="color: green;">배송 완료</span></td>
 						<td class="actions">
-							<button class="btn btn-secondary btn-sm" onclick="viewOrder('G20250420005')">
-								상세
-							</button>
+							<button class="btn btn-secondary btn-sm">상세</button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</section>
+
+		<section id="coupon-management" class="content-section">
+			<h2>쿠폰 관리</h2>
+			<button class="btn btn-primary btn-sm" id="addCouponBtn">새 쿠폰 추가</button>
+			<div class="filter-controls">
+				<input type="text" placeholder="쿠폰 코드 또는 이름 검색..." />
+				<select>
+					<option value="">상태 전체</option>
+					<option value="active">활성</option>
+					<option value="expired">만료</option>
+					<option value="upcoming">예정</option>
+				</select>
+				<button class="btn btn-secondary btn-sm">검색</button>
+			</div>
+			<table class="data-table">
+				<thead>
+					<tr>
+						<th>쿠폰 코드</th>
+						<th>쿠폰 이름</th>
+						<th>할인율(%)</th>
+						<th>수량</th>
+						<th>발급 기간</th>
+						<th>사용 기간</th>
+						<th>상태</th>
+						<th>작업</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>SUMMER2025</td>
+						<td>여름맞이 할인</td>
+						<td>10</td>
+						<td>1000</td>
+						<td>2025-06-01 ~ 2025-06-30</td>
+						<td>2025-06-01 ~ 2025-07-15</td>
+						<td>활성</td>
+						<td class="actions">
+							<button class="btn btn-secondary btn-sm" onclick="editCoupon('SUMMER2025')">수정</button>
+							<button class="btn btn-danger btn-sm">삭제</button>
+						</td>
+					</tr>
+					<tr>
+						<td>NEWUSER10</td>
+						<td>신규 가입 쿠폰</td>
+						<td>15</td>
+						<td>무제한</td>
+						<td>상시</td>
+						<td>발급일로부터 30일</td>
+						<td>활성</td>
+						<td class="actions">
+							<button class="btn btn-secondary btn-sm" onclick="editCoupon('NEWUSER10')">수정</button>
 						</td>
 					</tr>
 				</tbody>
 			</table>
 
-			<!-- 주문 상세 모달 -->
-			<div id="orderDetailModal" class="modal">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h3>주문 상세 정보</h3>
-						<span class="close-modal">&times;</span>
-					</div>
-					<div class="modal-body">
-						<div class="order-detail-container">
-							<div class="order-info-section">
-								<h4>주문 정보</h4>
-								<p><strong>주문번호:</strong> <span id="order-id">S20250422001</span></p>
-								<p><strong>주문 일시:</strong> <span id="order-date">2025-04-22 14:30:25</span></p>
-								<p><strong>주문 상태:</strong> <span id="order-status">배송 준비중</span></p>
-								<p><strong>주문 유형:</strong> <span id="order-type">단독</span></p>
-							</div>
-
-							<div class="order-info-section">
-								<h4>구매자 정보</h4>
-								<p><strong>아이디:</strong> <span id="buyer-id">user_gildong</span></p>
-								<p><strong>이름:</strong> <span id="buyer-name">홍길동</span></p>
-								<p><strong>연락처:</strong> <span id="buyer-phone">010-1234-5678</span></p>
-								<p><strong>주소:</strong> <span id="buyer-address">서울특별시 강남구 테헤란로 123, 456동 789호</span>
-								</p>
-							</div>
-
-							<div class="order-info-section full-width">
-								<h4>상품 정보</h4>
-								<div id="order-products">
-									<div class="product-item">
-										<p><strong>상품 번호:</strong> P001</p>
-										<p><strong>상품명:</strong> 일반 상품 A</p>
-										<p><strong>옵션:</strong> 기본 옵션</p>
-										<p><strong>가격:</strong> 55,000원 x 1개 = 55,000원</p>
-									</div>
-								</div>
-							</div>
-
-							<div class="order-info-section">
-								<h4>결제 정보</h4>
-								<p><strong>상품 금액:</strong> <span id="product-price">55,000원</span></p>
-								<p><strong>배송비:</strong> <span id="shipping-fee">3,000원</span></p>
-								<p><strong>할인 금액:</strong> <span id="discount-amount">0원</span></p>
-								<p><strong>총 결제 금액:</strong> <span id="total-amount">58,000원</span></p>
-								<p><strong>결제 방법:</strong> <span id="payment-method">신용카드</span></p>
-								<p><strong>결제 상태:</strong> <span id="payment-status">결제 완료</span></p>
-							</div>
-
-							<div class="order-info-section">
-								<h4>배송 정보</h4>
-								<p><strong>택배사:</strong> <span id="courier-name">CJ대한통운</span></p>
-								<p><strong>운송장 번호:</strong> <span id="tracking-number">12345678901</span></p>
-								<p><strong>배송 상태:</strong> <span id="shipping-status">배송 준비중</span></p>
-								<p><strong>발송일:</strong> <span id="shipping-date">-</span></p>
-								<p><strong>도착 예정일:</strong> <span id="arrival-date">-</span></p>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</section>
-
-		<section id="coupon-management" class="content-section">
-			<h2>쿠폰 관리</h2>
-			<button class="btn btn-primary" onclick="addCoupon()">+ 새 쿠폰 등록</button>
-
-			<div class="filter-controls">
-				<input type="text" placeholder="쿠폰명 검색..." />
-				<select>
-					<option value="">상태 전체</option>
-					<option value="active">활성</option>
-					<option value="inactive">비활성</option>
-				</select>
-				<button class="btn btn-secondary btn-sm">검색</button>
-			</div>
-
-			<div class="coupon-table-container">
-				<table class="data-table">
-					<thead>
-						<tr>
-							<th>번호</th>
-							<th>쿠폰번호</th>
-							<th>쿠폰명</th>
-							<th>할인율/액</th>
-							<th>사용횟수</th>
-							<th>발급기간</th>
-							<th>사용기간</th>
-							<th>작업</th>
-						</tr>
-					</thead>
-					<tbody>
-					</tbody>
-				</table>
-				<div class="pagination">
-					<a href="#" class="prev-page">◀</a>
-					<a href="#" class="page-number active">1</a>
-					<a href="#" class="page-number">2</a>
-					<a href="#" class="page-number">3</a>
-					<a href="#" class="next-page">▶</a>
-				</div>
-			</div>
-
-			<!-- 쿠폰 생성 모달 -->
+			<!-- 새 쿠폰 추가/수정 모달 -->
 			<div id="couponModal" class="modal">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h3>쿠폰 생성</h3>
+						<h3 id="couponModalTitle">새 쿠폰 추가</h3>
 						<span class="close-modal">&times;</span>
 					</div>
 					<div class="modal-body">
 						<form id="couponForm">
+							<input type="hidden" id="coupon-id" value="">
 							<div class="form-group">
-								<label for="coupon-code">쿠폰 번호</label>
-								<input type="text" id="coupon-code" placeholder="영문, 숫자 조합으로 입력해주세요." required>
+								<label for="coupon-code">쿠폰코드</label>
+								<input type="text" id="coupon-code" placeholder="영문, 숫자 조합 (최대 10자)" maxlength="10"
+									required>
 							</div>
 
 							<div class="form-group">
@@ -386,11 +333,11 @@
 							<div class="form-row">
 								<div class="form-group">
 									<label for="coupon-count">쿠폰수량</label>
-									<input type="number" id="coupon-count" min="1" value="1" required>
+									<input type="number" id="coupon-count" min="1" placeholder="무제한: 9999" required>
 								</div>
 								<div class="form-group">
 									<label for="discount-rate">할인율(%)</label>
-									<input type="number" id="discount-rate" min="1" max="100" value="10" required>
+									<input type="number" id="discount-rate" min="1" max="100" required>
 								</div>
 							</div>
 
@@ -417,27 +364,19 @@
 							</div>
 
 							<div class="form-buttons">
-								<button type="submit" class="btn btn-primary">생성</button>
-								<button type="button" class="btn btn-secondary" id="cancelCoupon">취소</button>
+								<button type="submit" class="btn btn-primary" id="saveCouponBtn">저장</button>
+								<button type="button" class="btn btn-secondary" id="cancelCouponBtn">취소</button>
 							</div>
 						</form>
-					</div>
-				</div>
-			</div>
 
-			<!-- 쿠폰 수정 모달 -->
-			<div id="editCouponModal" class="modal">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h3>쿠폰 수정</h3>
-						<span class="close-modal">&times;</span>
-					</div>
-					<div class="modal-body">
-						<form id="editCouponForm">
-							<input type="hidden" id="edit-coupon-id">
+						<!-- 쿠폰 수정 폼 (수정 모달에 재활용하거나 별도 모달 사용) -->
+						<!-- 예시를 위해 별도 ID 부여 -->
+						<form id="editCouponForm" style="display: none;">
+							<input type="hidden" id="edit-coupon-id" value="">
 							<div class="form-group">
-								<label for="edit-coupon-code">쿠폰 번호</label>
-								<input type="text" id="edit-coupon-code" placeholder="영문, 숫자 조합으로 입력해주세요." required>
+								<label for="edit-coupon-code">쿠폰코드</label>
+								<input type="text" id="edit-coupon-code" placeholder="영문, 숫자 조합 (최대 10자)" maxlength="10"
+									readonly required>
 							</div>
 
 							<div class="form-group">
@@ -558,7 +497,7 @@
 							<td>테스트</td>
 							<td>test@email.com</td>
 							<td>2025-03-01</td>
-							<td><span style="color: red">정지</span></td>
+							<td>정지</td>
 							<td class="actions">
 								<button class="btn btn-secondary btn-sm" onclick="viewUser('user_test')">
 									상세
@@ -570,16 +509,27 @@
 						</tr>
 					</tbody>
 				</table>
+
+				<!-- 사용자 상세 정보 표시될 영역 추가 -->
+				<!-- 이 div는 기본적으로 CSS로 display: none; 해서 숨겨두고, JS에서 보이게 하면 됨 -->
+				<div id="user-detail-area" style="display: none; border: 1px solid #ccc; padding: 20px; margin-top: 20px; background-color: #f9f9f9;">
+					<!-- 여기에 상세 정보가 동적으로 채워질 거야 -->
+					<h3>사용자 상세 정보</h3>
+					<!-- 상세 정보가 로드되기 전 초기 상태 -->
+					<p>사용자 '상세' 버튼을 클릭하면 여기에 정보가 표시됩니다.</p>
+				</div>
+
 			</div>
 
 			<div id="reported-users" class="user-tab-content">
-				<h3>신고된 사용자 및 내용</h3>
+				<h3>신고 관리 목록</h3>
 				<div class="filter-controls">
+					<input type="text" placeholder="신고자 또는 피신고자 검색..." />
 					<select>
-						<option value="">상태 전체</option>
-						<option value="pending">처리 대기</option>
-						<option value="reviewed">검토 완료</option>
-						<option value="action_taken">조치 완료</option>
+						<option value="">처리 상태 전체</option>
+						<option value="pending">미처리</option>
+						<option value="processing">처리 중</option>
+						<option value="completed">처리 완료</option>
 					</select>
 					<button class="btn btn-secondary btn-sm">검색</button>
 				</div>
@@ -587,109 +537,39 @@
 					<thead>
 						<tr>
 							<th>신고 ID</th>
-							<th>신고된 사용자</th>
+							<th>신고 유형</th>
 							<th>신고자</th>
-							<th>신고일</th>
-							<th>사유 요약</th>
-							<th>상태</th>
+							<th>피신고자</th>
+							<th>신고 내용</th>
+							<th>신고일시</th>
+							<th>처리 상태</th>
 							<th>작업</th>
 						</tr>
 					</thead>
 					<tbody>
 						<tr>
-							<td>R101</td>
-							<td>user_abuser</td>
-							<td>user_normal</td>
-							<td>2025-04-21</td>
-							<td>부적절한 언어 사용...</td>
-							<td>처리 대기</td>
+							<td>RP001</td>
+							<td>욕설/비방</td>
+							<td>user_C</td>
+							<td>user_test</td>
+							<td>채팅 중 심한 욕설 사용</td>
+							<td>2025-05-10 11:00</td>
+							<td><span class="status-pending">미처리</span></td>
 							<td class="actions">
-								<button class="btn btn-secondary btn-sm" onclick="viewReport('R101')">
-									상세 보기
-								</button>
-								<button class="btn btn-warning btn-sm" onclick="processReport('R101')">
-									처리하기
-								</button>
-							</td>
-						</tr>
-						<tr>
-							<td>R102</td>
-							<td>user_spammer</td>
-							<td>user_gildong</td>
-							<td>2025-04-22</td>
-							<td>홍보성 게시글 도배...</td>
-							<td>처리 대기</td>
-							<td class="actions">
-								<button class="btn btn-secondary btn-sm" onclick="viewReport('R102')">
-									상세 보기
-								</button>
-								<button class="btn btn-warning btn-sm" onclick="processReport('R102')">
-									처리하기
-								</button>
+								<button class="btn btn-secondary btn-sm">상세</button>
+								<button class="btn btn-primary btn-sm">처리</button>
+								<button class="btn btn-danger btn-sm">무시</button>
 							</td>
 						</tr>
 					</tbody>
 				</table>
-			</div>
-
-			<!-- 신고 상세 모달 -->
-			<div id="reportDetailModal" class="modal">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h3>신고 상세 정보</h3>
-						<span class="close-modal">&times;</span>
-					</div>
-					<div class="modal-body">
-						<div class="report-detail-container">
-							<div class="report-info-section full-width">
-								<h4>신고 정보</h4>
-								<p><strong>신고 ID:</strong> <span id="report-id">R101</span></p>
-								<p><strong>신고 일시:</strong> <span id="report-date">2025-04-21 14:30:25</span></p>
-								<p><strong>신고 상태:</strong> <span id="report-status" class="status-pending">처리 대기</span>
-								</p>
-							</div>
-
-							<div class="report-info-section">
-								<h4>신고 대상 정보</h4>
-								<p><strong>아이디:</strong> <span id="opponent-id">user_abuser</span></p>
-								<p><strong>이름:</strong> <span id="opponent-name">김불량</span></p>
-								<p><strong>이메일:</strong> <span id="opponent-email">abuser@email.com</span></p>
-								<p><strong>연락처:</strong> <span id="opponent-phone">010-8675-4321</span></p>
-							</div>
-
-							<div class="report-info-section">
-								<h4>신고자 정보</h4>
-								<p><strong>아이디:</strong> <span id="reporter-id">user_normal</span></p>
-								<p><strong>이름:</strong> <span id="reporter-name">이정상</span></p>
-								<p><strong>이메일:</strong> <span id="reporter-email">normal@email.com</span></p>
-								<p><strong>연락처:</strong> <span id="reporter-phone">010-1234-5678</span></p>
-							</div>
-
-							<div class="report-info-section full-width">
-								<h4>신고 사유</h4>
-								<p><strong>요약:</strong> <span>부적절한 언어 사용</span></p>
-								<p><strong>상세 내용:</strong> <span>커뮤니티 게시판에서 지속적으로 타 사용자에게 욕설과 비하 발언을 하고 있습니다. 특히 특정 사용자를
-										지속적으로 괴롭히는 행동이 목격되었습니다.</span></p>
-							</div>
-
-							<div class="report-info-section full-width">
-								<h4>증거 자료</h4>
-								<ul>
-									<li>게시판 댓글 #1254에서 욕설 사용</li>
-									<li>채팅방에서 부적절한 발언 스크린샷</li>
-									<li>다수의 사용자가 유사한 내용으로 신고</li>
-								</ul>
-							</div>
-						</div>
-					</div>
-				</div>
 			</div>
 		</section>
 
 		<section id="seller-account-management" class="content-section">
 			<h2>판매자 계정 관리</h2>
 			<div class="filter-controls">
-				<input type="text" placeholder="판매자 ID, 상점명 검색..." />
+				<input type="text" placeholder="판매자 ID, 담당자, 상점명 검색..." />
 				<select>
 					<option value="">상태 전체</option>
 					<option value="pending">승인 대기</option>
@@ -766,82 +646,33 @@
 							</button>
 						</td>
 					</tr>
-					<tr>
-    <td>seller_KimPanmae</td> <!-- 위에 JS 객체에 추가한 ID랑 맞춰야 함 -->
-    <td>판매왕 스토어</td>
-    <td>김판매</td> <!-- ⭐ 김판매씨 이름이 HTML에도 있어야겠지? -->
-    <td>010-7777-8888</td>
-    <td>444-55-66666</td>
-    <td>2023-11-01</td>
-    <td><span class="status-normal">정상</span></td> <!-- 상태는 CSS 클래스 맞춰서 -->
-    <td class="actions">
-        <button class="btn btn-secondary btn-sm" onclick="viewSellerDetails('seller_KimPanmae')"> <!-- ⭐ ID 맞춰서 viewSellerDetails 호출 -->
-            상세
-        </button>
-        <button class="btn btn-primary btn-sm" onclick="suspendSeller('seller_KimPanmae')">
-            정지
-        </button>
-    </td>
-</tr>
-					
 				</tbody>
 			</table>
+			
+			<!-- 판매자 상세 모달 오버레이 및 모달 창 -->
+<div id="sellerDetailOverlay" class="modal-overlay" style="display: none;">
+	<div id="sellerDetailModal" class="modal" style="display: none;">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h3>판매자 상세 정보</h3>
+				<span class="close-seller-modal" style="cursor: pointer;">&times;</span>
+			</div>
+			<div class="modal-body">
+				<p><strong>판매자 ID:</strong> <span id="detail-sellerId"></span></p>
+				<p><strong>상점명:</strong> <span id="detail-storeName"></span></p>
+				<p><strong>담당자:</strong> <span id="detail-contactName"></span></p>
+				<p><strong>연락처:</strong> <span id="detail-phoneNumber"></span></p>
+				<p><strong>사업자 번호:</strong> <span id="detail-businessId"></span></p>
+				<p><strong>가입일:</strong> <span id="detail-joinDate"></span></p>
+				<p><strong>상태:</strong> <span id="detail-sellerStatus"></span></p>
+			</div>
+		</div>
+	</div>
+</div>
+
+			
 		</section>
 	</main>
-	<!-- 2.txt 파일 어딘가에 추가할 상세 정보 모달 HTML (예시) -->
-<!-- 배경을 어둡게 만들 오버레이 -->
-<div id="userDetailOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999;"></div>
-
-<!-- 상세 정보 모달 본체 -->
-<div id="userDetailModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); z-index: 1000; width: 80%; max-width: 500px;">
-  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
-    <h3 style="margin: 0;">사용자 상세 정보</h3>
-    <!-- 닫기 버튼 -->
-    <span class="close-modal" style="cursor: pointer; font-size: 24px; color: #aaa;">&times;</span>
-  </div>
-  
-  <!-- 사용자 정보가 표시될 곳 -->
-  <div id="userDetailContent">
-    <p><strong>ID:</strong> <span id="detail-userId"></span></p>
-    <p><strong>이름:</strong> <span id="detail-userName"></span></p>
-    <p><strong>이메일:</strong> <span id="detail-userEmail"></span></p>
-    <p><strong>상태:</strong> <span id="detail-userStatus"></span></p>
-    <!-- 여기에 다른 정보들도 추가하면 돼 -->
-  </div>
-</div>
-
-<!--
-  스타일은 인라인으로 대충 넣었는데,
-  실제론 CSS 파일 따로 만들어서 클래스 지정해서 하는 게 훨씬 깔끔하고 관리하기 쉬움!
-  (예: .modal, .modal-content, .close-modal 등)
--->
-<!-- 판매자 상세 정보 모달 HTML (예시 - 네 판매자 관리 HTML 파일 </body> 바로 위에 추가) -->
-<!-- 배경을 어둡게 만들 오버레이 -->
-<div id="sellerDetailOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 999; backdrop-filter: blur(3px);"></div>
-<!-- backdrop-filter: blur(3px); 이거 넣으면 뒤에 배경이 살짝 흐려져서 더 화려해보임! -->
-
-<!-- 상세 정보 모달 본체 -->
-<div id="sellerDetailModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #f5f7fa, #c3cfe2); padding: 30px; border-radius: 10px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); z-index: 1000; width: 90%; max-width: 600px; color: #333;">
-  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #a1c4fd; padding-bottom: 15px; margin-bottom: 20px;">
-    <h3 style="margin: 0; color: #555; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">판매자 상세 정보 ✨</h3>
-    <!-- 닫기 버튼 -->
-    <span class="close-seller-modal" style="cursor: pointer; font-size: 28px; color: #555; transition: color 0.3s ease;">&times;</span>
-    <!-- 닫기 버튼에 마우스 올리면 색 바뀌게 살짝 효과 줌 -->
-  </div>
-
-  <!-- 판매자 정보가 표시될 곳 -->
-  <div id="sellerDetailContent">
-    <p style="margin-bottom: 10px;"><strong>판매자 ID:</strong> <span id="detail-sellerId" style="font-weight: normal;"></span></p>
-    <p style="margin-bottom: 10px;"><strong>스토어 이름:</strong> <span id="detail-storeName" style="font-weight: normal;"></span></p>
-    <p style="margin-bottom: 10px;"><strong>담당자 이름:</strong> <span id="detail-contactName" style="font-weight: normal;"></span></p>
-    <p style="margin-bottom: 10px;"><strong>연락처:</strong> <span id="detail-phoneNumber" style="font-weight: normal;"></span></p>
-    <p style="margin-bottom: 10px;"><strong>사업자 등록번호:</strong> <span id="detail-businessId" style="font-weight: normal;"></span></p>
-    <p style="margin-bottom: 10px;"><strong>가입일:</strong> <span id="detail-joinDate" style="font-weight: normal;"></span></p>
-    <p style="margin-bottom: 10px;"><strong>상태:</strong> <span id="detail-sellerStatus" style="font-weight: bold;"></span></p>
-    <!-- 여기에 판매자 관련 다른 정보들도 추가하면 더 좋겠지? -->
-  </div>
-</div>
-
 </body>
 
 </html>

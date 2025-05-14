@@ -7,20 +7,20 @@ function viewSellerDetails(sellerId) {
     // *** API 없이 그냥 여기서 가짜 판매자 데이터를 찾아서 보여줄 거야 ***
     // 실제 DB 데이터는 아니지만, 보여주는 연습용!
     const dummySellerData = {
-        'seller_A_approved': {
+        'seller_A': { // seller_A_approved에서 ID를 seller_A로 수정 (HTML ID에 맞춤)
             storeName: 'A 스토어',
             contactName: '김승인',
             phoneNumber: '010-1111-2222',
             businessId: '111-22-33333',
-            joinDate: '2024-01-15',
-            status: '정상'
+            joinDate: '2025-04-20', // 1.txt의 가입일자에 맞춤
+            status: '승인 완료' // 1.txt의 상태에 맞춤
         },
         'seller_B_pending': {
             storeName: 'B 스토어',
-            contactName: '박대기',
+            contactName: '박준비',
             phoneNumber: '010-3333-4444',
             businessId: '222-33-44444',
-            joinDate: '2025-02-20',
+            joinDate: '2025-04-22',
             status: '승인 대기'
         },
         'seller_C_suspended': {
@@ -30,7 +30,6 @@ function viewSellerDetails(sellerId) {
             businessId: '333-44-55555',
             joinDate: '2025-03-10',
             status: '이용 정지'
-        
         },
         'seller_KimPanmae': { // ⭐ 김판매씨 정보 추가! ID는 적당히 네가 정해봐
         storeName: '판매왕 스토어', // 예시 스토어 이름
@@ -40,10 +39,12 @@ function viewSellerDetails(sellerId) {
         joinDate: '2023-11-01',      // 예시 가입일
         status: '정상'             // 예시 상태
     }
-        
+
         // TODO: 여기에 필요한 만큼 판매자 데이터 추가해!
     };
 
+    // HTML 테이블에 있는 ID와 dummySellerData의 키가 일치해야 함.
+    // seller_A, seller_B_pending, seller_C_suspended 로 맞췄어.
     const sellerData = dummySellerData[sellerId];
 
     if (!sellerData) {
@@ -54,8 +55,8 @@ function viewSellerDetails(sellerId) {
 
     // 판매자 상세 정보 모달과 오버레이 엘리먼트 찾기
     const modal = document.getElementById('sellerDetailModal');
-    const overlay = document.getElementById('sellerDetailOverlay');
-    const detailContent = document.getElementById('sellerDetailContent');
+    const overlay = document.getElementById('sellerDetailOverlay'); // 오버레이 엘리먼트
+    const detailContent = modal.querySelector('.modal-body'); // .modal-body를 찾도록 수정
     const closeButton = modal.querySelector('.close-seller-modal'); // 닫기 버튼 찾기
 
     if (!modal || !overlay || !detailContent || !closeButton) {
@@ -65,7 +66,8 @@ function viewSellerDetails(sellerId) {
     }
 
     // 가져온 가짜 데이터로 모달 내용 채우기
-    document.getElementById('detail-sellerId').textContent = sellerId;
+    // HTML 구조에 맞게 ID를 찾아서 값을 채워야 함
+    document.getElementById('detail-sellerId').textContent = sellerId; // 판매자 ID는 인자로 받은 sellerId 사용
     document.getElementById('detail-storeName').textContent = sellerData.storeName;
     document.getElementById('detail-contactName').textContent = sellerData.contactName;
     document.getElementById('detail-phoneNumber').textContent = sellerData.phoneNumber;
@@ -76,7 +78,7 @@ function viewSellerDetails(sellerId) {
     const statusSpan = document.getElementById('detail-sellerStatus');
     statusSpan.textContent = sellerData.status;
     statusSpan.style.color = ''; // 기본 색상 초기화
-    if (sellerData.status === '정상') {
+    if (sellerData.status === '승인 완료' || sellerData.status === '정상') { // '정상'도 승인 완료와 같은 의미로 볼 수 있겠지
         statusSpan.style.color = 'green';
     } else if (sellerData.status === '승인 대기') {
         statusSpan.style.color = 'orange';
