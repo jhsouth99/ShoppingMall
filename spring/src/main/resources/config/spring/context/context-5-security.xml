@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
+	
+	<security:http auto-config="true" use-expressions="true">
+		<security:csrf disabled="false"/>
+		
+		<security:intercept-url pattern="/" access="permitAll"/>
+		<security:intercept-url pattern="/login" access="permitAll"/>
+		<security:intercept-url pattern="/social" access="permitAll"/>
+		<security:intercept-url pattern="/signup" access="permitAll"/>
+		<security:intercept-url pattern="/username-exists" method="GET" access="permitAll"/>
+		<security:intercept-url pattern="/email-exists" method="GET" access="permitAll"/>
+		<security:intercept-url pattern="/mail-send" method="POST" access="permitAll"/>
+		<security:intercept-url pattern="/mail-check" method="POST" access="permitAll"/>
+		<security:intercept-url pattern="/signup-perform" method="POST" access="permitAll"/>
+		<security:intercept-url pattern="/products/**" access="permitAll"/>
+		<security:intercept-url pattern="/categories/**" access="permitAll"/>
+		<security:intercept-url pattern="/admin/**" access="hasRole('ADMIN')"/>
+		<security:intercept-url pattern="/seller/**" access="hasRole('SELLER')"/>
+		<security:intercept-url pattern="/products/new" access="hasRole('SELLER')"/>
+		<security:intercept-url pattern="/**" access="isAuthenticated()"/>
+		<security:form-login
+		    login-page="/login"
+		    login-processing-url="/perform-login"
+		    default-target-url="/"
+		    always-use-default-target="true"
+		    authentication-success-handler-ref="customFormLoginSuccessHandler"/>
+		<security:logout 
+		    logout-url="/perform-logout"
+		    logout-success-url="/"/>
+		<security:oauth2-login
+	        login-page="/login"
+	        client-registration-repository-ref="clientRegistrationRepository"
+	        user-service-ref="customOAuth2UserService"
+	        authentication-success-handler-ref="customOAuth2LoginSuccessHandler"
+	        authentication-failure-handler-ref="customOAuth2LoginFailureHandler"/>
+	</security:http>
+	
+	<security:authentication-manager alias="authenticationManager">
+		<security:authentication-provider user-service-ref="customUserDetailsService">
+			<security:password-encoder ref="passwordEncoder"/>
+		</security:authentication-provider>
+	</security:authentication-manager>
+	
+	<bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+	
+</beans>

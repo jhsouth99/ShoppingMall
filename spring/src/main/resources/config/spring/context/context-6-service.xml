@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<bean id="userService" class="com.example.ecommerce.service.UserService">
+		<constructor-arg ref="oAuthAttributesDAO"/>
+		<constructor-arg ref="userDAO"/>
+		<constructor-arg ref="userRoleDAO"/>
+		<constructor-arg ref="passwordEncoder"/>
+	</bean>
+	
+	<bean id="customUserDetailsService" class="com.example.ecommerce.service.CustomUserDetailsService">
+		<constructor-arg ref="userDAO"/>
+		<constructor-arg ref="userRoleDAO"/>
+	</bean>
+	
+	<bean id="customOAuth2UserService" class="com.example.ecommerce.service.CustomOAuth2UserService">
+	</bean>
+	
+	<bean id="customOAuth2LoginSuccessHandler" class="com.example.ecommerce.service.CustomOAuth2LoginSuccessHandler">
+		<constructor-arg ref="userService"/>
+		<constructor-arg ref="clientRegistrationRepository"/>
+		<constructor-arg ref="oAuthAttributesDAO"/>
+	</bean>
+	<bean id="customOAuth2LoginFailureHandler" class="com.example.ecommerce.service.CustomOAuth2LoginFailureHandler" />
+	<bean id="customFormLoginSuccessHandler" class="com.example.ecommerce.service.CustomFormLoginSuccessHandler" />
+	<bean id="mailSendService" class="com.example.ecommerce.service.MailSendService">
+		<constructor-arg ref="javaMailSender"/>
+	</bean>
+</beans>
