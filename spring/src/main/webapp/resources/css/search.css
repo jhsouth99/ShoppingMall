@@ -1,0 +1,48 @@
+/* 검색 결과 페이지 스타일 */
+.search-info {
+    margin-bottom: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.search-info h2 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.result-count {
+    font-size: 16px;
+    color: #666;
+}
+
+.result-count span {
+    font-weight: bold;
+    color: #e74c3c;
+}
+
+/* 검색 결과 없음 */
+.no-products {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+}
+
+.no-results h3 {
+    font-size: 24px;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.no-results p {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.error-message {
+    font-size: 18px;
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+
