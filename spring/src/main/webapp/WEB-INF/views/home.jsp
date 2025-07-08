@@ -18,6 +18,7 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 	<script>var contextPath = "${pageContext.request.contextPath}";</script>
 	<script src="${pageContext.request.contextPath}/resources/js/home.js"></script>	
+	<script src="${pageContext.request.contextPath}/resources/js/search.js"></script>
 
 </head>
 
@@ -242,12 +243,13 @@
 						            </div>
 						            
 						            <c:if test="${dto.is_group_purchase == 1}">
-						                <div class="group-purchase-info">
-						                    <div class="group-price">
-						                        공동구매시: <fmt:formatNumber value="${dto.base_price * 0.8}" pattern="#,###"/>원
-						                    </div>
-						                </div>
-						            </c:if>
+			                            <div class="group-purchase-info">
+			                                <div class="group-price">
+			                                    공동구매시: 
+			                                    <fmt:formatNumber value="${dto.group_price}" pattern="#,###"/>원
+			                                </div>
+			                            </div>
+			                        </c:if>
 						        </div>
 						    </div>
 						</c:forEach>
