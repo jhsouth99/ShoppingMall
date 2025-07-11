@@ -378,7 +378,7 @@ $(document).ready(function() {
     $(document).on('click', '.product-card', function() {
         let productId = $(this).data('product-id');
         if (productId) {
-            location.href = contextPath + '/products/' + productId;
+            location.href = contextPath + '/pro_detail_view.do?id=' + productId;
         }
     });
 });
