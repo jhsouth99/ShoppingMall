@@ -1,6 +1,12 @@
 # 온라인 쇼핑몰 프로젝트
 
-## 초기 세팅
+## Spring 프로젝트
+
+#### Intellij 또는 STS 3 사용
+#### 프론트엔드 - JSP
+#### 백엔드 - Spring MVC
+
+## node.js 프로젝트
 
 ### 프론트엔드
 cd client
