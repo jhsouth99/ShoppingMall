@@ -39,9 +39,6 @@ public class LoginController {
     private final PasswordEncoder passwordEncoder;
 
 	private static final Logger logger = LoggerFactory.getLogger(LoginController.class);
-	
-	@Autowired
-	HttpServletRequest request;
 
 	@GetMapping("/login")
 	public String loginPage(@RequestParam(value = "error", required = false) String error, Model model) {
