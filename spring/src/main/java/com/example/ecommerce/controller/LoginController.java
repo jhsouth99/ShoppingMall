@@ -44,10 +44,12 @@ public class LoginController {
 	public String loginPage(@RequestParam(value = "error", required = false) String error, Model model) {
 		return "login";
 	}
+
 	@GetMapping("/signup")
 	public String signUpFormPage() {
 		return "signup";
 	}
+
 	@GetMapping("/api/username-exists")
     public ResponseEntity<Map<String, Boolean>> checkUsernameExists(
             @RequestParam("username") String username) {
@@ -55,11 +57,13 @@ public class LoginController {
         boolean exists = userService.existsByUsername(username);
         return ResponseEntity.ok(Collections.singletonMap("exists", exists));
     }
+
 	@GetMapping("/api/email-exists")
     public ResponseEntity<Map<String, Boolean>> checkEmailExists(@RequestParam("email") String email) {
         boolean exists = userService.existsByEmail(email);
         return ResponseEntity.ok(Collections.singletonMap("exists", exists));
     }
+
 	@PostMapping("/api/signup-perform") // JSP의 form action과 일치시킴
     public ResponseEntity<Map<String, Object>>  performSignUp(UserDTO user, String password, HttpServletRequest request) {
         logger.info("Performing standard user registration for username: {}", user.getUsername());
@@ -117,12 +121,14 @@ public class LoginController {
     public String linkOrRegisterPage() {
         return "link-or-register"; // JSP 파일 경로
     }
+
     @GetMapping("/login/link")
     public String linkLoginPage(Model model) {
         // 이 로그인 폼이 '연동용'임을 구분할 수 있는 값을 모델에 담아 보낼 수 있음
         model.addAttribute("isLinkLogin", true);
         return "login-link"; // 연동 전용 로그인 JSP
     }
+
     @PostMapping("/login/perform-link")
     public String performLinkLogin(HttpServletRequest request, String username, String password) {
         try {
@@ -151,6 +157,7 @@ public class LoginController {
             return "redirect:/link?error=true";
         }
     }
+
     @GetMapping("/signup/social")
     public String socialSignupPage(HttpSession session, Model model) {
         // 세션에서 소셜 정보 가져오기
@@ -164,6 +171,7 @@ public class LoginController {
         model.addAttribute("name", attributes.getName());
         return "signup-social"; // 소셜 가입 전용 JSP
     }
+
     @PostMapping("/api/signup/social-perform")
     public ResponseEntity<Map<String, Object>> performSocialSignup(UserDTO signupForm, HttpServletRequest request) {
         HttpSession session = request.getSession();
@@ -235,6 +243,7 @@ public class LoginController {
         response.put("message", "소셜 계정으로 회원가입이 완료되었습니다.");
         return ResponseEntity.ok(response);
     }
+
     @PostMapping("/api/users/{id}/{target}")
     public ResponseEntity<Map<String, Object>> editInfo(
     		@PathVariable("id") Integer id,
@@ -267,6 +276,7 @@ public class LoginController {
 		response.put("message", "실패");
 		return ResponseEntity.status(500).body(response);
     }
+
     @PostMapping("/api/reset-password")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> resetPassword(

@@ -124,8 +124,6 @@
         </if>
     </select>
 
-    <!-- ========== 판매자용 조회 쿼리들 (기존 유지) ========== -->
-
     <select id="findOrdersBySellerId" parameterType="map" resultType="OrderSummary">
         SELECT * FROM (
                           SELECT ROWNUM AS rnum, o.* FROM (
@@ -676,7 +674,6 @@
                  JOIN users u ON gbp.user_id = u.id
         WHERE gbp.id = #{participantId}
     </select>
-    <!-- order.xml에 추가해야 할 공동구매 관련 쿼리들 -->
 
     <!-- 공동구매 참여자 생성 -->
     <insert id="insertGroupBuyParticipant" parameterType="GroupBuyParticipant">
