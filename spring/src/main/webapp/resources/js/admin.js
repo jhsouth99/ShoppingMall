@@ -1060,12 +1060,12 @@ async function handleCategoryFormSubmit(e) {
     }
 }
 
-// ========== 속성 관리 관련 함수들 (신규 추가) ==========
+// ========== 속성 관리 관련 함수들 ==========
 function initAttributeManagement() {
     // 속성 추가 버튼
     const addAttributeBtn = document.getElementById("addAttributeBtn");
     if (addAttributeBtn) {
-        addAttributeBtn.addEventListener("click", openAttributeModal);
+        addAttributeBtn.addEventListener("click", () => openAttributeModal());
     }
 
     // 검색 기능
