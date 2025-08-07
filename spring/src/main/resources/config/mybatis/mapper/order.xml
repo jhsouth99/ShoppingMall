@@ -1,0 +1,779 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="order">
+
+    <!-- ========== 기존 조회 쿼리들 ========== -->
+
+    <!-- 단건 주문 목록 -->
+    <select id="findSingleOrdersSummary" resultType="OrderSummary" parameterType="map">
+        <bind name="start" value="offset"/>
+        <bind name="end"   value="offset + limit"/>
+
+    SELECT *
+    FROM (
+        SELECT /*+ FIRST_ROWS */ inner_tbl.*, ROWNUM AS rn
+        FROM (
+            SELECT o.id                    AS id
+                  , o.order_no             AS orderNo
+                  , p.name                 AS productName
+                  , pi.image_url           AS thumbnailUrl
+                  , o.created_at           AS orderDate
+                  , o.final_amount         AS paidAmount
+                  , o.status               AS orderStatus
+                  , NVL(r.status,'NONE')   AS refundStatus
+                  , (SELECT CASE WHEN EXISTS(SELECT 1 FROM reviews WHERE id = oi.review_id) THEN 'Y' ELSE 'N' END
+                     FROM DUAL) AS reviewWritten
+                  , o.confirmed_at           AS confirmedAt
+            FROM        orders              o
+            JOIN        order_items         oi  ON oi.order_id = o.id
+                                               AND oi.id = (SELECT MIN(id) FROM order_items WHERE order_id = o.id)
+            JOIN        product_variants    pv  ON pv.id              = oi.product_variant_id
+            JOIN        products            p   ON p.id               = pv.product_id
+            LEFT JOIN   product_images      pi  ON pi.product_id      = pv.product_id
+            LEFT JOIN   refunds             r   ON r.order_id         = o.id
+            WHERE o.user_id = #{userId}
+              AND pi.image_type = 'PRIMARY' AND display_order = 1
+              <if test="status != null">
+              AND o.status = #{status}
+              </if>
+              AND NOT EXISTS (
+                      SELECT 1
+                      FROM   group_buy_participants gbp
+                      WHERE  gbp.order_id = o.id
+                  )
+            ORDER BY o.created_at DESC
+        ) inner_tbl
+        WHERE ROWNUM &lt;= #{end}
+    )
+    WHERE rn > #{start}
+    </select>
+
+    <!-- 단건 주문 건수 -->
+    <select id="countSingleOrders" resultType="int" parameterType="map">
+        SELECT COUNT(*)
+        FROM orders o
+        WHERE o.user_id = #{userId}
+          AND NOT EXISTS (
+            SELECT 1
+            FROM   group_buy_participants gbp
+            WHERE  gbp.order_id = o.id
+          <if test="status != null">
+          AND o.status = #{status}
+          </if>
+        )
+    </select>
+
+    <!-- 공동구매 주문 목록 -->
+    <select id="findGroupBuyOrdersSummary" resultType="GroupBuyParticipant" parameterType="map">
+        <bind name="start" value="offset"/>
+        <bind name="end"   value="offset + limit"/>
+
+        SELECT *
+        FROM (
+            SELECT inner_tbl.*, ROWNUM AS rn
+            FROM (
+                SELECT  o.order_no                 AS orderNo
+                      , gb.id                      AS groupBuyId
+                      , gb.name                    AS groupBuyName
+                      , gbp.quantity               AS quantity
+                      , gbp.joined_at              AS joinedAt
+                      , pmt.paid_at                AS paidAt
+                      , gbp.total_amount_paid      AS paidAmount
+                      , gbp.status                 AS status
+                      , gb.end_date                AS endDate
+                      , gb.start_date              AS startDate
+                      , o.status                   AS orderStatus
+                      , gb.current_quantity        AS currentQuantity
+                      , gb.target_quantity         AS targetQuantity
+                      , NVL(r.status,'NONE')       AS refundStatus
+                      , p.id                       AS productId
+                      , p.name                     AS productName
+                      , (SELECT pi.image_url
+                         FROM product_images pi
+                         WHERE pi.product_id = p.id
+                           AND pi.image_type = 'PRIMARY'
+                           AND pi.display_order = 1) AS productImageUrl
+                FROM        group_buy_participants gbp
+                LEFT JOIN   orders          o   ON o.id  = gbp.order_id
+                JOIN        group_buys      gb  ON gb.id = gbp.group_buy_id
+                LEFT JOIN   payments        pmt ON pmt.order_id = o.id
+                LEFT JOIN   refunds         r   ON r.order_id   = o.id
+                LEFT JOIN   product_variants pv ON pv.id = gb.product_variant_id
+                LEFT JOIN   products        p   ON p.id = pv.product_id
+                WHERE gbp.user_id = #{userId}
+                <if test="status != null">
+                    AND o.status = #{status}
+                </if>
+                ORDER BY pmt.paid_at DESC
+            ) inner_tbl
+            WHERE ROWNUM &lt;= #{end}
+        )
+        WHERE rn > #{start}
+    </select>
+
+    <!-- 공동구매 주문 건수 -->
+    <select id="countGroupBuyOrders" resultType="int" parameterType="map">
+        SELECT COUNT(*)
+        FROM group_buy_participants gbp
+        LEFT JOIN orders o ON o.id = gbp.order_id
+        WHERE gbp.user_id = #{userId}
+        <if test="status != null">
+            AND o.status = #{status}
+        </if>
+    </select>
+
+    <!-- ========== 판매자용 조회 쿼리들 (기존 유지) ========== -->
+
+    <select id="findOrdersBySellerId" parameterType="map" resultType="OrderSummary">
+        SELECT * FROM (
+                          SELECT ROWNUM AS rnum, o.* FROM (
+                                                              SELECT DISTINCT
+                                                                  ord.id,
+                                                                  ord.order_no AS orderNo,
+                                                                  ord.created_at AS createdAt,
+                                                                  u.username AS username,
+                                                                  u.name AS customerName,
+                                                                  (SELECT pv.product_id
+                                                                   FROM product_variants pv
+                                                                            JOIN order_items oi_sub ON pv.id = oi_sub.product_variant_id
+                                                                   WHERE oi_sub.order_id = ord.id AND ROWNUM = 1
+                                                                  ) AS productId,
+                                                                  (SELECT p.name
+                                                                   FROM products p
+                                                                            JOIN product_variants pv ON p.id = pv.product_id
+                                                                            JOIN order_items oi_sub ON pv.id = oi_sub.product_variant_id
+                                                                   WHERE oi_sub.order_id = ord.id AND ROWNUM = 1
+                                                                  ) AS productName,
+                                                                  (SELECT SUM(oi_sub.quantity) FROM order_items oi_sub WHERE oi_sub.order_id = ord.id) AS quantity,
+                                                                  ord.final_amount AS finalAmount,
+                                                                  ord.status AS orderStatus,
+                                                                  CASE
+                                                                      WHEN EXISTS (
+                                                                          SELECT 1
+                                                                          FROM after_sales_requests asr
+                                                                                   JOIN after_sales_request_items asri ON asr.id = asri.request_id
+                                                                                   JOIN order_items oi_check ON asri.order_item_id = oi_check.id
+                                                                          WHERE oi_check.order_id = ord.id
+                                                                      ) THEN 1
+                                                                      ELSE 0
+                                                                      END AS hasReturnRequest
+                                                              FROM orders ord
+                                                                       JOIN users u ON ord.user_id = u.id
+                                                              WHERE EXISTS (
+                                                                  SELECT 1
+                                                                  FROM order_items oi
+                                                                           JOIN product_variants pv ON oi.product_variant_id = pv.id
+                                                                           JOIN products p ON pv.product_id = p.id
+                                                                  WHERE oi.order_id = ord.id
+                                                                    <if test="sellerId != 0">
+                                                                        AND p.seller_id = #{sellerId}
+                                                                    </if>
+                                                                    )
+                                                                    <if test="status != null and status != ''">
+                                                                        AND ord.status = #{status}
+                                                                    </if>
+                                                                    <if test="startDate != null and startDate != ''">
+                                                                        AND ord.created_at &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+                                                                    </if>
+                                                                    <if test="endDate != null and endDate != ''">
+                                                                        AND ord.created_at &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') + 1
+                                                                    </if>
+                                                                    <if test="keyword != null and keyword != ''">
+                                                                        AND (
+                                                                        ord.order_no LIKE '%' || #{keyword} || '%' OR
+                                                                        u.name LIKE '%' || #{keyword} || '%'
+                                                                        )
+                                                                    </if>
+                                                                  ORDER BY ord.created_at DESC
+                                                              ) o WHERE ROWNUM &lt;= #{offset} + #{size}
+                                                          ) WHERE rnum > #{offset}
+    </select>
+
+    <select id="countOrdersBySellerId" parameterType="map" resultType="int">
+        SELECT COUNT(DISTINCT ord.id)
+        FROM orders ord
+        JOIN users u ON ord.user_id = u.id
+        WHERE EXISTS (
+        SELECT 1 FROM order_items oi JOIN product_variants pv ON oi.product_variant_id = pv.id
+        JOIN products p ON pv.product_id = p.id WHERE oi.order_id = ord.id <if test="sellerId != 0"> AND p.seller_id = #{sellerId}</if>
+        )
+        <if test="status != null and status != ''">AND ord.status = #{status}</if>
+        <if test="startDate != null and startDate != ''">
+            AND ord.created_at &gt;= TO_DATE(#{startDate}, 'YYYY-MM-DD')
+        </if>
+        <if test="endDate != null and endDate != ''">
+            AND ord.created_at &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') + 1
+        </if>
+        <if test="keyword != null and keyword != ''">AND (ord.order_no LIKE '%' || #{keyword} || '%' OR u.name LIKE '%' || #{keyword} || '%')</if>
+    </select>
+
+    <update id="updateOrderStatus" parameterType="map">
+        UPDATE orders SET status = #{status} WHERE order_no = #{orderNo}
+                                               AND EXISTS (
+                SELECT 1 FROM order_items oi JOIN product_variants pv ON oi.product_variant_id = pv.id
+                                             JOIN products p ON pv.product_id = p.id WHERE oi.order_id = orders.id AND p.seller_id = #{sellerId}
+            )
+    </update>
+
+    <insert id="insertShipment" parameterType="Shipment">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT shipments_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO shipments(
+        id, order_id, tracking_number, carrier_name_snapshot, status,
+        cost, shipping_method_id, shipped_at, recipient_name, recipient_phone,
+        recipient_address, recipient_address_detail, recipient_zipcode, created_at
+        )
+        SELECT
+        #{id}, #{orderId}, #{trackingNumber}, #{carrierNameSnapshot}, 'SHIPPED',
+        0, 1, SYSTIMESTAMP, o.recipient_name, o.recipient_phone,
+        o.recipient_address, o.recipient_address_detail, o.recipient_zipcode, SYSTIMESTAMP
+        FROM orders o
+        WHERE o.id = #{orderId}
+    </insert>
+
+    <select id="findOrderIdByOrderNo" parameterType="string" resultType="int">
+        SELECT id FROM orders WHERE order_no = #{orderNo}
+    </select>
+
+    <!-- ========== 주문 상세 조회 (ResultMap 제거하고 간단한 쿼리로 변경) ========== -->
+
+    <!-- 주문 기본 정보만 조회 -->
+    <select id="findOrderDetailsByOrderNo" parameterType="string" resultType="OrderDetail">
+        SELECT
+            o.id,
+            o.order_no AS orderNo,
+            o.created_at AS createdAt,
+            o.status,
+            o.user_id AS userId,
+            u.username AS username,
+            u.name AS customerName,
+            o.recipient_name AS recipientName,
+            o.recipient_phone AS recipientPhone,
+            o.recipient_address AS recipientAddress,
+            o.recipient_address_detail AS recipientAddressDetail,
+            o.recipient_zipcode AS recipientZipcode,
+            o.recipient_deliv_req_msg AS recipientDelivReqMsg,
+            o.sub_total_amount AS subTotalAmount,
+            o.shipping_fee AS shippingFee,
+            o.final_amount AS finalAmount,
+            (SELECT CASE WHEN COUNT(*) = 0 THEN 'N' ELSE 'Y' END
+             FROM group_buy_participants gbp
+             WHERE gbp.order_id = o.id AND ROWNUM &lt;= 1) AS isGroupBuy
+        FROM orders o
+                 JOIN users u ON o.user_id = u.id
+        WHERE o.order_no = #{orderNo}
+    </select>
+
+    <select id="findOrderDetailByOrderNo" parameterType="string" resultType="OrderDetail">
+        SELECT
+            o.id,
+            o.order_no AS orderNo,
+            o.created_at AS createdAt,
+            o.status,
+            o.user_id AS userId,
+            u.username AS username,
+            u.name AS customerName,
+            o.recipient_name AS recipientName,
+            o.recipient_phone AS recipientPhone,
+            o.recipient_address AS recipientAddress,
+            o.recipient_address_detail AS recipientAddressDetail,
+            o.recipient_zipcode AS recipientZipcode,
+            o.recipient_deliv_req_msg AS recipientDelivReqMsg,
+            o.sub_total_amount AS subTotalAmount,
+            o.shipping_fee AS shippingFee,
+            o.final_amount AS finalAmount,
+            (SELECT CASE WHEN COUNT(*) = 0 THEN 'N' ELSE 'Y' END
+             FROM group_buy_participants gbp
+             WHERE gbp.order_id = o.id AND ROWNUM &lt;= 1) AS isGroupBuy
+        FROM orders o
+                 JOIN users u ON o.user_id = u.id
+        WHERE o.order_no = #{orderNo}
+    </select>
+
+    <select id="findShippingInfoByOrderNo" parameterType="string" resultType="Shipment">
+        SELECT
+            s.id,
+            s.order_id AS orderId,
+            s.tracking_number AS trackingNumber,
+            s.carrier_name_snapshot AS carrier,
+            s.status,
+            s.shipped_at AS shippedAt,
+            s.delivered_at AS deliveredAt
+        FROM shipments s
+                 JOIN orders o ON s.order_id = o.id
+        WHERE o.order_no = #{orderNo}
+    </select>
+
+    <select id="countSellerProductsInOrder" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM order_items oi
+                 JOIN product_variants pv ON oi.product_variant_id = pv.id
+                 JOIN products p ON pv.product_id = p.id
+        WHERE oi.order_id = #{orderId}
+          AND p.seller_id = #{sellerId}
+    </select>
+
+    <select id="findOrderItemsByOrderId" resultType="com.example.ecommerce.dto.OrderItemDTO" parameterType="int">
+        SELECT
+            oi.id,
+            oi.product_variant_id AS productVariantId,
+            oi.quantity,
+            oi.price_at_purchase AS priceAtPurchase,
+            oi.total_price_at_purch AS totalPriceAtPurchase,
+            oi.status,
+            oi.item_comment AS itemComment,
+            p.id AS productId,
+            p.name AS productName,
+            (SELECT image_url FROM product_images WHERE product_id = p.id AND image_type = 'PRIMARY' AND ROWNUM = 1) AS productImageUrl,
+            (SELECT LISTAGG(pov.value_text, ' / ') WITHIN GROUP (ORDER BY po.name)
+             FROM prod_variant_option_vals pvov
+                      JOIN product_option_values pov ON pvov.product_option_value_id = pov.id
+                      JOIN product_options po ON pov.product_option_id = po.id
+             WHERE pvov.variant_id = oi.product_variant_id
+            ) AS optionCombination
+        FROM
+            order_items oi
+                JOIN
+            product_variants pv ON oi.product_variant_id = pv.id
+                JOIN
+            products p ON pv.product_id = p.id
+        WHERE
+            oi.order_id = #{orderId}
+        ORDER BY
+            oi.id ASC
+    </select>
+
+    <select id="findShippingCost" parameterType="int" resultType="int">
+        SELECT (NVL(sm.cost, 0) + NVL(ssm.cost_override, 0)) as shippingCost
+        FROM products p
+        LEFT JOIN shipping_methods sm ON p.shipping_method_id = sm.id
+        LEFT JOIN seller_shipping_methods ssm ON p.seller_id = ssm.seller_id
+            AND p.shipping_method_id = ssm.shipping_method_id
+        WHERE p.id = #{id}
+    </select>
+
+    <select id="findProductSellerId" parameterType="int" resultType="int">
+        SELECT seller_id FROM products WHERE id = #{id}
+    </select>
+
+    <!-- ========== 주문 생성 관련 쿼리들 ========== -->
+
+    <!-- 장바구니 아이템들을 ID로 조회 -->
+    <select id="findCartItemsByIds" parameterType="map" resultType="CartItem">
+        SELECT
+        pv.product_id AS productId,  <!-- JOIN을 통해 가져오기 -->
+        ci.product_variant_id AS productVariantId,
+        ci.quantity,
+        pv.price,
+        (NVL(sm.cost, 0) + NVL(ssm.cost_override, 0)) as shippingCost
+        FROM cart_items ci
+        JOIN product_variants pv ON ci.product_variant_id = pv.id
+        JOIN products p ON pv.product_id = p.id
+        LEFT JOIN shipping_methods sm ON p.SHIPPING_METHOD_ID = sm.ID
+        LEFT JOIN seller_shipping_methods ssm ON p.seller_id = ssm.seller_id
+        AND p.shipping_method_id = ssm.shipping_method_id
+        WHERE ci.user_id = #{userId}
+        AND ci.product_variant_id IN
+        <foreach collection="cartItemIds" item="cartItemId" open="(" separator="," close=")">
+            #{cartItemId}
+        </foreach>
+    </select>
+
+    <!-- 사용자의 기본 배송지 조회 (Oracle 11g 호환) -->
+    <select id="findDefaultShippingAddress" parameterType="int" resultType="ShippingAddress">
+        SELECT
+            id,
+            recipient_name AS recipientName,
+            phone AS recipientPhone,
+            address,
+            address_detail AS addressDetail,
+            zipcode
+        FROM (
+                 SELECT
+                     id,
+                     recipient_name,
+                     phone,
+                     address,
+                     address_detail,
+                     zipcode
+                 FROM shipping_addresses
+                 WHERE user_id = #{userId}
+                   AND is_default = 'Y'
+                 ORDER BY created_at DESC
+             )
+        WHERE ROWNUM = 1
+    </select>
+
+    <!-- 배송지 ID로 배송지 정보 조회 -->
+    <select id="findShippingAddressById" parameterType="int" resultType="ShippingAddress">
+        SELECT
+            id,
+            recipient_name AS recipientName,
+            phone AS recipientPhone,
+            address,
+            address_detail AS addressDetail,
+            zipcode
+        FROM shipping_addresses
+        WHERE id = #{addressId}
+    </select>
+
+    <!-- 주문 아이템 확인 데이터 조회 -->
+    <select id="findOrderItemConfirmData" parameterType="OrderItemRequest" resultType="OrderItemDetail">
+        SELECT
+            p.id AS productId,
+            p.name AS productName,
+            #{quantity} AS quantity,
+            #{price} AS priceAtPurchase,
+            (#{price} * #{quantity}) AS totalPriceAtPurchase,
+            LISTAGG(opt.name || ':' || ov.value_text, ' / ') WITHIN GROUP (ORDER BY opt.id) AS optionCombination
+        FROM products p
+                 LEFT JOIN product_variants pv ON p.id = pv.product_id AND pv.id = #{productVariantId}
+                 LEFT JOIN prod_variant_option_vals pvov ON pv.id = pvov.variant_id
+                 LEFT JOIN product_options opt ON pvov.product_option_id = opt.id
+                 LEFT JOIN product_option_values ov ON pvov.product_option_value_id = ov.id
+        WHERE p.id = #{productId}
+        GROUP BY p.id, p.name
+    </select>
+
+    <!-- 상품 메인 이미지 URL 조회 -->
+    <select id="findProductMainImageUrl" parameterType="int" resultType="string">
+        SELECT image_url
+        FROM (
+                 SELECT pi.image_url
+                 FROM product_images pi
+                 WHERE pi.product_id = #{productId}
+                   AND pi.is_active = 'Y'
+                 ORDER BY
+                     CASE
+                         WHEN pi.image_type = 'PRIMARY' THEN 1
+                         WHEN pi.image_type = 'HERO' THEN 2
+                         ELSE 3
+                         END,
+                     pi.display_order,
+                     pi.created_at
+             )
+        WHERE ROWNUM = 1
+    </select>
+
+    <!-- 공동구매 정보 조회 -->
+    <select id="findGroupBuyById" parameterType="int" resultType="GroupBuy">
+        SELECT
+            id,
+            name,
+            product_variant_id AS productVariantId,
+            group_price AS groupPrice,
+            target_quantity AS targetQuantity,
+            current_quantity AS currentQuantity,
+            status,
+            start_date AS startDate,
+            end_date AS endDate
+        FROM group_buys
+        WHERE id = #{groupBuyId}
+    </select>
+
+    <!-- 상품 변형 정보 조회 -->
+    <select id="findProductVariantById" parameterType="int" resultType="ProductVariant">
+        SELECT
+            id,
+            product_id AS productId,
+            sku,
+            price,
+            stock_quantity AS stockQuantity,
+            is_active AS isActive
+        FROM product_variants
+        WHERE id = #{variantId}
+    </select>
+
+    <!-- 주문 생성 -->
+    <insert id="insertOrder" parameterType="OrderDetail">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT orders_seq.NEXTVAL FROM DUAL
+        </selectKey>
+
+        INSERT INTO orders (
+        id, user_id, order_no, status,
+        recipient_name, recipient_phone, recipient_address,
+        recipient_address_detail, recipient_zipcode,
+        recipient_deliv_req_type, recipient_deliv_req_msg,
+        sub_total_amount, shipping_fee, final_amount, total_discount_amount,
+        created_at, updated_at
+        ) VALUES (
+        #{id}, #{userId},
+        'ORD' || TO_CHAR(SYSDATE, 'YYYYMMDD') || '-' ||
+        LPAD(NVL((SELECT MAX(TO_NUMBER(SUBSTR(order_no, -5))) + 1
+        FROM orders
+        WHERE order_no LIKE 'ORD' || TO_CHAR(SYSDATE, 'YYYYMMDD') || '-%'), 1
+        ), 5, '0'
+        ),
+        #{status},
+        #{recipientName}, #{recipientPhone}, #{recipientAddress},
+        #{recipientAddressDetail}, #{recipientZipcode},
+        #{recipientDelivReqType}, #{recipientDelivReqMsg},
+        #{subTotalAmount}, #{shippingFee}, #{finalAmount}, #{totalDiscountAmount},
+        SYSTIMESTAMP, SYSTIMESTAMP
+        )
+    </insert>
+
+    <select id="findOrderNoById" parameterType="int" resultType="string">
+        SELECT order_no FROM orders WHERE id = #{id}
+    </select>
+
+    <!-- 주문 아이템 생성 -->
+    <insert id="insertOrderItem" parameterType="map">
+        <selectKey keyProperty="orderItem.id" resultType="int" order="BEFORE">
+            SELECT order_items_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO order_items (
+        id, order_id, product_variant_id,
+        quantity, price_at_purchase, total_price_at_purch,
+        status
+        ) VALUES (
+        #{orderItem.id}, #{orderId}, #{orderItem.productVariantId},
+        #{orderItem.quantity}, #{orderItem.priceAtPurchase}, #{orderItem.totalPriceAtPurchase},
+        'PENDING'
+        )
+    </insert>
+
+    <!-- 결제 정보 생성 -->
+    <insert id="insertPayment" parameterType="Payment">
+        <!-- PK 자동 채번 -->
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT payments_seq.NEXTVAL FROM DUAL
+        </selectKey>
+
+        INSERT INTO payments
+        <!-- 컬럼 목록: 자동으로 쉼표 제거 -->
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            id,
+            order_id,
+            <!-- group_buy_participant_id 는 null 시 생략 -->
+            <if test="groupBuyParticipantId != null">group_buy_participant_id,</if>
+            payment_method_type,
+            <!-- card_issuer 는 null 시 생략 -->
+            <if test="cardIssuer != null">card_issuer,</if>
+            amount,
+            status,
+            <!-- 그 외 null-able 컬럼들 -->
+            <if test="paymentDetails != null">payment_details,</if>
+            <if test="transactionId != null">transaction_id,</if>
+            <if test="approvalNumber != null">approval_number,</if>
+            <if test="installmentMonths != null">installment_months,</if>
+            <if test="cardCompany != null">card_company,</if>
+            <if test="paidAt != null">paid_at,</if>
+            created_at,
+            updated_at
+        </trim>
+
+        VALUES
+        <!-- 값 목록: 자동으로 쉼표 제거 -->
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            #{id},
+            #{orderId},
+            <if test="groupBuyParticipantId != null">#{groupBuyParticipantId},</if>
+            #{paymentMethodType},
+            <if test="cardIssuer != null">#{cardIssuer},</if>
+            #{amount},
+            #{status},
+            <if test="paymentDetails != null">#{paymentDetails},</if>
+            <if test="transactionId != null">#{transactionId},</if>
+            <if test="approvalNumber != null">#{approvalNumber},</if>
+            <if test="installmentMonths != null">#{installmentMonths},</if>
+            <if test="cardCompany != null">#{cardCompany},</if>
+            <if test="paidAt != null">#{paidAt},</if>
+            SYSTIMESTAMP,
+            SYSTIMESTAMP
+        </trim>
+    </insert>
+
+    <!-- 결제 정보 업데이트 -->
+    <update id="updatePayment" parameterType="Payment">
+        UPDATE payments
+        <set>
+            <!-- null-able 컬럼만 값이 있을 때 업데이트 -->
+            <if test="groupBuyParticipantId != null">group_buy_participant_id = #{groupBuyParticipantId},</if>
+            <if test="paymentMethodType != null">payment_method_type       = #{paymentMethodType},</if>
+            <if test="cardIssuer           != null">card_issuer              = #{cardIssuer},</if>
+            <if test="paymentDetails       != null">payment_details          = #{paymentDetails},</if>
+            <if test="transactionId        != null">transaction_id           = #{transactionId},</if>
+            <if test="approvalNumber       != null">approval_number          = #{approvalNumber},</if>
+            <if test="installmentMonths    != null">installment_months       = #{installmentMonths},</if>
+            <if test="cardCompany          != null">card_company             = #{cardCompany},</if>
+            <if test="paidAt               != null">paid_at                  = #{paidAt},</if>
+            <!-- status 는 NOT NULL 이지만, 동적 업데이트가 필요하면 아래와 같이 처리 -->
+            <if test="status              != null">status                   = #{status},</if>
+            updated_at = SYSTIMESTAMP
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 주문 상태 업데이트 (ID 기준) -->
+    <update id="updateOrderStatusById" parameterType="map">
+        UPDATE orders
+        SET status = #{status}, updated_at = SYSTIMESTAMP
+        WHERE id = #{orderId}
+    </update>
+
+    <!-- 상품 재고 차감 -->
+    <update id="decreaseProductStock" parameterType="map">
+        UPDATE product_variants
+        SET stock_quantity = stock_quantity - #{quantity},
+            updated_at = SYSTIMESTAMP
+        WHERE id = #{variantId}
+          AND stock_quantity >= #{quantity}
+    </update>
+
+    <!-- 공동구매 현재 수량 증가 -->
+    <update id="increaseGroupBuyQuantity" parameterType="map">
+        UPDATE group_buys
+        SET current_quantity = current_quantity + #{quantity}
+        WHERE id = #{groupBuyId}
+    </update>
+
+
+    <!-- 공동구매 참여자 상태 업데이트 -->
+    <update id="updateGroupBuyParticipantStatus" parameterType="GroupBuyParticipant">
+        UPDATE group_buy_participants
+        SET status = #{status},
+            updated_at = SYSTIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <!-- 공동구매 참여자의 order_id 업데이트 -->
+    <update id="updateGroupBuyParticipantOrderId" parameterType="GroupBuyParticipant">
+        UPDATE group_buy_participants
+        SET order_id = #{orderId},
+            updated_at = SYSTIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <!-- 공동구매 성공 여부 확인 -->
+    <select id="isGroupBuySuccessful" parameterType="int" resultType="boolean">
+        SELECT CASE
+                   WHEN gb.current_quantity >= gb.target_quantity THEN 1
+                   ELSE 0
+                   END
+        FROM group_buys gb
+        WHERE gb.id = #{groupBuyId}
+          AND gb.status = 'ACTIVE'
+          AND gb.end_date > SYSTIMESTAMP
+    </select>
+
+    <!-- 공동구매 참여자 정보 조회 (주문 생성용) -->
+    <select id="selectGroupBuyParticipantWithDetails" parameterType="int" resultType="GroupBuyParticipant">
+        SELECT
+            gbp.*,
+            gb.name as groupBuyName,
+            pv.price as originalPrice,
+            gb.group_price as finalPrice,
+            u.name as userName,
+            u.phone as userPhone
+        FROM group_buy_participants gbp
+                 JOIN group_buys gb ON gbp.group_buy_id = gb.id
+                 JOIN product_variants pv ON gb.product_variant_id = pv.id
+                 JOIN users u ON gbp.user_id = u.id
+        WHERE gbp.id = #{participantId}
+    </select>
+    <!-- order.xml에 추가해야 할 공동구매 관련 쿼리들 -->
+
+    <!-- 공동구매 참여자 생성 -->
+    <insert id="insertGroupBuyParticipant" parameterType="GroupBuyParticipant">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT group_buy_participants_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO group_buy_participants (
+        id, group_buy_id, user_id, quantity, order_id,
+        status, total_amount_paid, recipient_name, recipient_phone,
+        recipient_address, recipient_address_detail, recipient_zipcode,
+        recipient_deliv_req_type, recipient_deliv_req_msg,
+        joined_at, created_at, updated_at
+        ) VALUES (
+        #{id}, #{groupBuyId}, #{userId}, #{quantity}, #{orderId},
+        #{status}, #{paidAmount}, #{recipientName}, #{recipientPhone},
+        #{recipientAddress}, #{recipientAddressDetail}, #{recipientZipcode},
+        #{recipientDelivReqType}, #{recipientDelivReqMsg},
+        SYSTIMESTAMP, SYSTIMESTAMP, SYSTIMESTAMP
+        )
+    </insert>
+
+    <!-- 공동구매 참여자 ID로 조회 -->
+    <select id="findGroupBuyParticipantById" parameterType="int" resultType="GroupBuyParticipant">
+        SELECT
+        gbp.id,
+        gbp.group_buy_id AS groupBuyId,
+        gbp.user_id AS userId,
+        gb.product_variant_id AS variantId,  <!-- 수정 -->
+        gbp.quantity,
+        gbp.order_id AS orderId,
+        gbp.status,
+        gbp.total_amount_paid AS paidAmount,
+        gbp.recipient_name AS recipientName,
+        gbp.recipient_phone AS recipientPhone,
+        gbp.recipient_address AS recipientAddress,
+        gbp.recipient_address_detail AS recipientAddressDetail,
+        gbp.recipient_zipcode AS recipientZipcode,
+        gbp.recipient_deliv_req_type AS recipientDelivReqType,
+        gbp.recipient_deliv_req_msg AS recipientDelivReqMsg,
+        gbp.joined_at AS joinedAt,
+        gbp.created_at AS createdAt,
+        gbp.updated_at AS updatedAt,
+        gb.name AS groupBuyName,
+        gb.group_price AS finalPrice,
+        gb.current_quantity AS currentParticipants,
+        gb.target_quantity AS targetParticipants,
+        gb.end_date AS endDate,
+        pv.price AS originalPrice,
+        p.name AS productName,
+        (SELECT image_url FROM product_images WHERE product_id = p.id AND image_type = 'PRIMARY' AND ROWNUM = 1) AS productImageUrl,
+        (SELECT LISTAGG(pov.value_text, ' / ') WITHIN GROUP (ORDER BY po.name)
+        FROM prod_variant_option_vals pvov
+        JOIN product_option_values pov ON pvov.product_option_value_id = pov.id
+        JOIN product_options po ON pov.product_option_id = po.id
+        WHERE pvov.variant_id = gb.product_variant_id  <!-- 수정 -->
+        ) AS optionCombination
+        FROM group_buy_participants gbp
+        JOIN group_buys gb ON gbp.group_buy_id = gb.id
+        JOIN product_variants pv ON gb.product_variant_id = pv.id
+        JOIN products p ON pv.product_id = p.id
+        WHERE gbp.id = #{participantId}
+    </select>
+
+    <!-- 공동구매 결제 정보 생성 (payments 테이블에 저장) -->
+    <insert id="insertGroupBuyPayment" parameterType="Payment">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT payments_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO payments (
+        id, order_id, group_buy_participant_id, payment_method_type,
+        amount, status, payment_details, transaction_id, approval_number,
+        card_company, installment_months, paid_at, created_at, updated_at
+        ) VALUES (
+        #{id}, #{orderId}, #{groupBuyParticipantId}, #{paymentMethodType},
+        #{amount}, #{status}, #{paymentDetails}, #{transactionId}, #{approvalNumber},
+        #{cardCompany}, #{installmentMonths}, #{paidAt}, SYSTIMESTAMP, SYSTIMESTAMP
+        )
+    </insert>
+
+    <!-- seller가 해당 주문에 상품을 가지고 있는지 확인 -->
+    <select id="hasSellerProductsInOrder" parameterType="map" resultType="boolean">
+        SELECT CASE
+                   WHEN COUNT(*) > 0 THEN 1
+                   ELSE 0
+                   END
+        FROM order_items oi
+                 JOIN product_variants pv ON oi.product_variant_id = pv.id
+                 JOIN products p ON pv.product_id = p.id
+        WHERE oi.order_id = #{orderId}
+          AND p.seller_id = #{sellerId}
+    </select>
+
+    <update id="setOrderConfirmed" parameterType="int">
+        UPDATE orders SET status = 'CONFIRMED', confirmed_at = CURRENT_TIMESTAMP WHERE id = #{orderId}
+    </update>
+
+    <update id="setOrderItemConfirmed" parameterType="int">
+        UPDATE order_items SET status = 'CONFIRMED', confirmed_at = CURRENT_TIMESTAMP WHERE id = #{orderItemId}
+    </update>
+</mapper>

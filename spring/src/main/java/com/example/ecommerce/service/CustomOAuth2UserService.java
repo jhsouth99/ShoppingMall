@@ -11,7 +11,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
-import com.example.ecommerce.OAuthAttributes;
+import com.example.ecommerce.controller.OAuthAttributes;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,12 +30,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String userNameAttributeName = userRequest.getClientRegistration()
                 .getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName();
 
-        // ¼Ò¼È ¼­ºñ½º·ÎºÎÅÍ ¹ŞÀº Á¤º¸¸¦ OAuthAttributes °´Ã¼·Î º¯È¯
+        // ì†Œì…œ ì„œë¹„ìŠ¤ë¡œë¶€í„° ë°›ì€ ì •ë³´ë¥¼ OAuthAttributes ê°ì²´ë¡œ ë³€í™˜
         OAuthAttributes attributes = OAuthAttributes.of(registrationId, userNameAttributeName, oAuth2User.getAttributes());
         logger.debug("DEBUG: Fetched attributes for {}: {}", registrationId, attributes.getAttributes());
 
-        // DB¿¡ ÀúÀåÇÏÁö ¾Ê°í, ÀÎÁõÀ» À§ÇÑ ÀÓ½Ã User °´Ã¼¸¦ »ı¼º
-        // ÀÌ °´Ã¼´Â ÀÎÁõÀÌ ¼º°øÇÑ ÈÄ SuccessHandler·Î Àü´ŞµÊ
+        // DBì— ì €ì¥í•˜ì§€ ì•Šê³ , ì¸ì¦ì„ ìœ„í•œ ì„ì‹œ User ê°ì²´ë¥¼ ìƒì„±
+        // ì´ ê°ì²´ëŠ” ì¸ì¦ì´ ì„±ê³µí•œ í›„ SuccessHandlerë¡œ ì „ë‹¬ë¨
         return new DefaultOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")),
                 oAuth2User.getAttributes(),

@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="admin_user">
+
+    <!-- 사용자 목록 조회 (페이징) -->
+    <select id="getUserList" resultType="UserSummary" parameterType="map">
+        SELECT * FROM (
+        SELECT ROWNUM rn, t.* FROM (
+        SELECT
+        u.id,
+        u.username,
+        u.name,
+        u.email,
+        u.phone,
+        u.created_at as createdAt,
+        u.suspended_at as suspendedAt,
+        u.resumed_at as resumedAt,
+        u.deleted_at as deletedAt,
+        u.suspension,
+        u.termination,
+        CASE
+        WHEN u.deleted_at IS NOT NULL THEN 'DELETED'
+        WHEN u.termination IS NOT NULL THEN 'TERMINATED'
+        WHEN u.suspension IS NOT NULL AND u.resumed_at IS NULL THEN 'SUSPENDED'
+        WHEN u.suspension IS NOT NULL AND u.resumed_at > u.suspended_at THEN 'ACTIVE'
+        ELSE 'ACTIVE'
+        END as status,
+        LISTAGG(ur.role, ',') WITHIN GROUP (ORDER BY ur.role) as roles,
+        NVL(order_stats.order_count, 0) as orderCount,
+        NVL(order_stats.total_spent, 0) as totalSpent,
+        NVL(review_stats.review_count, 0) as reviewCount
+        FROM users u
+        LEFT JOIN user_roles ur ON u.id = ur.user_id
+        LEFT JOIN (
+        SELECT
+        user_id,
+        COUNT(*) as order_count,
+        SUM(final_amount) as total_spent
+        FROM orders
+        WHERE status IN ('DELIVERED', 'SHIPPED', 'PREPARING')
+        GROUP BY user_id
+        ) order_stats ON u.id = order_stats.user_id
+        LEFT JOIN (
+        SELECT user_id, COUNT(*) as review_count
+        FROM reviews
+        GROUP BY user_id
+        ) review_stats ON u.id = review_stats.user_id
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND (
+            UPPER(u.username) LIKE '%' || UPPER(#{keyword}) || '%'
+            OR UPPER(u.name) LIKE '%' || UPPER(#{keyword}) || '%'
+            OR UPPER(u.email) LIKE '%' || UPPER(#{keyword}) || '%'
+            )
+        </if>
+        <if test="status != null and status != ''">
+            <choose>
+                <when test="status == 'active'">
+                    AND u.deleted_at IS NULL
+                    AND u.termination IS NULL
+                    AND (u.suspension IS NULL OR u.resumed_at > u.suspended_at)
+                </when>
+                <when test="status == 'suspended'">
+                    AND u.suspension IS NOT NULL
+                    AND (u.resumed_at IS NULL OR u.resumed_at &lt;= u.suspended_at)
+                </when>
+                <when test="status == 'terminated'">
+                    AND u.termination IS NOT NULL
+                </when>
+                <when test="status == 'deleted'">
+                    AND u.deleted_at IS NOT NULL
+                </when>
+            </choose>
+        </if>
+        GROUP BY u.id, u.username, u.name, u.email, u.phone, u.created_at,
+        u.suspended_at, u.resumed_at, u.deleted_at, u.suspension, u.termination,
+        order_stats.order_count, order_stats.total_spent, review_stats.review_count
+        ORDER BY u.created_at DESC
+        ) t
+        WHERE ROWNUM &lt;= #{offset} + #{size}
+        )
+        WHERE rn > #{offset}
+    </select>
+
+    <!-- 사용자 총 개수 조회 -->
+    <select id="getUserCount" resultType="int" parameterType="map">
+        SELECT COUNT(DISTINCT u.id)
+        FROM users u
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND (
+            UPPER(u.username) LIKE '%' || UPPER(#{keyword}) || '%'
+            OR UPPER(u.name) LIKE '%' || UPPER(#{keyword}) || '%'
+            OR UPPER(u.email) LIKE '%' || UPPER(#{keyword}) || '%'
+            )
+        </if>
+        <if test="status != null and status != ''">
+            <choose>
+                <when test="status == 'active'">
+                    AND u.deleted_at IS NULL
+                    AND u.termination IS NULL
+                    AND (u.suspension IS NULL OR u.resumed_at > u.suspended_at)
+                </when>
+                <when test="status == 'suspended'">
+                    AND u.suspension IS NOT NULL
+                    AND (u.resumed_at IS NULL OR u.resumed_at &lt;= u.suspended_at)
+                </when>
+                <when test="status == 'terminated'">
+                    AND u.termination IS NOT NULL
+                </when>
+                <when test="status == 'deleted'">
+                    AND u.deleted_at IS NOT NULL
+                </when>
+            </choose>
+        </if>
+    </select>
+
+    <!-- 사용자 상세 정보 조회 -->
+    <select id="getUserDetail" resultType="UserDetail" parameterType="int">
+        SELECT
+            u.id,
+            u.username,
+            u.name,
+            u.email,
+            u.phone,
+            u.created_at as createdAt,
+            u.suspended_at as suspendedAt,
+            u.resumed_at as resumedAt,
+            u.deleted_at as deletedAt,
+            u.suspension,
+            u.termination,
+            CASE
+                WHEN u.deleted_at IS NOT NULL THEN 'DELETED'
+                WHEN u.termination IS NOT NULL THEN 'TERMINATED'
+                WHEN u.suspension IS NOT NULL AND u.resumed_at IS NULL THEN 'SUSPENDED'
+                WHEN u.suspension IS NOT NULL AND u.resumed_at > u.suspended_at THEN 'ACTIVE'
+                ELSE 'ACTIVE'
+                END as status,
+            NVL(stats.total_orders, 0) as totalOrders,
+            NVL(stats.total_spent, 0) as totalSpent,
+            NVL(stats.total_reviews, 0) as totalReviews,
+            NVL(stats.total_inquiries, 0) as totalInquiries,
+            NVL(stats.total_reports, 0) as totalReports,
+            NVL(stats.reports_made, 0) as reportsMade,
+            stats.last_order_at as lastOrderAt,
+            stats.last_review_at as lastReviewAt
+        FROM users u
+                 LEFT JOIN (
+            SELECT
+                u.id as user_id,
+                COUNT(DISTINCT o.id) as total_orders,
+                SUM(o.final_amount) as total_spent,
+                COUNT(DISTINCT r.id) as total_reviews,
+                COUNT(DISTINCT i.id) as total_inquiries,
+                COUNT(DISTINCT rep1.id) as total_reports,
+                COUNT(DISTINCT rep2.id) as reports_made,
+                MAX(o.created_at) as last_order_at,
+                MAX(r.created_at) as last_review_at
+            FROM users u
+                     LEFT JOIN orders o ON u.id = o.user_id AND o.status IN ('DELIVERED', 'SHIPPED', 'PREPARING')
+                     LEFT JOIN reviews r ON u.id = r.user_id
+                     LEFT JOIN inquiries i ON u.id = i.user_id
+                     LEFT JOIN reports rep1 ON u.id = rep1.reported_user_id
+                     LEFT JOIN reports rep2 ON u.id = rep2.reporter_id
+            GROUP BY u.id
+        ) stats ON u.id = stats.user_id
+        WHERE u.id = #{userId}
+    </select>
+
+    <!-- 사용자 역할 조회 -->
+    <select id="getUserRoles" resultType="string" parameterType="int">
+        SELECT role
+        FROM user_roles
+        WHERE user_id = #{userId}
+        ORDER BY role
+    </select>
+
+    <!-- 신고 목록 조회 (페이징) -->
+    <select id="getReportList" resultType="ReportSummary" parameterType="map">
+        SELECT * FROM (
+        SELECT ROWNUM rn, t.* FROM (
+        SELECT
+        r.id,
+        r.report_type as reportType,
+        r.reason,
+        r.detail,
+        r.status,
+        r.evidence_url as evidenceUrl,
+        r.action_taken as actionTaken,
+        r.created_at as createdAt,
+        r.processed_at as processedAt,
+        r.processed_by as processedBy,
+
+        -- 신고자 정보
+        r.reporter_id as reporterId,
+        reporter.name as reporterName,
+        reporter.username as reporterUsername,
+
+        -- 신고 대상 정보
+        r.reported_user_id as reportedUserId,
+        reported_user.name as reportedUserName,
+        reported_user.username as reportedUserUsername,
+        r.reported_product_id as reportedProductId,
+        p.name as reportedProductName,
+        r.reported_review_id as reportedReviewId,
+
+        -- 처리자 정보
+        processor.name as processedByName
+        FROM reports r
+        LEFT JOIN users reporter ON r.reporter_id = reporter.id
+        LEFT JOIN users reported_user ON r.reported_user_id = reported_user.id
+        LEFT JOIN products p ON r.reported_product_id = p.id
+        LEFT JOIN users processor ON r.processed_by = processor.id
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND (
+            UPPER(r.reason) LIKE '%' || UPPER(#{keyword}) || '%'
+            OR UPPER(r.detail) LIKE '%' || UPPER(#{keyword}) || '%'
+            OR UPPER(reporter.username) LIKE '%' || UPPER(#{keyword}) || '%'
+            OR UPPER(reported_user.username) LIKE '%' || UPPER(#{keyword}) || '%'
+            )
+        </if>
+        <if test="status != null and status != ''">
+            AND r.status = #{status}
+        </if>
+        <if test="reportType != null and reportType != ''">
+            AND r.report_type = #{reportType}
+        </if>
+        ORDER BY
+        CASE WHEN r.status = 'PENDING' THEN 1 ELSE 2 END,
+        r.created_at DESC
+        ) t
+        WHERE ROWNUM &lt;= #{offset} + #{size}
+        )
+        WHERE rn > #{offset}
+    </select>
+
+    <!-- 신고 총 개수 조회 -->
+    <select id="getReportCount" resultType="int" parameterType="map">
+        SELECT COUNT(*)
+        FROM reports r
+        LEFT JOIN users reporter ON r.reporter_id = reporter.id
+        LEFT JOIN users reported_user ON r.reported_user_id = reported_user.id
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND (
+            UPPER(r.reason) LIKE '%' || UPPER(#{keyword}) || '%'
+            OR UPPER(r.detail) LIKE '%' || UPPER(#{keyword}) || '%'
+            OR UPPER(reporter.username) LIKE '%' || UPPER(#{keyword}) || '%'
+            OR UPPER(reported_user.username) LIKE '%' || UPPER(#{keyword}) || '%'
+            )
+        </if>
+        <if test="status != null and status != ''">
+            AND r.status = #{status}
+        </if>
+        <if test="reportType != null and reportType != ''">
+            AND r.report_type = #{reportType}
+        </if>
+    </select>
+
+    <!-- 신고 상세 정보 조회 -->
+    <select id="getReportDetail" resultType="ReportDetail" parameterType="int">
+        SELECT
+            r.id,
+            r.report_type as reportType,
+            r.reason,
+            r.detail,
+            r.status,
+            r.evidence_url as evidenceUrl,
+            r.action_taken as actionTaken,
+            r.created_at as createdAt,
+            r.processed_at as processedAt,
+            r.processed_by as processedBy,
+            processor.name as processedByName
+        FROM reports r
+                 LEFT JOIN users processor ON r.processed_by = processor.id
+        WHERE r.id = #{reportId}
+    </select>
+
+    <!-- 사용자 정지 -->
+    <update id="suspendUser" parameterType="map">
+        UPDATE users
+        SET suspension = #{reason},
+            suspended_at = CURRENT_TIMESTAMP,
+            resumed_at = NULL
+        WHERE id = #{userId}
+    </update>
+
+    <!-- 사용자 정지 해제 -->
+    <update id="resumeUser" parameterType="map">
+        UPDATE users
+        SET resumed_at = CURRENT_TIMESTAMP
+        WHERE id = #{userId}
+    </update>
+
+    <!-- 사용자 계정 해지 -->
+    <update id="terminateUser" parameterType="map">
+        UPDATE users
+        SET termination = #{reason},
+            terminated_at = CURRENT_TIMESTAMP
+        WHERE id = #{userId}
+    </update>
+
+    <!-- 신고 처리 -->
+    <update id="processReport" parameterType="map">
+        UPDATE reports
+        SET status = #{status},
+            action_taken = #{actionTaken},
+            processed_at = CURRENT_TIMESTAMP,
+            processed_by = #{processedBy}
+        WHERE id = #{reportId}
+    </update>
+
+    <!-- 사용자 배송지 조회 -->
+    <select id="getUserShippingAddresses" resultType="ShippingAddress" parameterType="int">
+        SELECT
+            id,
+            user_id as userId,
+            name,
+            recipient_name as recipientName,
+            phone,
+            address,
+            address_detail as addressDetail,
+            city,
+            zipcode,
+            country,
+            is_default as isDefault,
+            created_at as createdAt
+        FROM shipping_addresses
+        WHERE user_id = #{userId}
+        ORDER BY is_default DESC, created_at DESC
+    </select>
+
+    <!-- 미처리 신고 수 조회 -->
+    <select id="getPendingReportCount" resultType="int">
+        SELECT COUNT(*)
+        FROM reports
+        WHERE status = 'PENDING'
+    </select>
+
+</mapper>

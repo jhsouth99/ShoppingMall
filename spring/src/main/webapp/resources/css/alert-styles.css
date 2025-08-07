@@ -1,0 +1,117 @@
+/**
+ * Custom Alert Styles
+ * 커스텀 알림 메시지 스타일
+ */
+
+.custom-alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 2000;
+    min-width: 300px;
+    max-width: 500px;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.custom-alert.show {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+.alert-content {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px var(--shadow-medium);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.alert-success .alert-content {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.alert-error .alert-content {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+.alert-warning .alert-content {
+    background-color: #fff3cd;
+    color: #856404;
+    border-left: 4px solid #ffc107;
+}
+
+.alert-info .alert-content {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border-left: 4px solid #17a2b8;
+}
+
+/* 다크모드 알림 스타일 */
+body.dark-theme .alert-success .alert-content {
+    background-color: rgba(0, 184, 148, 0.2);
+    color: var(--accent-secondary);
+    border-left-color: var(--accent-secondary);
+}
+
+body.dark-theme .alert-error .alert-content {
+    background-color: rgba(225, 112, 85, 0.2);
+    color: var(--accent-danger);
+    border-left-color: var(--accent-danger);
+}
+
+body.dark-theme .alert-warning .alert-content {
+    background-color: rgba(253, 203, 110, 0.2);
+    color: var(--accent-warning);
+    border-left-color: var(--accent-warning);
+}
+
+body.dark-theme .alert-info .alert-content {
+    background-color: rgba(0, 206, 201, 0.2);
+    color: var(--accent-info);
+    border-left-color: var(--accent-info);
+}
+
+.alert-icon {
+    margin-right: 12px;
+    font-size: 18px;
+}
+
+.alert-message {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.alert-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 15px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+    color: inherit;
+}
+
+.alert-close:hover {
+    opacity: 1;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 575px) {
+    .custom-alert {
+        left: 10px;
+        right: 10px;
+        min-width: auto;
+        max-width: none;
+    }
+}

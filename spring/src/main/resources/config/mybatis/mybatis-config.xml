@@ -6,17 +6,107 @@
 		<setting name="cacheEnabled" value="false" />
 		<setting name="useGeneratedKeys" value="true" />
 		<setting name="defaultExecutorType" value="REUSE" />
+		<setting name="mapUnderscoreToCamelCase" value="true" />
 	</settings>
-	
 	<typeAliases>
-		<typeAlias type="com.example.ecommerce.vo.UserVO" alias="User"/>
-		<typeAlias type="com.example.ecommerce.vo.UserRoleVO" alias="UserRole"/>
-		<typeAlias type="com.example.ecommerce.vo.OAuthAttributesVO" alias="OAuthAttr"/>
+		<typeAlias type="com.example.ecommerce.dto.UserDTO" alias="User"/>
+		<typeAlias type="com.example.ecommerce.dto.UserRoleDTO" alias="UserRole"/>
+		<typeAlias type="com.example.ecommerce.dto.OAuthAttributesDTO" alias="OAuthAttr"/>
+		<typeAlias type="com.example.ecommerce.dto.ShippingAddressDTO" alias="ShipAddr"/>
+		<typeAlias type="com.example.ecommerce.dto.OrderSummaryDTO" alias="OrderSummary"/>
+		<typeAlias type="com.example.ecommerce.dto.AgreementTermDTO" alias="AgreementTerm"/>
+		<typeAlias type="com.example.ecommerce.dto.UserAgreementDTO" alias="UserAgreement"/>
+		<typeAlias type="com.example.ecommerce.dto.UserCouponDTO" alias="UserCoupon"/>
+		<typeAlias type="com.example.ecommerce.dto.NotificationSettingsDTO" alias="NotifSettings"/>
+		<typeAlias type="com.example.ecommerce.dto.CategoryDTO" alias="Category"/>
+		<typeAlias type="com.example.ecommerce.dto.CartItemDTO" alias="CartItem"/>
+		<typeAlias type="com.example.ecommerce.dto.ProductSummaryDTO" alias="SellerProductSummary"/>
+		<typeAlias type="com.example.ecommerce.dto.ProductDetailDTO" alias="SellerProductDetail"/>
+		<typeAlias type="com.example.ecommerce.dto.ProductOptionDTO" alias="SellerProductOption"/>
+		<typeAlias type="com.example.ecommerce.dto.ProductOptionValueDTO" alias="SellerProductOptionValue"/>
+		<typeAlias type="com.example.ecommerce.dto.ShipmentDTO" alias="Shipment"/>
+		<typeAlias type="com.example.ecommerce.dto.ReturnDTO" alias="Return"/>
+		<typeAlias type="com.example.ecommerce.dto.ReturnItemDetailDTO" alias="ReturnItemDetail"/>
+		<typeAlias type="com.example.ecommerce.dto.PromotionDTO" alias="Promotion"/>
+		<typeAlias type="com.example.ecommerce.dto.PromotionDetailDTO" alias="PromotionDetail"/>
+		<typeAlias type="com.example.ecommerce.dto.PromotionConditionDTO" alias="PromotionCondition"/>
+		<typeAlias type="com.example.ecommerce.dto.ProductVariantDTO" alias="ProductVariant"/>
+		<typeAlias type="com.example.ecommerce.dto.CouponDTO" alias="Coupon"/>
+		<typeAlias type="com.example.ecommerce.dto.SellerInfoDTO" alias="SellerInfo"/>
+		<typeAlias type="com.example.ecommerce.dto.QnADTO" alias="QnA"/>
+		<typeAlias type="com.example.ecommerce.dto.PaymentDTO" alias="Payment"/>
+		<typeAlias type="com.example.ecommerce.dto.SellerDashboardSummaryDTO" alias="SellerDashboardSummary"/>
+		<typeAlias type="com.example.ecommerce.dto.OrderDTO" alias="OrderDetail"/>
+		<typeAlias type="com.example.ecommerce.dto.OrderItemDTO" alias="OrderItemDetail"/>
+		<typeAlias type="com.example.ecommerce.dto.SellerNotificationSettingsDTO" alias="SellerNotificationSettings"/>
+		<typeAlias type="com.example.ecommerce.dto.AdminDashboardSummaryDTO" alias="AdminDashboardSummary"/>
+		<typeAlias type="com.example.ecommerce.dto.GroupBuyDTO" alias="GroupBuy"/>
+		<typeAlias type="com.example.ecommerce.dto.GroupBuyParticipantDTO" alias="GroupBuyParticipant"/>
+		<typeAlias type="com.example.ecommerce.dto.ReviewDTO" alias="Review"/>
+		<typeAlias type="com.example.ecommerce.dto.ReviewImageDTO" alias="ReviewImage"/>
+		<typeAlias type="com.example.ecommerce.dto.SearchProductDTO" alias="SearchProduct"/>
+		<typeAlias type="com.example.ecommerce.dto.ProductAttributeValueDTO" alias="ProductAttributeValue"/>
+		<typeAlias type="com.example.ecommerce.dto.AttributeDTO" alias="Attribute"/>
+		<typeAlias type="com.example.ecommerce.dto.AttributeOptionDTO" alias="AttributeOption"/>
+		<typeAlias type="com.example.ecommerce.dto.CategoryAttributeDTO" alias="CategoryAttribute"/>
+		<typeAlias type="com.example.ecommerce.dto.InquiryDTO" alias="Inquiry"/>
+		<typeAlias type="com.example.ecommerce.dto.ProductImageDTO" alias="ProductImage"/>
+		<typeAlias type="com.example.ecommerce.dto.UserSummaryDTO" alias="UserSummary"/>
+		<typeAlias type="com.example.ecommerce.dto.UserDetailDTO" alias="UserDetail"/>
+		<typeAlias type="com.example.ecommerce.dto.UserStatusHistoryDTO" alias="UserStatusHistory"/>
+		<typeAlias type="com.example.ecommerce.dto.ReportSummaryDTO" alias="ReportSummary"/>
+		<typeAlias type="com.example.ecommerce.dto.ReportDetailDTO" alias="ReportDetail"/>
+		<typeAlias type="com.example.ecommerce.dto.ShippingAddressDTO" alias="ShippingAddress"/>
+		<typeAlias type="com.example.ecommerce.dto.OrderItemRequestDTO" alias="OrderItemRequest"/>
+		<typeAlias type="com.example.ecommerce.dto.AfterSalesRequestDTO" alias="AfterSalesRequest"/>
+		<typeAlias type="com.example.ecommerce.dto.AfterSalesRequestItemDTO" alias="AfterSalesRequestItem"/>
+		<typeAlias type="com.example.ecommerce.dto.AfterSalesStatusHistoryDTO" alias="AfterSalesStatusHistory"/>
+		<typeAlias type="com.example.ecommerce.dto.RefundDTO" alias="Refund"/>
+		<typeAlias type="com.example.ecommerce.dto.RefundItemDTO" alias="RefundItem"/>
+		<typeAlias type="com.example.ecommerce.dto.ShippingMethodDTO" alias="ShippingMethod"/>
 	</typeAliases>
-	
+
+	<typeHandlers>
+		<typeHandler javaType="java.lang.Boolean" handler="com.example.ecommerce.handler.BooleanYNTypeHandler" jdbcType="CHAR"/>
+		<typeHandler javaType="boolean" handler="com.example.ecommerce.handler.BooleanYNTypeHandler" jdbcType="CHAR"/>
+		<!-- DATE 컬럼 ↔ LocalDate -->
+		<typeHandler javaType="java.time.LocalDate"
+					 jdbcType="DATE"
+					 handler="org.apache.ibatis.type.LocalDateTypeHandler"/>
+		<!-- TIMESTAMP 컬럼 ↔ LocalDateTime -->
+		<typeHandler javaType="java.time.LocalDateTime"
+					 jdbcType="TIMESTAMP"
+					 handler="org.apache.ibatis.type.LocalDateTimeTypeHandler"/>
+	</typeHandlers>
+
 	<mappers>
 		<mapper resource="config/mybatis/mapper/user.xml" />
 		<mapper resource="config/mybatis/mapper/user_role.xml" />
 		<mapper resource="config/mybatis/mapper/oauthattributes.xml" />
+		<mapper resource="config/mybatis/mapper/shipping_address.xml" />
+		<mapper resource="config/mybatis/mapper/agreement.xml" />
+		<mapper resource="config/mybatis/mapper/group_buy.xml" />
+		<mapper resource="config/mybatis/mapper/coupon.xml" />
+		<mapper resource="config/mybatis/mapper/product.xml" />
+		<mapper resource="config/mybatis/mapper/order.xml" />
+		<mapper resource="config/mybatis/mapper/promotion.xml" />
+		<mapper resource="config/mybatis/mapper/seller_info.xml" />
+		<mapper resource="config/mybatis/mapper/seller_dashboard.xml" />
+		<mapper resource="config/mybatis/mapper/return.xml" />
+		<mapper resource="config/mybatis/mapper/promotion.xml" />
+		<mapper resource="config/mybatis/mapper/coupon.xml" />
+		<mapper resource="config/mybatis/mapper/qna.xml" />
+		<mapper resource="config/mybatis/mapper/category.xml" />
+		<mapper resource="config/mybatis/mapper/attribute.xml" />
+		<mapper resource="config/mybatis/mapper/review.xml" />
+		<mapper resource="config/mybatis/mapper/carrier.xml" />
+		<mapper resource="config/mybatis/mapper/inquiry.xml" />
+		<mapper resource="config/mybatis/mapper/admin_dashboard.xml" />
+		<mapper resource="config/mybatis/mapper/admin_user.xml" />
+		<mapper resource="config/mybatis/mapper/wishlist.xml" />
+		<mapper resource="config/mybatis/mapper/after_sales.xml" />
+		<mapper resource="config/mybatis/mapper/refund.xml" />
+		<mapper resource="config/mybatis/mapper/shipment.xml" />
+		<mapper resource="config/mybatis/mapper/cart.xml" />
 	</mappers>
 </configuration>

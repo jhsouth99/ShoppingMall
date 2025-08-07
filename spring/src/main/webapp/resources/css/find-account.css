@@ -1,0 +1,560 @@
+/**
+ * Find Account Page Styles
+ * 아이디/비밀번호 찾기 페이지 전용 CSS (다크모드 지원)
+ */
+
+/* =====================================
+   페이지 레이아웃
+   ===================================== */
+.find-account-wrapper {
+    min-height: calc(100vh - 200px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+    background-color: var(--bg-secondary);
+}
+
+.find-account-container {
+    max-width: 500px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* =====================================
+   폼 영역
+   ===================================== */
+.find-account-form-wrapper {
+    background-color: var(--bg-primary);
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 4px 20px var(--shadow-light);
+    border: 1px solid var(--border-color);
+}
+
+.find-account-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.find-account-header h1 {
+    font-size: 28px;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.find-account-header p {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* =====================================
+   폼 스타일
+   ===================================== */
+.find-form {
+    display: block;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.find-form .form-group {
+    margin-bottom: 20px;
+}
+
+.find-form .form-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.find-form .form-label i {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.find-form .form-control {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 16px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.find-form .form-control:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(116, 185, 255, 0.1);
+    outline: none;
+}
+
+/* 입력 필드와 버튼이 함께 있는 그룹 */
+.input-with-button {
+    display: flex;
+    gap: 10px;
+}
+
+.input-with-button .form-control {
+    flex: 1;
+}
+
+.send-code-btn {
+    white-space: nowrap;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* 인증번호 입력 그룹 */
+.verification-group {
+    animation: slideInFromTop 0.3s ease-out;
+}
+
+.input-with-timer {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-with-timer .form-control {
+    padding-right: 60px;
+}
+
+.timer {
+    position: absolute;
+    right: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent-danger);
+}
+
+.resend-btn {
+    margin-top: 8px;
+    font-size: 13px;
+    padding: 6px 12px;
+}
+
+/* =====================================
+   찾기 버튼
+   ===================================== */
+.find-btn {
+    width: 100%;
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent-primary), #0056b3);
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.find-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #0056b3, #003d82);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(116, 185, 255, 0.3);
+}
+
+.find-btn:active {
+    transform: translateY(0);
+}
+
+.find-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* =====================================
+   결과 표시 영역
+   ===================================== */
+.find-result {
+    text-align: center;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.result-header {
+    margin-bottom: 25px;
+}
+
+.result-header i {
+    font-size: 48px;
+    color: var(--accent-success);
+    margin-bottom: 15px;
+    display: block;
+}
+
+.result-header.success i {
+    color: var(--accent-success);
+}
+
+.result-header h3 {
+    font-size: 24px;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.result-content {
+    margin-bottom: 30px;
+}
+
+.result-content p {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+/* 찾은 아이디 박스 */
+.found-id-box {
+    background-color: var(--bg-secondary);
+    border: 2px solid var(--accent-primary);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 300px;
+}
+
+.found-id-box span {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--accent-primary);
+}
+
+.register-date {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 10px;
+}
+
+/* 성공 메시지 */
+.success-message {
+    font-size: 16px;
+    line-height: 1.8;
+    color: var(--text-primary);
+}
+
+.success-message strong {
+    color: var(--accent-primary);
+}
+
+/* 정보 박스 */
+.info-box {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.info-box i {
+    color: var(--accent-info);
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.info-box p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+/* 결과 액션 버튼들 */
+.result-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.result-actions .btn {
+    min-width: 140px;
+}
+
+/* =====================================
+   비밀번호 재설정 폼
+   ===================================== */
+.reset-password-form {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.reset-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.reset-header i {
+    font-size: 40px;
+    color: var(--accent-primary);
+    margin-bottom: 15px;
+    display: block;
+}
+
+.reset-header h3 {
+    font-size: 22px;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.reset-header p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* 폼 텍스트 도움말 */
+.form-text {
+    display: block;
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* 비밀번호 강도 표시 */
+.password-strength {
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+.strength-bar {
+    height: 6px;
+    background-color: var(--bg-tertiary);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.strength-progress {
+    height: 100%;
+    width: 0;
+    background-color: var(--accent-danger);
+    transition: all 0.3s ease;
+}
+
+.strength-progress.weak {
+    width: 33%;
+    background-color: var(--accent-danger);
+}
+
+.strength-progress.medium {
+    width: 66%;
+    background-color: var(--accent-warning);
+}
+
+.strength-progress.strong {
+    width: 100%;
+    background-color: var(--accent-success);
+}
+
+.strength-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+#strength-level {
+    font-weight: 600;
+}
+
+/* =====================================
+   하단 링크
+   ===================================== */
+.find-links {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.find-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s ease;
+}
+
+.find-links a:hover {
+    color: var(--accent-primary);
+    text-decoration: underline;
+}
+
+.find-links .separator {
+    margin: 0 12px;
+    color: var(--text-muted);
+}
+
+/* =====================================
+   유효성 검사 스타일
+   ===================================== */
+.form-control.is-invalid {
+    border-color: var(--accent-danger);
+}
+
+.form-control.is-invalid:focus {
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+.form-control.is-valid {
+    border-color: var(--accent-success);
+}
+
+.form-control.is-valid:focus {
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+}
+
+.invalid-feedback {
+    display: block;
+    margin-top: 5px;
+    font-size: 13px;
+    color: var(--accent-danger);
+}
+
+.valid-feedback {
+    display: block;
+    margin-top: 5px;
+    font-size: 13px;
+    color: var(--accent-success);
+}
+
+/* =====================================
+   로딩 상태
+   ===================================== */
+.btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    margin-left: -10px;
+    margin-top: -10px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spinner 0.8s linear infinite;
+}
+
+@keyframes spinner {
+    to { transform: rotate(360deg); }
+}
+
+/* =====================================
+   반응형 디자인
+   ===================================== */
+@media (max-width: 575px) {
+    .find-account-wrapper {
+        padding: 20px 0;
+    }
+
+    .find-account-form-wrapper {
+        padding: 30px 20px;
+        margin: 0 15px;
+    }
+
+    .find-account-header h1 {
+        font-size: 24px;
+    }
+
+    .input-with-button {
+        flex-direction: column;
+    }
+
+    .send-code-btn {
+        width: 100%;
+    }
+
+    .result-actions {
+        flex-direction: column;
+    }
+
+    .result-actions .btn {
+        width: 100%;
+    }
+
+    .found-id-box {
+        max-width: 100%;
+    }
+}
+
+/* =====================================
+   애니메이션
+   ===================================== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* =====================================
+   다크모드 전용 스타일
+   ===================================== */
+body.dark-theme .find-account-form-wrapper {
+    background-color: var(--bg-primary);
+    box-shadow: 0 4px 20px var(--shadow-medium);
+}
+
+body.dark-theme .info-box {
+    background-color: var(--bg-secondary);
+}
+
+body.dark-theme .found-id-box {
+    background-color: var(--bg-secondary);
+}
+
+/* =====================================
+   접근성 개선
+   ===================================== */
+.find-form .form-control:focus,
+.find-btn:focus {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+    .find-form .form-control {
+        border-width: 2px;
+    }
+
+    .find-btn {
+        border: 2px solid transparent;
+    }
+}
+
+/* 움직임 감소 모드 지원 */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

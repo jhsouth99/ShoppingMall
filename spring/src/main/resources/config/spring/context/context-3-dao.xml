@@ -14,4 +14,104 @@
 	<bean id="oAuthAttributesDAO" class="com.example.ecommerce.dao.OAuthAttributesDAO">
 		<constructor-arg ref="sqlSession"/>
 	</bean>
+	
+	<bean id="shippingAddressDAO" class="com.example.ecommerce.dao.ShippingAddressDAO">
+		<constructor-arg ref="sqlSession"/>
+	</bean>
+	
+	<bean id="orderDAO" class="com.example.ecommerce.dao.OrderDAO">
+		<constructor-arg ref="sqlSession"/>
+	</bean>
+	
+	<bean id="agreementDAO" class="com.example.ecommerce.dao.AgreementDAO">
+		<constructor-arg ref="sqlSession"/>
+	</bean>
+	
+	<bean id="groupBuyDAO" class="com.example.ecommerce.dao.GroupBuyDAO">
+		<constructor-arg ref="sqlSession"/>
+	</bean>
+	
+	<bean id="couponDAO" class="com.example.ecommerce.dao.CouponDAO">
+		<constructor-arg ref="sqlSession"/>
+	</bean>
+	
+	<bean id="notificationSettingsDAO" class="com.example.ecommerce.dao.NotificationSettingsDAO">
+		<constructor-arg ref="sqlSession"/>
+	</bean>
+	
+	<bean id="sellerDashboardDAO" class="com.example.ecommerce.dao.DashboardDAO">
+    	<constructor-arg ref="sqlSession"/>
+	</bean>
+	
+	<bean id="productDAO" class="com.example.ecommerce.dao.ProductDAO">
+    	<constructor-arg ref="sqlSession"/>
+	</bean>
+	
+	<bean id="returnDAO" class="com.example.ecommerce.dao.ReturnDAO">
+    	<constructor-arg ref="sqlSession"/>
+	</bean>
+	
+	<bean id="promotionDAO" class="com.example.ecommerce.dao.PromotionDAO">
+    	<constructor-arg ref="sqlSession"/>
+	</bean>
+	
+	<bean id="sellerInfoDAO" class="com.example.ecommerce.dao.SellerInfoDAO">
+    	<constructor-arg ref="sqlSession"/>
+	</bean>
+	
+	<bean id="qnADAO" class="com.example.ecommerce.dao.QnADAO">
+    	<constructor-arg ref="sqlSession"/>
+	</bean>
+	
+	<bean id="categoryDAO" class="com.example.ecommerce.dao.CategoryDAO">
+    	<constructor-arg ref="sqlSession"/>
+	</bean>
+
+	<bean id="reviewDAO" class="com.example.ecommerce.dao.ReviewDAO">
+		<constructor-arg ref="sqlSession"/>
+	</bean>
+
+	<bean id="inquiryDAO" class="com.example.ecommerce.dao.InquiryDAO">
+		<constructor-arg ref="sqlSession"/>
+	</bean>
+
+	<bean id="homeDAO" class="com.example.ecommerce.dao.HomeDAO">
+		<constructor-arg ref="sqlSession"/>
+	</bean>
+
+	<bean id="searchDAO" class="com.example.ecommerce.dao.SearchDAO">
+		<constructor-arg ref="sqlSession"/>
+	</bean>
+
+	<bean id="carrierDAO" class="com.example.ecommerce.dao.CarrierDAO">
+		<constructor-arg ref="sqlSession"/>
+	</bean>
+
+	<bean id="adminUserDAO" class="com.example.ecommerce.dao.AdminUserDAO">
+		<constructor-arg ref="sqlSession"/>
+	</bean>
+
+	<bean id="afterSalesDAO" class="com.example.ecommerce.dao.AfterSalesDAO">
+		<constructor-arg ref="sqlSession"/>
+	</bean>
+
+	<bean id="wishlistDAO" class="com.example.ecommerce.dao.WishlistDAO">
+		<constructor-arg ref="sqlSession"/>
+	</bean>
+
+	<bean id="refundDAO" class="com.example.ecommerce.dao.RefundDAO">
+		<constructor-arg ref="sqlSession"/>
+	</bean>
+
+	<bean id="shipmentDAO" class="com.example.ecommerce.dao.ShipmentDAO">
+		<constructor-arg ref="sqlSession"/>
+	</bean>
+
+	<bean id="attributeDAO" class="com.example.ecommerce.dao.AttributeDAO">
+		<constructor-arg ref="sqlSession"/>
+	</bean>
+
+	<bean id="cartDAO" class="com.example.ecommerce.dao.CartDAO">
+		<constructor-arg ref="sqlSession"/>
+	</bean>
 </beans>

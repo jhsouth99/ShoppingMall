@@ -3,24 +3,75 @@
 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="user">
- 	
- 	<select id="findByUsername" resultType="User" parameterType="String"> 
+
+ 	<select id="findByUsername" resultType="User" parameterType="String">
  	   SELECT * FROM users WHERE username=#{username}
  	</select>
- 	
+
  	<select id="findByEmail" resultType="User" parameterType="String">
  		SELECT * FROM users WHERE email=#{email}
  	</select>
- 	
- 	<select id="findById" resultType="User" parameterType="int"> 
+
+ 	<select id="findById" resultType="User" parameterType="int">
  	   SELECT * FROM users WHERE id=#{id}
  	</select>
- 	
+
 	<insert id="save" parameterType="User">
 	    <selectKey keyProperty="id" resultType="int" order="BEFORE">
 	        SELECT USERS_SEQ.NEXTVAL FROM DUAL
 	    </selectKey>
         INSERT INTO users (id, username, password, name, email)
-        VALUES (#{id}, #{username}, #{password}, #{name}, #{email})
+        VALUES (#{id}, #{username}, #{password}, #{name}, #{email, jdbcType=VARCHAR})
     </insert>
+
+	<update id="update" parameterType="User">
+        UPDATE users
+        SET username=#{username}, password=#{password}, name=#{name}, email=#{email, jdbcType=VARCHAR}, phone=#{phone, jdbcType=VARCHAR}
+        WHERE id=#{id}
+    </update>
+
+    <update id="deactivateUser" parameterType="map">
+    UPDATE users
+       SET deleted_at = SYSDATE,
+           name = '탈퇴한사용자',
+           email = 'deleted_' || #{userId} || '@deleted.com',
+           phone = NULL,
+           password = 'DELETED_USER_PASSWORD_HASH', -- 임의의 값으로 변경
+           reset_token = NULL,
+           reset_token_expires_at = NULL
+     WHERE id = #{userId}
+    </update>
+
+
+    <!-- 이름과 이메일로 사용자 찾기 -->
+    <select id="findByNameAndEmail" resultType="User" parameterType="map">
+        SELECT * FROM users
+        WHERE name = #{name}
+          AND email = #{email}
+          AND deleted_at IS NULL
+    </select>
+
+    <!-- 이름과 휴대폰 번호로 사용자 찾기 -->
+    <select id="findByNameAndPhone" resultType="User" parameterType="map">
+        SELECT * FROM users
+        WHERE name = #{name}
+          AND phone = #{phone}
+          AND deleted_at IS NULL
+    </select>
+
+    <!-- 재설정 토큰으로 사용자 찾기 -->
+    <select id="findByResetToken" resultType="User" parameterType="String">
+        SELECT * FROM users
+        WHERE reset_token = #{resetToken}
+          AND reset_token_expires_at > SYSDATE
+          AND deleted_at IS NULL
+    </select>
+
+    <!-- 재설정 토큰 업데이트 -->
+    <update id="updateResetToken" parameterType="User">
+        UPDATE users
+        SET reset_token = #{resetToken, jdbcType=VARCHAR},
+            reset_token_expires_at = #{resetTokenExpiresAt, jdbcType=TIMESTAMP}
+        WHERE id = #{id}
+    </update>
 </mapper>

@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="return">
+    <resultMap id="returnListResultMap" type="Return">
+        <id property="id" column="return_id"/>
+        <result property="returnNo" column="return_no"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="requestDate" column="request_date"/>
+        <result property="type" column="type"/>
+        <result property="status" column="status"/>
+        <result property="customerName" column="customer_name"/>
+        <result property="productSummary" column="product_summary"/>
+        <collection property="items" ofType="ReturnItemDetail">
+            <result property="productName" column="item_product_name"/>
+            <result property="productOption" column="item_product_option"/>
+            <result property="quantity" column="item_quantity"/>
+            <result property="reasonCode" column="item_reason_code"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="returnWithItemsResultMap" type="Return">
+        <id property="id" column="id"/>
+        <result property="returnNo" column="return_no"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="requestDate" column="request_date"/>
+        <result property="type" column="type"/>
+        <result property="status" column="status"/>
+        <result property="customerName" column="customer_name"/>
+        <result property="pickupCarrier" column="pickup_carrier_id"/>
+        <result property="pickupTrackingNo" column="pickup_tracking_no"/>
+        <result property="inspectionResult" column="inspection_result"/>
+        <result property="inspectionMemo" column="inspection_comment"/>
+        <result property="customerReason" column="customer_reason"/>
+
+
+        <collection property="items"
+                    ofType="ReturnItemDetail"
+                    select="findReturnItemsByReturnId"
+                    column="{returnId=id}" />
+    </resultMap>
+
+    <!-- return.xml에 추가할 쿼리들 -->
+
+    <!-- 주문이 해당 판매자의 것인지 검증 -->
+    <select id="validateSellerOrder" parameterType="map" resultType="int">
+        SELECT COUNT(DISTINCT o.id)
+        FROM orders o
+                 JOIN order_items oi ON o.id = oi.order_id
+                 JOIN product_variants pv ON oi.product_variant_id = pv.id
+                 JOIN products p ON pv.product_id = p.id
+        WHERE o.id = #{orderId}
+          AND p.seller_id = #{sellerId}
+          AND o.status = 'DELIVERED' -- 배송 완료된 주문만 반품 가능
+    </select>
+
+    <!-- 주문 항목이 해당 주문에 속하는지 검증 -->
+    <select id="validateOrderItem" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM order_items oi
+        WHERE oi.order_id = #{orderId}
+          AND oi.id = #{orderItemId}
+    </select>
+
+    <!-- 새로운 반품/교환 요청 삽입 -->
+    <insert id="insertReturnRequest" parameterType="map" useGeneratedKeys="true" keyProperty="returnRequestId">
+        <selectKey keyProperty="returnRequestId" resultType="int" order="BEFORE">
+            SELECT after_sales_requests_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO after_sales_requests (
+        id, order_id, request_type, status, customer_reason, customer_comment,
+        created_at, updated_at
+        )
+        VALUES (
+        #{returnRequestId}, #{orderId}, #{requestType}, #{status},
+        #{customerReason}, #{customerComment, jdbcType=CLOB},
+        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- 반품/교환 요청 항목 삽입 -->
+    <insert id="insertReturnRequestItem" parameterType="map">
+        INSERT INTO after_sales_request_items (
+            id, request_id, order_item_id, item_type, quantity,
+            reason_code, reason_detail, new_variant_id, created_at
+        )
+        VALUES (
+                   after_sales_request_items_seq.NEXTVAL, #{requestId}, #{orderItemId},
+                   #{itemType}, #{quantity}, #{reasonCode}, #{reasonDetail, jdbcType=VARCHAR},
+                   #{newVariantId, jdbcType=NUMERIC}, CURRENT_TIMESTAMP
+               )
+    </insert>
+
+    <!-- 반품/교환 상태 이력 삽입 -->
+    <insert id="insertReturnStatusHistory" parameterType="map">
+        INSERT INTO after_sales_status_history (
+            id, request_id, status_from, status_to, changed_by, changed_at
+        )
+        VALUES (
+                   after_sales_status_history_seq.NEXTVAL, #{requestId},
+                   #{statusFrom, jdbcType=VARCHAR}, #{statusTo},
+                   #{changedBy, jdbcType=NUMERIC}, CURRENT_TIMESTAMP
+               )
+    </insert>
+
+    <!-- ✅ 주문 항목 상태를 반품 요청으로 업데이트 (새로 추가) -->
+    <update id="updateOrderItemStatusForReturn" parameterType="map">
+        UPDATE order_items
+        SET status = #{status}
+        WHERE id = #{orderItemId}
+    </update>
+
+    <!-- 통합된 A/S 요청 목록 조회 - Oracle 호환 버전 -->
+    <select id="findReturnsBySellerId" parameterType="map" resultMap="returnListResultMap">
+        WITH main_data AS (
+        SELECT DISTINCT
+        asr.id AS return_id,
+        asr.request_no AS return_no,
+        o.order_no,
+        asr.created_at AS request_date,
+        CASE
+        WHEN asr.request_type = 'RETURN' THEN '반품'
+        WHEN asr.request_type = 'EXCHANGE' THEN '교환'
+        WHEN asr.request_type = 'RETURN_EXCHANGE' THEN '반품+교환'
+        ELSE asr.request_type
+        END AS type,
+        asr.status,
+        u.name AS customer_name
+        FROM after_sales_requests asr
+        JOIN orders o ON asr.order_id = o.id
+        JOIN users u ON o.user_id = u.id
+        WHERE EXISTS (
+        SELECT 1
+        FROM after_sales_request_items asri
+        JOIN order_items oi ON asri.order_item_id = oi.id
+        JOIN product_variants pv ON oi.product_variant_id = pv.id
+        JOIN products p ON pv.product_id = p.id
+        WHERE asri.request_id = asr.id
+        AND p.seller_id = #{sellerId}
+        )
+        <if test="keyword != null and keyword != ''">
+            AND (asr.request_no LIKE '%' || #{keyword} || '%'
+            OR o.order_no LIKE '%' || #{keyword} || '%')
+        </if>
+        <if test="status != null and status != ''">
+            AND asr.status = #{status}
+        </if>
+        ),
+        product_summary AS (
+        SELECT
+        asri.request_id,
+        p.name as first_product_name,
+        COUNT(*) as item_count,
+        ROW_NUMBER() OVER (PARTITION BY asri.request_id ORDER BY asri.id) as rn
+        FROM after_sales_request_items asri
+        JOIN order_items oi ON asri.order_item_id = oi.id
+        JOIN product_variants pv ON oi.product_variant_id = pv.id
+        JOIN products p ON pv.product_id = p.id
+        WHERE EXISTS (
+        SELECT 1 FROM main_data md WHERE md.return_id = asri.request_id
+        )
+        GROUP BY asri.request_id, p.name, asri.id
+        )
+        SELECT * FROM (
+        SELECT ROWNUM AS rnum, final_query.* FROM (
+        SELECT
+        md.return_id,
+        md.return_no,
+        md.order_no,
+        md.request_date,
+        md.type,
+        md.status,
+        md.customer_name,
+        CASE
+        WHEN ps.item_count > 1
+        THEN ps.first_product_name || ' 외 ' || (ps.item_count - 1) || '건'
+        ELSE ps.first_product_name
+        END AS product_summary,
+        -- 더미 컬럼들 (collection 매핑용)
+        NULL AS item_product_name,
+        NULL AS item_product_option,
+        NULL AS item_quantity,
+        NULL AS item_reason_code
+        FROM main_data md
+        LEFT JOIN (
+        SELECT
+        request_id,
+        first_product_name,
+        item_count
+        FROM product_summary
+        WHERE rn = 1
+        ) ps ON md.return_id = ps.request_id
+        ORDER BY md.request_date DESC
+        ) final_query
+        WHERE ROWNUM &lt;= #{offset} + #{size}
+        )
+        WHERE rnum > #{offset}
+    </select>
+
+    <!-- 카운트 쿼리 -->
+    <select id="countReturnsBySellerId" parameterType="map" resultType="int">
+        SELECT COUNT(DISTINCT asr.id)
+        FROM after_sales_requests asr
+        JOIN orders o ON asr.order_id = o.id
+        WHERE EXISTS (
+        SELECT 1
+        FROM after_sales_request_items asri
+        JOIN order_items oi ON asri.order_item_id = oi.id
+        JOIN product_variants pv ON oi.product_variant_id = pv.id
+        JOIN products p ON pv.product_id = p.id
+        WHERE asri.request_id = asr.id
+        AND p.seller_id = #{sellerId}
+        )
+        <if test="keyword != null and keyword != ''">
+            AND (asr.request_no LIKE '%' || #{keyword} || '%'
+            OR o.order_no LIKE '%' || #{keyword} || '%')
+        </if>
+        <if test="status != null and status != ''">
+            AND asr.status = #{status}
+        </if>
+    </select>
+
+    <!-- A/S 요청 상세 조회 -->
+    <select id="findReturnDetailsById" parameterType="map" resultMap="returnWithItemsResultMap">
+        SELECT
+            asr.id,
+            asr.request_no AS return_no,
+            o.order_no,
+            asr.created_at AS request_date,
+            CASE
+                WHEN asr.request_type = 'RETURN' THEN '반품'
+                WHEN asr.request_type = 'EXCHANGE' THEN '교환'
+                WHEN asr.request_type = 'RETURN_EXCHANGE' THEN '반품+교환'
+                ELSE asr.request_type
+                END AS type,
+            asr.status,
+            u.name AS customer_name,
+            asr.pickup_carrier_id,
+            asr.pickup_tracking_no,
+            asr.inspection_comment,
+            asr.customer_reason
+        FROM after_sales_requests asr
+                 JOIN orders o ON asr.order_id = o.id
+                 JOIN users u ON o.user_id = u.id
+        WHERE asr.id = #{returnId}
+          AND EXISTS (
+            SELECT 1
+            FROM after_sales_request_items asri
+                     JOIN order_items oi ON asri.order_item_id = oi.id
+                     JOIN product_variants pv ON oi.product_variant_id = pv.id
+                     JOIN products p ON pv.product_id = p.id
+            WHERE asri.request_id = asr.id
+              AND p.seller_id = #{sellerId}
+        )
+    </select>
+
+    <!-- A/S 요청 항목 조회 -->
+    <select id="findReturnItemsByReturnId" parameterType="map" resultType="ReturnItemDetail">
+        SELECT
+            p.id AS productId,
+            p.name AS productName,
+            (
+                SELECT LISTAGG(opt.name || ':' || ov.value_text, ' / ')
+                               WITHIN GROUP (ORDER BY opt.id)
+                FROM prod_variant_option_vals pvov
+                         JOIN product_options opt ON pvov.product_option_id = opt.id
+                         JOIN product_option_values ov ON pvov.product_option_value_id = ov.id
+                WHERE pvov.variant_id = oi.product_variant_id
+            ) AS productOption,
+            asri.quantity,
+            asri.reason_code AS reasonCode,
+            asri.reason_detail AS reasonDetail,
+            asri.item_type AS itemType,
+            asri.inspection_result AS inspectionResult,
+            asri.inspection_comment AS inspectionComment,
+            asri.approved_quantity AS approvedQuantity,
+            asri.refund_amount AS refundAmount
+        FROM after_sales_request_items asri
+                 JOIN order_items oi ON asri.order_item_id = oi.id
+                 JOIN product_variants pv ON oi.product_variant_id = pv.id
+                 JOIN products p ON pv.product_id = p.id
+        WHERE asri.request_id = #{returnId}
+        ORDER BY asri.id
+    </select>
+
+    <!-- A/S 요청 상태 업데이트 -->
+    <update id="updateReturnStatus" parameterType="map">
+        UPDATE after_sales_requests
+        <set>
+            <if test="status != null">status = #{status},</if>
+            <if test="pickupCarrier != null">pickup_carrier_id = #{pickupCarrier},</if>
+            <if test="pickupTrackingNo != null">pickup_tracking_no = #{pickupTrackingNo},</if>
+            <if test="inspectionResult != null">
+                inspected_at = CURRENT_TIMESTAMP,
+                inspected_by = 1,
+            </if>
+            <if test="inspectionComment != null">inspection_comment = #{inspectionComment},</if>
+            updated_at = CURRENT_TIMESTAMP
+        </set>
+        WHERE id = #{returnId}
+    </update>
+
+    <!-- A/S 요청 항목 상태 업데이트 -->
+    <update id="updateReturnItemStatus" parameterType="map">
+        UPDATE after_sales_request_items
+        <set>
+            <if test="inspectionResult != null">inspection_result = #{inspectionResult},</if>
+            <if test="inspectionComment != null">inspection_comment = #{inspectionComment},</if>
+            <if test="approvedQuantity != null">approved_quantity = #{approvedQuantity},</if>
+            <if test="refundAmount != null">refund_amount = #{refundAmount},</if>
+            <if test="refundId != null">refund_id = #{refundId},</if>
+            <if test="newShipmentId != null">new_shipment_id = #{newShipmentId}</if>
+        </set>
+        WHERE request_id = #{returnId}
+        AND order_item_id = #{orderItemId}
+    </update>
+
+    <!-- 환불 정보 생성 -->
+    <insert id="insertRefund" parameterType="map" useGeneratedKeys="true" keyProperty="refundId">
+        <selectKey keyProperty="refundId" resultType="int" order="BEFORE">
+            SELECT refunds_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO refunds (
+        id, order_id, payment_id, prod_items_total_amount,
+        shipping_fee_deduction, other_deductions, final_refund_amount,
+        refund_reason, refund_reason_detail, status,
+        requested_at, processed_by
+        )
+        VALUES (
+        #{refundId}, #{orderId}, #{paymentId}, #{totalAmount},
+        #{shippingFeeDeduction, jdbcType=NUMERIC},
+        #{otherDeductions, jdbcType=NUMERIC},
+        #{finalRefundAmount},
+        'AS_REQUEST', #{reasonDetail, jdbcType=CLOB}, 'REQUESTED',
+        CURRENT_TIMESTAMP, #{processedBy, jdbcType=NUMERIC}
+        )
+    </insert>
+
+    <!-- 환불 항목 생성 -->
+    <insert id="insertRefundItem" parameterType="map">
+        INSERT INTO refund_items (
+            id, refund_id, order_item_id, quantity,
+            item_price_at_refund, item_total_amount
+        )
+        VALUES (
+                   refund_items_seq.NEXTVAL, #{refundId}, #{orderItemId},
+                   #{quantity}, #{itemPrice}, #{totalAmount}
+               )
+    </insert>
+
+    <!-- 교환용 새 배송 생성 -->
+    <insert id="insertExchangeShipment" parameterType="map" useGeneratedKeys="true" keyProperty="shipmentId">
+        <selectKey keyProperty="shipmentId" resultType="int" order="BEFORE">
+            SELECT shipments_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO shipments (
+        id, order_id, shipping_method_id, cost, tracking_number,
+        carrier_name_snapshot, status, recipient_name, recipient_phone,
+        recipient_address, recipient_address_detail, recipient_zipcode,
+        shipped_at, created_at, updated_at
+        )
+        VALUES (
+        #{shipmentId}, #{orderId}, #{shippingMethodId, jdbcType=NUMERIC},
+        #{cost, jdbcType=NUMERIC}, #{trackingNumber},
+        #{carrierName}, 'SHIPPED', #{recipientName}, #{recipientPhone},
+        #{recipientAddress}, #{recipientAddressDetail}, #{recipientZipcode},
+        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+</mapper>

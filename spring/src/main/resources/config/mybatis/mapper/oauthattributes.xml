@@ -1,17 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
-PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="oauth">
- 	
- 	<!-- 전체게시글 조회 -->
- 	<select id="findByUsernameAndProviderId" resultType="OAuthAttr"
- 	 parameterType="java.util.Map"> 
-		SELECT * FROM oauthattributes WHERE username=#{username} AND provider_id=#{provider_id}
- 	</select>
- 	
+
+	<!-- 전체게시글 조회 -->
+	<select id="findByUsernameAndProviderId" resultType="OAuthAttr"
+			parameterType="map">
+		SELECT * FROM oauthattributes
+		WHERE username=#{username}
+		  AND UPPER(provider_id) = UPPER(#{providerId})
+	</select>
+
 	<insert id="save" parameterType="OAuthAttr">
-        INSERT INTO oauthattributes
-        VALUES (#{user_id}, #{provider_id}, #{username}, #{email}, #{name})
-    </insert>
+		INSERT INTO oauthattributes
+		VALUES (#{userId}, #{providerId}, #{username}, #{email}, #{name})
+	</insert>
+
+	<!-- 사용자의 모든 소셜 계정 조회 -->
+	<select id="findByUserId" resultType="OAuthAttr" parameterType="int">
+		SELECT * FROM oauthattributes WHERE user_id = #{userId}
+	</select>
+
+	<!-- 소셜 계정 연동 해제 -->
+	<delete id="deleteByUserIdAndProviderId" parameterType="map">
+		DELETE FROM oauthattributes
+		WHERE user_id = #{userId}
+		  AND UPPER(provider_id) = UPPER(#{providerId})
+	</delete>
 </mapper>

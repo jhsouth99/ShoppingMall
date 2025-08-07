@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="agreement">
+ 	
+    <!-- 최신(가장 큰 version) 약관 1건 -->
+    <select id="selectLatestTerm" parameterType="String" resultType="AgreementTerm">
+        SELECT *
+          FROM (
+                SELECT * 
+                  FROM agreement_terms
+                 WHERE type = #{type}
+                 ORDER BY version DESC
+          )
+        WHERE ROWNUM = 1
+    </select>
+
+    <!-- 특정 유저‑약관 내역 1건(가장 최근) -->
+    <select id="selectUserAgreement" parameterType="UserAgreement" resultType="UserAgreement">
+        SELECT *
+          FROM (
+                SELECT *
+                  FROM user_agreements
+                 WHERE user_id = #{userId}
+                   AND agreement_term_id = #{agreementTermId}
+                 ORDER BY id DESC
+          )
+        WHERE ROWNUM = 1
+    </select>
+
+    <!-- 동의 신규 INSERT -->
+    <insert id="insertUserAgreement" parameterType="UserAgreement">
+        <selectKey resultType="int" keyProperty="id" order="BEFORE">
+            SELECT user_agreements_seq.NEXTVAL AS id FROM dual
+        </selectKey>
+        INSERT INTO user_agreements
+              (id, user_id, agreement_term_id, agreed_at, status, method, created_at)
+        VALUES (#{id},
+                #{userId},
+                #{agreementTermId},
+                SYSDATE,
+                #{status},
+				#{method,jdbcType=VARCHAR},
+                SYSDATE)
+    </insert>
+
+    <!-- 동의 상태를 ‘AGREED’ 로 업데이트(철회→재동의) -->
+    <update id="reAgree" parameterType="UserAgreement">
+        UPDATE user_agreements
+           SET status    = 'AGREED',
+               agreed_at = SYSDATE,
+               revoked_at= NULL
+	  		<if test="method != null">
+				, method = #{method,jdbcType=VARCHAR}
+			</if>
+		WHERE id = #{id}
+    </update>
+
+    <!-- 동의 철회 -->
+    <update id="revoke" parameterType="int">
+        UPDATE user_agreements
+           SET status     = 'REVOKED',
+               revoked_at = SYSDATE
+         WHERE id = #{id}
+    </update>
+
+    <!-- 현재 동의 여부 Boolean -->
+    <select id="existsAgreed" parameterType="UserAgreement" resultType="boolean">
+        SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END
+          FROM user_agreements
+         WHERE user_id = #{userId}
+           AND agreement_term_id = #{agreementTermId}
+           AND status = 'AGREED'
+    </select>
+</mapper>

@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.ecommerce.dao.UserDAO;
 import com.example.ecommerce.dao.UserRoleDAO;
-import com.example.ecommerce.vo.UserVO;
+import com.example.ecommerce.dto.UserDTO;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,31 +24,31 @@ public class CustomUserDetailsService implements UserDetailsService {
     private static final Logger logger = LoggerFactory.getLogger(CustomUserDetailsService.class);
 
     @Override
-    @Transactional(readOnly = true) // Shared Lock °É±â
+    @Transactional(readOnly = true) // Shared Lock ê±¸ê¸°
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
     	logger.info("==================================================");
-        logger.info("loadUserByUsername - ½ÃµµµÈ »ç¿ëÀÚ¸í: {}", username); // ÀÔ·ÂµÈ ¾ÆÀÌµğ È®ÀÎ
-        // DB¿¡¼­ usernameÀ¸·Î »ç¿ëÀÚ Á¤º¸ Á¶È¸
-        UserVO userVO = userDAO.findByUsername(username);
+        logger.info("loadUserByUsername - ì‹œë„ëœ ì‚¬ìš©ìëª…: {}", username); // ì…ë ¥ëœ ì•„ì´ë”” í™•ì¸
+        // DBì—ì„œ usernameìœ¼ë¡œ ì‚¬ìš©ì ì •ë³´ ì¡°íšŒ
+        UserDTO userVO = userDAO.findByUsername(username);
         if (userVO == null) {
-        	logger.warn("DB¿¡¼­ »ç¿ëÀÚ¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù: {}", username); // DB Á¶È¸ °á°ú È®ÀÎ
+        	logger.warn("DBì—ì„œ ì‚¬ìš©ìë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤: {}", username); // DB ì¡°íšŒ ê²°ê³¼ í™•ì¸
             logger.info("==================================================");
         	throw new UsernameNotFoundException("User not found with username: " + username);
         }
-        logger.info("DB¿¡¼­ Ã£Àº »ç¿ëÀÚ: {}", userVO.getUsername());
-        logger.info("DB¿¡ ÀúÀåµÈ ¾ÏÈ£È­µÈ ºñ¹Ğ¹øÈ£: {}", userVO.getPassword()); // DB ºñ¹Ğ¹øÈ£ È®ÀÎ
-        logger.info("»ç¿ëÀÚ È°¼ºÈ­ ¿©ºÎ: {}", userVO.isEnabled()); // °èÁ¤ È°¼ºÈ­ »óÅÂ È®ÀÎ (¸¸¾à ÀÖ´Ù¸é)
-        logger.info("»ç¿ëÀÚ ºñÁ¤Áö ¿©ºÎ: {}", userVO.isAccountNonExpired());
-        logger.info("»ç¿ëÀÚ ºñ¿µ±¸Á¤Áö ¿©ºÎ: {}", userVO.isAccountNonLocked());
+        logger.info("DBì—ì„œ ì°¾ì€ ì‚¬ìš©ì: {}", userVO.getUsername());
+        logger.info("DBì— ì €ì¥ëœ ì•”í˜¸í™”ëœ ë¹„ë°€ë²ˆí˜¸: {}", userVO.getPassword()); // DB ë¹„ë°€ë²ˆí˜¸ í™•ì¸
+        logger.info("ì‚¬ìš©ì í™œì„±í™” ì—¬ë¶€: {}", userVO.isEnabled()); // ê³„ì • í™œì„±í™” ìƒíƒœ í™•ì¸ (ë§Œì•½ ìˆë‹¤ë©´)
+        logger.info("ì‚¬ìš©ì ë¹„ì •ì§€ ì—¬ë¶€: {}", userVO.isAccountNonExpired());
+        logger.info("ì‚¬ìš©ì ë¹„ì˜êµ¬ì •ì§€ ì—¬ë¶€: {}", userVO.isAccountNonLocked());
         
-        // DB¿¡¼­ userÀÇ ÁÖ Å°(id)·Î ¿ªÇÒ(Role) Á¶È¸
+        // DBì—ì„œ userì˜ ì£¼ í‚¤(id)ë¡œ ì—­í• (Role) ì¡°íšŒ
         Set<String> roles = userRoleDAO.findRolesByUserId(userVO.getId());
 
-        // »ç¿ëÀÚÀÇ ¿ªÇÒ(Role) Á¤º¸¸¦ GrantedAuthority ÄÃ·º¼ÇÀ¸·Î º¯È¯
+        // ì‚¬ìš©ìì˜ ì—­í• (Role) ì •ë³´ë¥¼ GrantedAuthority ì»¬ë ‰ì…˜ìœ¼ë¡œ ë³€í™˜
         userVO.setRoles(roles);
-        logger.info("ºÎ¿©µÈ ±ÇÇÑ: {}", userVO.getAuthorities()); // ÃÖÁ¾ ±ÇÇÑ È®ÀÎ
+        logger.info("ë¶€ì—¬ëœ ê¶Œí•œ: {}", userVO.getAuthorities()); // ìµœì¢… ê¶Œí•œ í™•ì¸
         logger.info("==================================================");
-        // Spring SecurityÀÇ UserDetails °´Ã¼·Î º¯È¯ÇÏ¿© ¹İÈ¯
+        // Spring Securityì˜ UserDetails ê°ì²´ë¡œ ë³€í™˜í•˜ì—¬ ë°˜í™˜
         return userVO;
     }
 }

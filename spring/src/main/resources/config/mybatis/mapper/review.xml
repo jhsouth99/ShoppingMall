@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="review">
+
+    <!-- 판매자용 리뷰 조회 -->
+    <select id="findReviewsBySellerId" parameterType="map" resultType="Review">
+        SELECT * FROM (
+        SELECT ROWNUM AS rnum, r_outer.* FROM (
+        SELECT
+        r.id,
+        r.product_id,
+        p.name AS product_name,
+        u.name AS customer_name,
+        r.rating,
+        r.review_comment AS "comment",
+        r.created_at,
+        r.is_photo_review,
+        r.replied_at,
+        r.reply
+        FROM reviews r
+        JOIN products p ON r.product_id = p.id
+        JOIN users u ON r.user_id = u.id
+        WHERE p.seller_id = #{sellerId}
+        <if test="keyword != null and keyword != ''">
+            AND (p.name LIKE '%' || #{keyword} || '%' OR u.name LIKE '%' || #{keyword} || '%')
+        </if>
+        <if test="rating != null and rating > 0">
+            AND r.rating = #{rating}
+        </if>
+        ORDER BY r.created_at DESC
+        ) r_outer
+        WHERE ROWNUM &lt;= #{offset} + #{size}
+        ) WHERE rnum > #{offset}
+    </select>
+
+    <select id="countReviewsBySellerId" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM reviews r
+        JOIN products p ON r.product_id = p.id
+        JOIN users u ON r.user_id = u.id
+        WHERE p.seller_id = #{sellerId}
+        <if test="keyword != null and keyword != ''">
+            AND (p.name LIKE '%' || #{keyword} || '%' OR u.name LIKE '%' || #{keyword} || '%')
+        </if>
+        <if test="rating != null and rating > 0">
+            AND r.rating = #{rating}
+        </if>
+    </select>
+
+    <!-- 구매자용 리뷰 조회 -->
+    <select id="findReviewsByBuyerId" parameterType="map" resultType="Review">
+        SELECT * FROM (
+                          SELECT ROWNUM AS rnum, r_outer.* FROM (
+                                                                    SELECT
+                                                                        r.id,
+                                                                        p.name AS product_name,
+                                                                        r.rating,
+                                                                        r.review_comment AS "comment",
+                                                                        r.created_at,
+                                                                        r.reply,
+                                                                        r.replied_at,
+                                                                        r.is_photo_review
+                                                                    FROM reviews r
+                                                                             JOIN products p ON r.product_id = p.id
+                                                                    WHERE r.user_id = #{id}
+                                                                    ORDER BY r.created_at DESC
+                                                                ) r_outer
+                          WHERE ROWNUM &lt;= #{offset} + #{size}
+                      ) WHERE rnum > #{offset}
+    </select>
+
+    <select id="countReviewsByBuyerId" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM reviews r
+        WHERE r.user_id = #{id}
+    </select>
+
+    <!-- 상품별 리뷰 조회 -->
+    <select id="findReviewsByProductId" parameterType="map" resultType="Review">
+        SELECT * FROM (
+        SELECT ROWNUM AS rnum, r_outer.* FROM (
+        SELECT
+        r.id,
+        r.product_id,
+        u.name AS customer_name,
+        r.rating,
+        r.review_comment AS "comment",
+        r.created_at,
+        r.reply,
+        r.replied_at,
+        r.is_photo_review,
+        r.helpful_count
+        FROM reviews r
+        JOIN users u ON r.user_id = u.id
+        WHERE r.product_id = #{productId}
+        <if test="rating != null and rating > 0">
+            AND r.rating = #{rating}
+        </if>
+        ORDER BY r.created_at DESC
+        ) r_outer
+        WHERE ROWNUM &lt;= #{offset} + #{size}
+        ) WHERE rnum > #{offset}
+    </select>
+
+    <select id="countReviewsByProductId" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM reviews r
+        WHERE r.product_id = #{productId}
+        <if test="rating != null and rating > 0">
+            AND r.rating = #{rating}
+        </if>
+    </select>
+
+    <!-- 리뷰 상세 조회 -->
+    <select id="findReviewDetailsById" parameterType="map" resultType="Review">
+        SELECT
+            r.id,
+            r.product_id,
+            p.name AS product_name,
+            u.id AS customer_id,
+            u.name AS customer_name,
+            r.rating,
+            r.review_comment AS "comment",
+            r.created_at,
+            r.reply,
+            r.replied_at,
+            r.is_photo_review,
+            r.helpful_count
+        FROM reviews r
+                 JOIN products p ON r.product_id = p.id
+                 JOIN users u ON r.user_id = u.id
+        WHERE r.id = #{reviewId}
+        <if test="sellerId != null">
+            AND p.seller_id = #{sellerId}
+        </if>
+        <if test="id != null">
+            AND r.user_id = #{id}
+        </if>
+    </select>
+
+    <select id="findReviewById" parameterType="int" resultType="Review">
+        SELECT
+            r.id,
+            r.product_id,
+            p.name AS product_name,
+            u.id AS customer_id,
+            u.name AS customer_name,
+            r.rating,
+            r.review_comment AS "comment",
+            r.created_at,
+            r.reply,
+            r.replied_at,
+            r.is_photo_review,
+            r.helpful_count
+        FROM reviews r
+                 JOIN products p ON r.product_id = p.id
+                 JOIN users u ON r.user_id = u.id
+        WHERE r.id = #{reviewId}
+    </select>
+
+    <!-- 리뷰 이미지 관련 -->
+    <select id="findReviewImagesByReviewId" parameterType="int" resultType="string">
+        SELECT image_url
+        FROM review_images
+        WHERE review_id = #{reviewId}
+        ORDER BY display_order
+    </select>
+
+    <select id="findReviewImageById" parameterType="string" resultType="ReviewImage">
+        SELECT id, review_id, image_url, display_order
+        FROM review_images
+        WHERE id = #{imageId}
+    </select>
+
+    <!-- 리뷰 CRUD -->
+    <insert id="insertReview" parameterType="Review" useGeneratedKeys="true" keyProperty="id">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT reviews_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO reviews (
+        id, user_id, product_id, order_item_id, rating, review_comment,
+        is_photo_review, is_verified_purchase, created_at
+        ) VALUES (
+        #{id}, #{customerId},
+        <choose>
+            <when test="productId == null or productId == 0">
+                (SELECT p.id FROM product_variants pv
+                JOIN products p ON pv.product_id = p.id
+                JOIN order_items oi ON pv.id = oi.product_variant_id
+                WHERE oi.id = #{orderItemId})
+            </when>
+            <otherwise>
+                #{productId}
+            </otherwise>
+        </choose>,
+        #{orderItemId}, #{rating}, #{comment},
+        'N', 'Y', SYSTIMESTAMP
+        )
+    </insert>
+
+    <update id="updateReview" parameterType="Review">
+        UPDATE reviews
+        SET rating = #{rating},
+            review_comment = #{comment}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteReview" parameterType="int">
+        DELETE FROM reviews WHERE id = #{reviewId}
+    </delete>
+
+    <!-- 리뷰 이미지 CRUD -->
+    <insert id="insertReviewImage" parameterType="ReviewImage">
+        INSERT INTO review_images (id, review_id, image_url, display_order)
+        VALUES (#{id}, #{reviewId}, #{imageUrl}, #{displayOrder})
+    </insert>
+
+    <delete id="deleteReviewImage" parameterType="string">
+        DELETE FROM review_images WHERE id = #{imageId}
+    </delete>
+
+    <delete id="deleteReviewImages" parameterType="int">
+        DELETE FROM review_images WHERE review_id = #{reviewId}
+    </delete>
+
+    <!-- 판매자 댓글 -->
+    <update id="updateReviewReply" parameterType="map">
+        UPDATE reviews
+        SET reply = #{reply},
+            replied_at = SYSDATE
+        WHERE id = #{reviewId}
+          AND product_id IN (SELECT id FROM products WHERE seller_id = #{sellerId})
+    </update>
+
+    <!-- 포토 리뷰 상태 업데이트 -->
+    <update id="updateReviewPhotoStatus" parameterType="map">
+        UPDATE reviews
+        SET is_photo_review = #{isPhotoReview, jdbcType=CHAR}
+        WHERE id = #{reviewId}
+    </update>
+
+    <!-- 도움됨 투표 -->
+    <insert id="insertOrUpdateReviewHelpfulness" parameterType="map">
+        MERGE INTO review_helpfulness rh
+        USING (SELECT #{userId} AS user_id, #{reviewId} AS review_id, #{isHelpful} AS is_helpful FROM dual) src
+        ON (rh.user_id = src.user_id AND rh.review_id = src.review_id)
+        WHEN MATCHED THEN
+            UPDATE SET is_helpful = src.is_helpful, created_at = SYSDATE
+        WHEN NOT MATCHED THEN
+            INSERT (user_id, review_id, is_helpful, created_at)
+            VALUES (src.user_id, src.review_id, src.is_helpful, SYSDATE)
+    </insert>
+
+    <!-- 통계 업데이트 -->
+    <update id="updateProductRatingStats" parameterType="int">
+        UPDATE products
+        SET avg_rating = (
+            SELECT ROUND(AVG(rating), 1)
+            FROM reviews
+            WHERE product_id = #{productId}
+        ),
+            review_count = (
+                SELECT COUNT(*)
+                FROM reviews
+                WHERE product_id = #{productId}
+            )
+        WHERE id = #{productId}
+    </update>
+
+    <update id="updateReviewHelpfulCount" parameterType="int">
+        UPDATE reviews
+        SET helpful_count = (
+            SELECT COUNT(*)
+            FROM review_helpfulness
+            WHERE review_id = #{reviewId} AND is_helpful = 'Y'
+        )
+        WHERE id = #{reviewId}
+    </update>
+
+    <!-- 작성 가능한 리뷰 조회 (주문 기반) -->
+    <select id="findAvailableReviewsByUserId" parameterType="map" resultType="Review">
+        SELECT * FROM (
+                          SELECT ROWNUM AS rnum, r_outer.* FROM (
+                                                                    SELECT
+                                                                        oi.id AS order_item_id,
+                                                                        p.id AS product_id,
+                                                                        p.name AS product_name,
+                                                                        o.created_at,
+                                                                        pv.sku
+                                                                    FROM order_items oi
+                                                                             JOIN orders o ON oi.order_id = o.id
+                                                                             JOIN product_variants pv ON oi.product_variant_id = pv.id
+                                                                             JOIN products p ON pv.product_id = p.id
+                                                                    WHERE o.user_id = #{userId}
+                                                                      AND o.status = 'DELIVERED'
+                                                                      AND NOT EXISTS (
+                                                                        SELECT 1 FROM reviews r
+                                                                        WHERE r.order_item_id = oi.id
+                                                                    )
+                                                                    ORDER BY o.created_at DESC
+                                                                ) r_outer
+                          WHERE ROWNUM &lt;= #{offset} + #{size}
+                      ) WHERE rnum > #{offset}
+    </select>
+
+    <select id="countAvailableReviewsByUserId" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM order_items oi
+                 JOIN orders o ON oi.order_id = o.id
+        WHERE o.user_id = #{userId}
+          AND o.status = 'DELIVERED'
+          AND NOT EXISTS (
+            SELECT 1 FROM reviews r
+            WHERE r.order_item_id = oi.id
+        )
+    </select>
+
+    <!-- 리뷰 작성 가능 여부 확인 -->
+    <select id="canWriteReview" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM order_items oi
+                 JOIN orders o ON oi.order_id = o.id
+        WHERE o.user_id = #{userId}
+          AND oi.id = #{orderItemId}
+          AND o.status = 'DELIVERED'
+    </select>
+
+    <select id="hasExistingReview" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM reviews r
+                 JOIN order_items oi ON r.order_item_id = oi.id
+                 JOIN orders o ON oi.order_id = o.id
+        WHERE o.user_id = #{userId}
+          AND oi.id = #{orderItemId}
+    </select>
+
+    <select id="findReviewImageByUrl" parameterType="string" resultType="ReviewImage">
+        SELECT * FROM review_images WHERE image_url = #{imageUrl}
+    </select>
+
+    <select id="findReviewByOrderItemId" parameterType="int" resultType="Review">
+        SELECT * FROM reviews WHERE order_item_id = #{orderItemId}
+    </select>
+
+</mapper>

@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cart">
+
+    <!-- 장바구니 아이템 ResultMap -->
+    <resultMap id="CartItemResultMap" type="CartItem">
+        <!-- 장바구니 기본 정보 -->
+        <result property="userId" column="user_id"/>
+        <result property="productVariantId" column="product_variant_id"/>
+        <result property="quantity" column="quantity"/>
+        <result property="addedAt" column="added_at"/>
+        
+        <!-- 상품 기본 정보 -->
+        <result property="productId" column="product_id"/>
+        <result property="productName" column="product_name"/>
+        <result property="description" column="description"/>
+        
+        <!-- 가격 정보 - variant의 price 사용 -->
+        <result property="basePrice" column="base_price"/>
+        <result property="variantPrice" column="variant_price"/>
+        <result property="unitPrice" column="unit_price"/>
+        <result property="totalPrice" column="total_price"/>
+        
+        <!-- 할인 정보 -->
+        <result property="isDiscounted" column="is_discounted"/>
+        <result property="discountType" column="discount_type"/>
+        <result property="discountValue" column="discount_value"/>
+        <result property="maxDiscountAmount" column="max_discount_amount"/>
+        <result property="discountedUnitPrice" column="discounted_unit_price"/>
+        <result property="discountedTotalPrice" column="discounted_total_price"/>
+        <result property="discountAmount" column="discount_amount"/>
+        
+        <!-- 옵션 정보 -->
+        <result property="optionInfo" column="option_info"/>
+        
+        <!-- 판매자 정보 -->
+        <result property="sellerId" column="seller_id"/>
+        <result property="businessName" column="business_name"/>
+        
+        <!-- 배송 정보 -->
+        <result property="shippingMethodId" column="shipping_method_id"/>
+        <result property="shippingMethodName" column="shipping_method_name"/>
+        <result property="shippingCost" column="shipping_cost"/>
+        <result property="costOverride" column="cost_override"/>
+        <result property="finalShippingCost" column="final_shipping_cost"/>
+        
+        <!-- 상품 상태 -->
+        <result property="isActive" column="is_active"/>
+        <result property="stockQuantity" column="stock_quantity"/>
+        
+        <!-- 이미지 정보 -->
+        <result property="thumbnailUrl" column="thumbnail_url"/>
+        <result property="altText" column="alt_text"/>
+    </resultMap>
+    
+    <!-- 상품 옵션 조회를 위한 ResultMap -->
+    <resultMap id="ProductOptionResultMap" type="com.example.ecommerce.dto.CartOptionDTO$ProductOption">
+        <result property="id" column="option_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="name" column="option_name"/>
+        <result property="sku" column="option_sku"/>
+        <collection property="optionValues" ofType="com.example.ecommerce.dto.CartOptionDTO$ProductOptionValue">
+            <result property="id" column="value_id"/>
+            <result property="productOptionId" column="option_id"/>
+            <result property="valueText" column="value_text"/>
+            <result property="priceAdjustment" column="price_adjustment"/>
+            <result property="isActive" column="value_is_active"/>
+            <result property="commentNeeded" column="comment_needed"/>
+        </collection>
+    </resultMap>
+
+    <!-- 현재 선택된 옵션 조회를 위한 ResultMap -->
+    <resultMap id="CurrentVariantOptionResultMap" type="com.example.ecommerce.dto.CartOptionDTO$CurrentVariantOption">
+        <result property="variantId" column="variant_id"/>
+        <result property="optionId" column="option_id"/>
+        <result property="optionName" column="option_name"/>
+        <result property="valueId" column="value_id"/>
+        <result property="valueText" column="value_text"/>
+        <result property="priceAdjustment" column="price_adjustment"/>
+    </resultMap>
+
+    <!-- 사용자의 장바구니 목록 조회 -->
+    <select id="selectCartItems" parameterType="int" resultMap="CartItemResultMap">
+    <![CDATA[
+        WITH BestPromotions AS (
+            -- 각 상품별로 가장 큰 할인을 제공하는 프로모션만 선택
+            SELECT
+                pp.product_id,
+                pr.id as promotion_id,
+                pr.discount_type,
+                pr.discount_value,
+                pr.max_discount_amount,
+                -- 실제 할인 금액 계산 (1000원 기준으로 계산)
+                CASE
+                    WHEN pr.discount_type = 'PERCENTAGE' THEN
+                        LEAST(
+                                1000 * (pr.discount_value / 100),
+                                NVL(pr.max_discount_amount, 1000 * (pr.discount_value / 100))
+                        )
+                    WHEN pr.discount_type = 'FIXED_AMOUNT' THEN
+                        pr.discount_value
+                    ELSE 0
+                    END as discount_per_1000,
+                ROW_NUMBER() OVER (
+                    PARTITION BY pp.product_id
+                    ORDER BY
+                        CASE
+                            WHEN pr.discount_type = 'PERCENTAGE' THEN
+                                LEAST(
+                                        1000 * (pr.discount_value / 100),
+                                        NVL(pr.max_discount_amount, 1000 * (pr.discount_value / 100))
+                                )
+                            WHEN pr.discount_type = 'FIXED_AMOUNT' THEN
+                                pr.discount_value
+                            ELSE 0
+                            END DESC
+                    ) as rn
+            FROM promotion_products pp
+                     INNER JOIN promotions pr ON pp.promotion_id = pr.id
+                AND pr.start_date <= CURRENT_TIMESTAMP
+                AND (pr.end_date IS NULL OR pr.end_date >= CURRENT_TIMESTAMP)
+                AND pr.is_active = 'Y'
+        )
+        SELECT
+            ci.user_id,
+            ci.product_variant_id,
+            ci.quantity,
+            ci.added_at,
+
+            p.id as product_id,
+            p.name as product_name,
+            p.base_price,
+            p.seller_id,
+
+            pv.price as variant_price,
+            pv.stock_quantity,
+            pv.is_active,
+
+            -- 단위 가격은 variant의 price 사용
+            pv.price as unit_price,
+
+            -- 총 가격 계산 (variant 가격 * 수량)
+            (pv.price * ci.quantity) as total_price,
+
+            -- 옵션 정보 문자열 생성
+            CAST((SELECT LISTAGG(opt.name || ':' || ov.value_text, ' / ') WITHIN GROUP (ORDER BY opt.id)
+                  FROM prod_variant_option_vals pvov
+                           JOIN product_options opt ON pvov.product_option_id = opt.id
+                           JOIN product_option_values ov ON pvov.product_option_value_id = ov.id
+                  WHERE pvov.variant_id = pv.id) AS VARCHAR2(30)) as option_info,
+
+            -- 판매자 정보
+            NVL(bp.business_name, '판매자명') as business_name,
+
+            -- 할인 정보 (최적 프로모션만 사용)
+            CASE WHEN best_pr.promotion_id IS NOT NULL THEN 1 ELSE 0 END as is_discounted,
+            best_pr.discount_type,
+            NVL(best_pr.discount_value, 0) as discount_value,
+            NVL(best_pr.max_discount_amount, 0) as max_discount_amount,
+
+            -- 실제 할인 금액 계산 (단위당)
+            CASE
+                WHEN best_pr.promotion_id IS NULL THEN 0
+                WHEN best_pr.discount_type = 'PERCENTAGE' THEN
+                    LEAST(
+                            pv.price * (best_pr.discount_value / 100),
+                            NVL(best_pr.max_discount_amount, pv.price * (best_pr.discount_value / 100))
+                    )
+                WHEN best_pr.discount_type = 'FIXED_AMOUNT' THEN
+                    LEAST(best_pr.discount_value, pv.price)
+                ELSE 0
+                END as discount_amount,
+
+            -- 할인된 단위 가격 계산
+            CASE
+                WHEN best_pr.promotion_id IS NULL THEN pv.price
+                WHEN best_pr.discount_type = 'PERCENTAGE' THEN
+                    pv.price -
+                    LEAST(
+                            pv.price * (best_pr.discount_value / 100),
+                            NVL(best_pr.max_discount_amount, pv.price * (best_pr.discount_value / 100))
+                    )
+                WHEN best_pr.discount_type = 'FIXED_AMOUNT' THEN
+                    GREATEST(
+                            pv.price - best_pr.discount_value,
+                            0
+                    )
+                ELSE pv.price
+                END as discounted_unit_price,
+
+            -- 할인된 총 가격 계산
+            CASE
+                WHEN best_pr.promotion_id IS NULL THEN (pv.price * ci.quantity)
+                ELSE
+                    (CASE
+                         WHEN best_pr.discount_type = 'PERCENTAGE' THEN
+                             pv.price -
+                             LEAST(
+                                     pv.price * (best_pr.discount_value / 100),
+                                     NVL(best_pr.max_discount_amount, pv.price * (best_pr.discount_value / 100))
+                             )
+                         WHEN best_pr.discount_type = 'FIXED_AMOUNT' THEN
+                             GREATEST(
+                                     pv.price - best_pr.discount_value,
+                                     0
+                             )
+                         ELSE pv.price
+                        END) * ci.quantity
+                END as discounted_total_price,
+
+            -- 배송 정보
+            p.shipping_method_id as shipping_method_id,
+            sm.name as shipping_method_name,
+            sm.cost as shipping_cost,
+            NVL(ssm.cost_override, 0) as cost_override,
+            (NVL(sm.cost, 0) + NVL(ssm.cost_override, 0)) as final_shipping_cost,
+
+            -- 상품 이미지 (PRIMARY 이미지 우선)
+            pi.image_url as thumbnail_url,
+            pi.alt_text,
+
+            -- 적용된 프로모션 정보 (디버깅/표시용)
+            best_pr.promotion_id as applied_promotion_id
+
+        FROM cart_items ci
+                 INNER JOIN product_variants pv ON ci.product_variant_id = pv.id
+                 INNER JOIN products p ON pv.product_id = p.id
+                 LEFT JOIN business_profiles bp ON p.seller_id = bp.user_id
+
+            -- 최적 프로모션만 조인 (rn = 1인 것만)
+                 LEFT JOIN BestPromotions best_pr ON p.id = best_pr.product_id AND best_pr.rn = 1
+
+            -- 배송 정보 조인
+                 LEFT JOIN seller_shipping_methods ssm ON p.seller_id = ssm.seller_id
+            AND p.shipping_method_id = ssm.shipping_method_id
+                 LEFT JOIN shipping_methods sm ON p.shipping_method_id = sm.id
+
+            -- 상품 이미지 조인 (PRIMARY 이미지 우선)
+                 LEFT JOIN (
+            SELECT
+                product_id,
+                image_url,
+                alt_text,
+                ROW_NUMBER() OVER (
+                    PARTITION BY product_id
+                    ORDER BY
+                        CASE WHEN image_type = 'PRIMARY' THEN 1 ELSE 2 END,
+                        NVL(display_order, 999),
+                        created_at
+                    ) as rn
+            FROM product_images
+            WHERE is_active = 'Y'
+        ) pi ON p.id = pi.product_id AND pi.rn = 1
+
+        WHERE ci.user_id = #{userId}
+          AND pv.is_active = 'Y'
+
+        ORDER BY bp.business_name, ci.added_at DESC
+        ]]>
+</select>
+
+    <!-- 특정 장바구니 아이템 조회 -->
+    <select id="selectCartItem" parameterType="map" resultMap="CartItemResultMap">
+        SELECT 
+            ci.user_id,
+            ci.product_variant_id,
+            ci.quantity,
+            ci.added_at,
+            
+            p.id as product_id,
+            p.name as product_name,
+            p.base_price,
+            pv.price as variant_price,
+            pv.price as unit_price,
+            pv.stock_quantity,
+            pv.is_active
+            
+        FROM cart_items ci
+        INNER JOIN product_variants pv ON ci.product_variant_id = pv.id
+        INNER JOIN products p ON pv.product_id = p.id
+        WHERE ci.user_id = #{userId} 
+          AND ci.product_variant_id = #{productVariantId}
+    </select>
+
+    <!-- 장바구니에 상품 추가 -->
+    <insert id="insertCartItem" parameterType="map">
+        INSERT INTO cart_items (user_id, product_variant_id, quantity, added_at)
+        VALUES (#{userId}, #{productVariantId}, #{quantity}, CURRENT_TIMESTAMP)
+    </insert>
+
+    <!-- 장바구니 상품 수량 변경 -->
+    <update id="updateCartItemQuantity" parameterType="map">
+        UPDATE cart_items 
+        SET quantity = #{quantity}
+        WHERE user_id = #{userId} 
+          AND product_variant_id = #{productVariantId}
+    </update>
+
+    <!-- 장바구니 상품 삭제 -->
+    <delete id="deleteCartItem" parameterType="map">
+        DELETE FROM cart_items 
+        WHERE user_id = #{userId} 
+          AND product_variant_id = #{productVariantId}
+    </delete>
+
+    <!-- 선택된 장바구니 상품들 삭제 -->
+    <delete id="deleteSelectedCartItems" parameterType="map">
+        DELETE FROM cart_items 
+        WHERE user_id = #{userId} 
+          AND product_variant_id IN
+        <foreach collection="productVariantIds" item="variantId" open="(" separator="," close=")">
+            #{variantId}
+        </foreach>
+    </delete>
+
+    <!-- 구매 불가능한 상품들 삭제 -->
+    <delete id="deleteUnavailableCartItems" parameterType="int">
+    	<![CDATA[
+        DELETE FROM cart_items ci
+        WHERE ci.user_id = #{userId}
+          AND ci.product_variant_id IN (
+              SELECT pv.id 
+              FROM product_variants pv
+              WHERE pv.is_active = 'N' 
+                 OR pv.stock_quantity <= 0
+          )
+          ]]>
+    </delete>
+
+    <!-- 장바구니 상품 개수 조회 -->
+    <select id="selectCartItemCount" parameterType="int" resultType="int">
+        SELECT NVL(SUM(ci.quantity), 0)
+        FROM cart_items ci
+        INNER JOIN product_variants pv ON ci.product_variant_id = pv.id
+        WHERE ci.user_id = #{userId}
+          AND pv.is_active = 'Y'
+          AND pv.stock_quantity > 0
+    </select>
+    
+    <!-- 상품의 모든 옵션 조회 (옵션 선택 모달용) -->
+    <select id="selectProductOptions" parameterType="int" resultMap="ProductOptionResultMap">
+        <![CDATA[
+        SELECT 
+            po.id as option_id,
+            po.product_id,
+            po.name as option_name,
+            po.sku as option_sku,
+            pov.id as value_id,
+            pov.value_text,
+            NVL(pov.price_adjustment, 0) as price_adjustment,
+            pov.is_active as value_is_active,
+            pov.comment_needed
+        FROM product_options po
+        INNER JOIN product_option_values pov ON po.id = pov.product_option_id
+        WHERE po.product_id = #{productId}
+          AND pov.is_active = 'Y'
+        ORDER BY po.id, pov.id
+        ]]>
+    </select>
+
+    <!-- 현재 변형 상품의 선택된 옵션 조회 -->
+    <select id="selectCurrentVariantOptions" parameterType="int" resultMap="CurrentVariantOptionResultMap">
+        <![CDATA[
+        SELECT 
+            pv.id as variant_id,
+            po.id as option_id,
+            po.name as option_name,
+            pov.id as value_id,
+            pov.value_text,
+            NVL(pov.price_adjustment, 0) as price_adjustment
+        FROM product_variants pv
+        INNER JOIN prod_variant_option_vals pvov ON pv.id = pvov.variant_id
+        INNER JOIN product_options po ON pvov.product_option_id = po.id
+        INNER JOIN product_option_values pov ON pvov.product_option_value_id = pov.id
+        WHERE pv.id = #{variantId}
+          AND pov.is_active = 'Y'
+        ORDER BY po.id
+        ]]>
+    </select>
+
+    <!-- 상품 기본 정보 조회 (모달용) -->
+    <select id="selectProductBasicInfo" parameterType="int" resultType="map">
+        <![CDATA[
+        SELECT 
+            p.id as "productId",
+            p.name as "productName",
+            p.base_price as "basePrice",
+            p.description as "description",
+            pi.image_url as "imageUrl",
+            pi.alt_text as "altText"
+        FROM products p
+        LEFT JOIN (
+            SELECT 
+                product_id,
+                image_url,
+                alt_text,
+                ROW_NUMBER() OVER (
+                    PARTITION BY product_id 
+                    ORDER BY 
+                        CASE WHEN image_type = 'PRIMARY' THEN 1 ELSE 2 END,
+                        NVL(display_order, 999),
+                        created_at
+                ) as rn
+            FROM product_images 
+            WHERE is_active = 'Y'
+        ) pi ON p.id = pi.product_id AND pi.rn = 1
+        WHERE p.id = #{productId}
+        ]]>
+    </select>
+    
+    <!-- 변형 상품 ID로 상품 ID 조회 -->
+	<select id="selectProductIdByVariantId" parameterType="int" resultType="int">
+	    <![CDATA[
+	    SELECT pv.product_id
+	    FROM product_variants pv
+	    WHERE pv.id = #{variantId}
+	      AND pv.is_active = 'Y'
+	    ]]>
+	</select>
+
+    <!-- 옵션 조합으로 변형 상품 조회 -->
+	<select id="selectVariantByOptions" parameterType="map" resultType="map">
+	    SELECT
+	        pv.id as "variantId",
+	        pv.sku as "sku",
+	        pv.price as "price",
+	        pv.stock_quantity as "stockQuantity",
+	        pv.is_active as "isActive",
+	        CASE
+	            WHEN pv.is_active = 'Y' AND NVL(pv.stock_quantity, 0) > 0 THEN 'Y'
+	            ELSE 'N'
+	        END AS "available"
+	    FROM product_variants pv
+	    WHERE pv.product_id = #{productId}
+	      AND pv.id IN (
+	          SELECT pvov.variant_id
+	          FROM prod_variant_option_vals pvov
+	          WHERE pvov.product_option_value_id IN
+	          <foreach collection="optionValueIds" item="optionValueId" open="(" separator="," close=")">
+	              #{optionValueId}
+	          </foreach>
+	          GROUP BY pvov.variant_id
+	          HAVING COUNT(DISTINCT pvov.product_option_value_id) = #{optionCount}
+	             AND COUNT(DISTINCT pvov.product_option_value_id) = (
+	                 SELECT COUNT(DISTINCT pvov2.product_option_value_id)
+	                 FROM prod_variant_option_vals pvov2
+	                 WHERE pvov2.variant_id = pvov.variant_id
+	             )
+	      )
+	</select>
+
+    <!-- 장바구니 아이템의 옵션 변경 -->
+    <update id="updateCartItemVariant" parameterType="map">
+        <![CDATA[
+        UPDATE cart_items 
+        SET product_variant_id = #{newVariantId},
+            quantity = #{quantity}
+        WHERE user_id = #{userId} 
+          AND product_variant_id = #{currentVariantId}
+        ]]>
+    </update>
+
+    <!-- 기존 장바구니 아이템 존재 여부 확인 -->
+    <select id="checkExistingCartItem" parameterType="map" resultType="int">
+        <![CDATA[
+        SELECT NVL(quantity, 0)
+        FROM cart_items
+        WHERE user_id = #{userId} 
+          AND product_variant_id = #{variantId}
+        ]]>
+    </select>
+
+    <!-- 기존 장바구니 아이템 수량 증가 -->
+    <update id="increaseCartItemQuantity" parameterType="map">
+        <![CDATA[
+        UPDATE cart_items 
+        SET quantity = quantity + #{additionalQuantity}
+        WHERE user_id = #{userId} 
+          AND product_variant_id = #{variantId}
+        ]]>
+    </update>
+</mapper>

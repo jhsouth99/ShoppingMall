@@ -1,45 +1,211 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans:beans xmlns="http://www.springframework.org/schema/mvc"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:beans="http://www.springframework.org/schema/beans"
-	xmlns:context="http://www.springframework.org/schema/context"
-	xsi:schemaLocation="http://www.springframework.org/schema/mvc https://www.springframework.org/schema/mvc/spring-mvc.xsd
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:context="http://www.springframework.org/schema/context"
+             xmlns:util="http://www.springframework.org/schema/util"
+             xsi:schemaLocation="http://www.springframework.org/schema/mvc https://www.springframework.org/schema/mvc/spring-mvc.xsd
 		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
-		http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd">
+		http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
-	<!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
-	
-	<!-- Enables the Spring MVC @Controller programming model -->
-	<annotation-driven />
+    <!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
 
-	<!-- Handles HTTP GET requests for /resources/** by efficiently serving up static resources in the ${webappRoot}/resources directory -->
-	<resources mapping="/resources/**" location="/resources/" />
+    <!-- Enables the Spring MVC @Controller programming model -->
+    <annotation-driven />
 
-	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
-	<beans:bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
-		<beans:property name="prefix" value="/WEB-INF/views/" />
-		<beans:property name="suffix" value=".jsp" />
-	</beans:bean>
-	
+    <!-- Handles HTTP GET requests for /resources/** by efficiently serving up static resources in the ${webappRoot}/resources directory -->
+    <resources mapping="/resources/**" location="/resources/" />
+
+    <context:property-placeholder location="classpath:application.properties" />
+
+    <!-- 업로드된 이미지 파일 서빙을 위한 정적 리소스 매핑 추가 -->
+    <resources mapping="/uploads/**" location="file:${file.upload.base-path}/" />
+
+    <!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
+    <beans:bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <beans:property name="prefix" value="/WEB-INF/views/" />
+        <beans:property name="suffix" value=".jsp" />
+    </beans:bean>
+
     <!-- 보안 설정 import -->
     <beans:import resource="classpath:config/spring/context/context-5-security.xml"/>
-    
-	<!-- AutoWired사용을 위한 설정 -->
-	<context:annotation-config/>
-	
-	<!-- HomeController 생성 -->
-	<beans:bean class="com.example.ecommerce.HomeController">
-	</beans:bean>
-	
-	<!-- LoginController 생성 -->
-	<beans:bean class="com.example.ecommerce.LoginController">
-		<beans:constructor-arg ref="authenticationManager"/>
-		<beans:constructor-arg ref="userService"/>
-	</beans:bean>
-	
-	<!-- EmailController 생성 -->
-	<beans:bean class="com.example.ecommerce.EmailController">
-		<beans:constructor-arg ref="mailSendService"/>
-	</beans:bean>
-	
+
+    <!-- Spring MVC 애노테이션 드라이빙 활성화 및 Argument Resolver 등록 -->
+    <annotation-driven>
+        <argument-resolvers>
+            <beans:bean class="org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver"/>
+        </argument-resolvers>
+    </annotation-driven>
+
+    <!-- AutoWired사용을 위한 설정 -->
+    <context:annotation-config/>
+
+    <!-- com.fasterxml.jackson.datatype:jackson-datatype-jsr310 -->
+
+    <!-- Snake_Case 전략을 적용할 ObjectMapper 빈 정의 -->
+    <!-- <beans:bean id="snakeCaseObjectMapper" class="org.springframework.http.converter.json.Jackson2ObjectMapperFactoryBean">
+        <beans:property name="propertyNamingStrategy">
+            <util:constant static-field="com.fasterxml.jackson.databind.PropertyNamingStrategies.SNAKE_CASE"/>
+        </beans:property>
+    </beans:bean> -->
+
+    <!-- mvc:annotation-driven 에 컨버터 등록 -->
+    <!-- <annotation-driven>
+        <message-converters register-defaults="true">
+            Snake_Case 전략이 적용된 ObjectMapper 를 사용하는 MappingJackson2HttpMessageConverter 빈
+            <beans:bean id="jacksonMessageConverter" class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+                <beans:property name="objectMapper" ref="snakeCaseObjectMapper"/>
+            </beans:bean>
+        </message-converters>
+    </annotation-driven> -->
+
+    <beans:bean class="com.example.ecommerce.controller.HomeController">
+        <beans:constructor-arg ref="productService"/>
+        <beans:constructor-arg ref="categoryService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.SearchController">
+        <beans:constructor-arg ref="productService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.LoginController">
+        <beans:constructor-arg ref="authenticationManager"/>
+        <beans:constructor-arg ref="userService"/>
+        <beans:constructor-arg ref="passwordEncoder"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.EmailController">
+        <beans:constructor-arg ref="mailSendService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.MyPageController">
+        <beans:constructor-arg ref="userService"/>
+        <beans:constructor-arg ref="shippingAddressService"/>
+        <beans:constructor-arg ref="agreementService"/>
+        <beans:constructor-arg ref="orderService"/>
+        <beans:constructor-arg ref="groupBuyService"/>
+        <beans:constructor-arg ref="couponService"/>
+        <beans:constructor-arg ref="afterSalesService"/>
+        <beans:constructor-arg ref="fileUploadService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.SellerPageController">
+        <beans:constructor-arg ref="objectMapper"/>
+        <beans:constructor-arg ref="dashboardService"/>
+        <beans:constructor-arg ref="productService"/>
+        <beans:constructor-arg ref="groupBuyService"/>
+        <beans:constructor-arg ref="orderService"/>
+        <beans:constructor-arg ref="afterSalesService"/>
+        <beans:constructor-arg ref="promotionService"/>
+        <beans:constructor-arg ref="couponService"/>
+        <beans:constructor-arg ref="sellerInfoService"/>
+        <beans:constructor-arg ref="qnAService"/>
+        <beans:constructor-arg ref="reviewService"/>
+        <beans:constructor-arg ref="inquiryService"/>
+        <beans:constructor-arg ref="shipmentService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.PromotionContoller">
+        <beans:constructor-arg ref="promotionService"/>
+        <beans:constructor-arg ref="couponService"/>
+        <beans:constructor-arg ref="productService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.AdminController">
+        <beans:constructor-arg ref="dashboardService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.CommonController">
+        <beans:constructor-arg ref="carrierService"/>
+        <beans:constructor-arg ref="groupBuyService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.CategoryController">
+        <beans:constructor-arg ref="categoryService"/>
+        <beans:constructor-arg ref="productService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.ReviewController">
+        <beans:constructor-arg ref="objectMapper"/>
+        <beans:constructor-arg ref="reviewService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.QnAController">
+        <beans:constructor-arg ref="qnAService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.InquiryController">
+        <beans:constructor-arg ref="inquiryService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.ProductController">
+        <beans:constructor-arg ref="objectMapper"/>
+        <beans:constructor-arg ref="productService"/>
+        <beans:constructor-arg ref="promotionService"/>
+        <beans:constructor-arg ref="couponService"/>
+        <beans:constructor-arg ref="groupBuyService"/>
+        <beans:constructor-arg ref="qnAService"/>
+        <beans:constructor-arg ref="cartService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.OrderController">
+        <beans:constructor-arg ref="fileUploadService"/>
+        <beans:constructor-arg ref="orderService"/>
+        <beans:constructor-arg ref="cartService"/>
+        <beans:constructor-arg ref="couponService"/>
+        <beans:constructor-arg ref="shippingAddressService"/>
+        <beans:constructor-arg ref="groupBuyService"/>
+        <beans:constructor-arg ref="afterSalesService"/>
+        <beans:constructor-arg ref="reviewService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.WishlistController">
+        <beans:constructor-arg ref="wishlistService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.CartController">
+        <beans:constructor-arg ref="cartService"/>
+        <beans:constructor-arg ref="cartOptionService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.FindAccountController">
+        <beans:constructor-arg ref="userService"/>
+        <beans:constructor-arg ref="mailSendService"/>
+        <beans:constructor-arg ref="passwordEncoder"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.AttributeController">
+        <beans:constructor-arg ref="attributeService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.AccountController">
+        <beans:constructor-arg ref="userService"/>
+        <beans:constructor-arg ref="adminUserService"/>
+        <beans:constructor-arg ref="shippingAddressService"/>
+        <beans:constructor-arg ref="agreementService"/>
+        <beans:constructor-arg ref="sellerInfoService"/>
+        <beans:constructor-arg ref="shipmentService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.ReportController">
+        <beans:constructor-arg ref="userService"/>
+        <beans:constructor-arg ref="adminUserService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.GroupBuyController">
+        <beans:constructor-arg ref="groupBuyService"/>
+        <beans:constructor-arg ref="orderService"/>
+        <beans:constructor-arg ref="productService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.AfterSalesController">
+        <beans:constructor-arg ref="fileUploadService"/>
+        <beans:constructor-arg ref="afterSalesService"/>
+        <beans:constructor-arg ref="orderService"/>
+    </beans:bean>
+
+    <beans:bean class="com.example.ecommerce.controller.CouponController">
+        <beans:constructor-arg ref="couponService"/>
+    </beans:bean>
 </beans:beans>

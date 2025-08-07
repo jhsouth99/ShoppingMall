@@ -1,0 +1,1366 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="product">
+
+    <resultMap id="OptionWithValuesResultMap" type="SellerProductOption">
+        <id property="id" column="option_id"/>
+        <result property="name" column="option_name"/>
+        <collection property="values" ofType="SellerProductOptionValue">
+            <id property="id" column="value_id"/>
+            <result property="value" column="value_text"/>
+        </collection>
+    </resultMap>
+
+    <select id="findProductsBySellerId" parameterType="map" resultType="SellerProductSummary">
+        SELECT * FROM (
+        SELECT ROWNUM AS rnum, p_outer.* FROM (
+        SELECT
+        p.id,
+        p.name,
+        p.base_price,
+        p.view_count,
+        p.sold_count,
+        p.is_business_only,
+        p.created_at,
+        -- 썸네일 이미지 조회 (LEFT JOIN 방식)
+        pi.image_url AS thumbnail_url,
+        -- 총 재고 조회
+        (SELECT NVL(SUM(pv.stock_quantity), 0) FROM product_variants pv WHERE pv.product_id = p.id) AS total_stock,
+        -- 판매 상태 계산
+        CASE
+        WHEN p.deleted_at IS NOT NULL THEN 'DELETED'
+        WHEN (SELECT NVL(SUM(pv.stock_quantity), 0) FROM product_variants pv
+        WHERE pv.product_id = p.id AND pv.is_active = 'Y') = 0 THEN 'SOLDOUT'
+        ELSE 'SELLING'
+        END AS status
+        FROM products p
+        LEFT JOIN (
+        SELECT DISTINCT
+        product_id,
+        FIRST_VALUE(image_url) OVER (
+        PARTITION BY product_id
+        ORDER BY
+        CASE image_type
+        WHEN 'PRIMARY' THEN 1
+        WHEN 'MAIN' THEN 2
+        WHEN 'THUMBNAIL' THEN 3
+        WHEN 'HERO' THEN 4
+        WHEN 'GALLERY' THEN 5
+        WHEN 'DETAIL' THEN 6
+        WHEN 'SUB' THEN 7
+        ELSE 8
+        END,
+        display_order ASC
+        ) AS image_url
+        FROM product_images
+        WHERE is_active = 'Y'
+        ) pi ON p.id = pi.product_id
+        WHERE p.seller_id = #{sellerId}
+        AND p.deleted_at IS NULL
+        <if test="keyword != null and keyword != ''">
+            AND p.name LIKE '%' || #{keyword} || '%'
+        </if>
+        ORDER BY p.created_at DESC
+        ) p_outer
+        <where>
+            <if test="status != null and status != ''">
+                p_outer.status = #{status}
+            </if>
+        </where>
+        ) WHERE rnum BETWEEN #{offset} + 1 AND #{offset} + #{size}
+    </select>
+
+    <select id="countProductsBySellerId" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM (
+        SELECT
+        p.id,
+        CASE
+        WHEN p.deleted_at IS NOT NULL THEN 'DELETED'
+        WHEN (SELECT NVL(SUM(pv.stock_quantity), 0) FROM product_variants pv
+        WHERE pv.product_id = p.id AND pv.is_active = 'Y') = 0 THEN 'SOLDOUT'
+        ELSE 'SELLING'
+        END AS status
+        FROM products p
+        WHERE p.seller_id = #{sellerId}
+        AND p.deleted_at IS NULL
+        <if test="keyword != null and keyword != ''">
+            AND p.name LIKE '%' || #{keyword} || '%'
+        </if>
+        ) p_outer
+        <where>
+            <if test="status != null and status != ''">
+                p_outer.status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <select id="findProductById" parameterType="int" resultType="SellerProductDetail">
+        SELECT
+            p.id AS product_id,
+            p.name,
+            p.description,
+            p.detailed_content,
+            p.base_price,
+            p.is_business_only,
+            p.category_id,
+            p.created_at,
+            p.updated_at,
+            p.shipping_method_id,
+            sm.cost AS shippingFee,
+            sm.name AS shippingMethodName
+        FROM products p
+                 LEFT JOIN shipping_methods sm ON p.shipping_method_id = sm.id
+        WHERE p.id = #{productId}
+    </select>
+
+    <select id="findOptionsByProductId" parameterType="int" resultMap="OptionWithValuesResultMap">
+        SELECT
+            po.id as option_id,
+            po.name as option_name,
+            pov.id as value_id,
+            pov.value_text
+        FROM product_options po
+                 LEFT JOIN product_option_values pov ON po.id = pov.product_option_id
+        WHERE po.product_id = #{productId}
+        ORDER BY po.id, pov.id
+    </select>
+
+    <select id="findVariantsByProductId" parameterType="int" resultType="ProductVariant">
+        SELECT
+            pv.id,
+            pv.sku,
+            pv.price,
+            pv.stock_quantity,
+            pv.is_active,
+            (SELECT LISTAGG(opt.name || ':' || ov.value_text, ' / ') WITHIN GROUP (ORDER BY opt.id)
+             FROM prod_variant_option_vals pvov
+                      JOIN product_options opt ON pvov.product_option_id = opt.id
+                      JOIN product_option_values ov ON pvov.product_option_value_id = ov.id
+             WHERE pvov.variant_id = pv.id) as option_combination
+        FROM product_variants pv
+        WHERE pv.product_id = #{productId}
+        ORDER BY pv.id
+    </select>
+
+    <insert id="insertProduct" parameterType="SellerProductDetail" useGeneratedKeys="true" keyProperty="id">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT products_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO products (
+        id, seller_id, category_id, name, description, detailed_content,
+        base_price, is_business_only, shipping_method_id, created_at, updated_at
+        )
+        VALUES (
+        #{id}, #{sellerId}, #{categoryId, jdbcType=NUMERIC}, #{name, jdbcType=VARCHAR},
+        #{description, jdbcType=VARCHAR}, #{detailedContent, jdbcType=CLOB},
+        #{basePrice, jdbcType=NUMERIC}, #{isBusinessOnly, jdbcType=CHAR},
+        #{shippingMethodId, jdbcType=NUMERIC}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <insert id="insertProductOption" parameterType="SellerProductOption" useGeneratedKeys="true" keyProperty="id">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT product_options_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO product_options (id, product_id, name)
+        VALUES(#{id}, #{productId}, #{name})
+    </insert>
+
+    <insert id="insertProductOptionValue" parameterType="SellerProductOptionValue" useGeneratedKeys="true" keyProperty="id">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT product_option_values_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO product_option_values (id, product_option_id, value_text)
+        VALUES (#{id}, #{productOptionId}, #{value})
+    </insert>
+
+    <insert id="insertProductVariant" parameterType="ProductVariant" useGeneratedKeys="true" keyProperty="id">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT product_variants_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO product_variants (
+        id, product_id, sku, price, stock_quantity, is_active,
+        created_at, updated_at
+        )
+        VALUES (
+        #{id}, #{productId}, #{sku}, #{price}, #{stockQuantity},
+        #{isActive, jdbcType=CHAR}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <insert id="insertVariantOptionValueLink" parameterType="map">
+        INSERT INTO prod_variant_option_vals (variant_id, product_option_id, product_option_value_id)
+        VALUES (#{variantId}, #{productOptionId}, #{productOptionValueId})
+    </insert>
+
+    <update id="updateProduct" parameterType="SellerProductDetail">
+        UPDATE products
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name, jdbcType=VARCHAR},
+            </if>
+            <if test="description != null">
+                description = #{description, jdbcType=CLOB},
+            </if>
+            <if test="detailedContent != null">
+                detailed_content = #{detailedContent, jdbcType=CLOB},
+            </if>
+            <if test="basePrice != null">
+                base_price = #{basePrice, jdbcType=NUMERIC},
+            </if>
+            <if test="categoryId != null and categoryId > 0">
+                category_id = #{categoryId, jdbcType=NUMERIC},
+            </if>
+            <if test="isBusinessOnly != null">
+                is_business_only = #{isBusinessOnly, jdbcType=CHAR},
+            </if>
+            <if test="shippingMethodId != null and shippingMethodId > 0">
+                shipping_method_id = #{shippingMethodId, jdbcType=NUMERIC},
+            </if>
+            updated_at = CURRENT_TIMESTAMP
+        </set>
+        WHERE id = #{id} AND seller_id = #{sellerId}
+    </update>
+
+    <update id="updateProductVariant" parameterType="ProductVariant">
+        UPDATE product_variants
+        SET sku = #{sku},
+            price = #{price, jdbcType=NUMERIC},
+            stock_quantity = #{stockQuantity, jdbcType=NUMERIC},
+            is_active = #{isActive, jdbcType=CHAR},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND product_id = #{productId}
+    </update>
+
+    <update id="deleteProduct" parameterType="map">
+        UPDATE products
+        SET deleted_at = CURRENT_TIMESTAMP
+        WHERE id = #{productId} AND seller_id = #{sellerId}
+    </update>
+
+    <delete id="deleteVariantsByProductId" parameterType="int">
+        DELETE FROM product_variants WHERE product_id = #{productId}
+    </delete>
+
+    <delete id="deleteOptionsByProductId" parameterType="int">
+        DELETE FROM product_options WHERE product_id = #{productId}
+    </delete>
+
+    <select id="findGroupBuyableVariantsBySellerId" parameterType="int" resultType="ProductVariant">
+        SELECT
+            pv.id,
+            p.name || ' - ' || (
+                SELECT LISTAGG(ov.value_text, '/') WITHIN GROUP (ORDER BY opt.id)
+                FROM prod_variant_option_vals pvov
+                         JOIN product_options opt ON pvov.product_option_id = opt.id
+                         JOIN product_option_values ov ON pvov.product_option_value_id = ov.id
+                WHERE pvov.variant_id = pv.id
+            ) AS displayName,
+            pv.price
+        FROM product_variants pv
+                 JOIN products p ON pv.product_id = p.id
+        WHERE p.seller_id = #{sellerId}
+          AND pv.is_active = 'Y'
+          AND p.deleted_at IS NULL
+          AND pv.stock_quantity > 0
+        ORDER BY p.name, pv.id
+    </select>
+
+    <update id="deactivateAllProductsBySeller" parameterType="int">
+        UPDATE products
+        SET deleted_at = CURRENT_TIMESTAMP
+        WHERE seller_id = #{sellerId}
+          AND deleted_at IS NULL
+    </update>
+
+    <select id="findTargetableProductsBySellerId" parameterType="int" resultType="map">
+        SELECT
+            p.id AS "id",
+            p.name AS "name"
+        FROM products p
+        WHERE p.seller_id = #{sellerId}
+          AND p.deleted_at IS NULL
+        ORDER BY p.name ASC
+    </select>
+
+    <select id="findRecommendedProducts" resultType="SearchProduct">
+        SELECT * FROM (
+                          SELECT
+                              p.id,
+                              p.name,
+                              p.base_price,
+                              pi.image_url,
+                              -- 현재 적용 가능한 가장 높은 할인율(%) 조회
+                              (SELECT MAX(pr.discount_value) KEEP (DENSE_RANK FIRST ORDER BY pr.discount_value DESC)
+                               FROM promotions pr
+                                        JOIN promotion_products pp ON pr.id = pp.promotion_id
+                               WHERE pp.product_id = p.id
+                                 AND pr.is_active = 'Y'
+                                 AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+                                 AND pr.discount_type = 'PERCENTAGE'
+                                 AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+                              ) AS discount_rate,
+                              (SELECT MAX(pr.discount_value) KEEP (DENSE_RANK FIRST ORDER BY pr.discount_value DESC)
+                               FROM promotions pr
+                                        JOIN promotion_products pp ON pr.id = pp.promotion_id
+                               WHERE pp.product_id = p.id
+                                 AND pr.is_active = 'Y'
+                                 AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+                                 AND pr.discount_type = 'FIXED_AMOUNT'
+                                 AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+                              ) AS discount_amount,
+                              (SELECT MAX(pr.max_discount_amount) KEEP (DENSE_RANK FIRST ORDER BY pr.discount_value DESC)
+                               FROM promotions pr
+                                        JOIN promotion_products pp ON pr.id = pp.promotion_id
+                               WHERE pp.product_id = p.id
+                                 AND pr.is_active = 'Y'
+                                 AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+                                 AND pr.discount_type = 'PERCENTAGE'
+                                 AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+                              ) AS max_discount_amount_p,
+                              (SELECT MAX(pr.max_discount_amount) KEEP (DENSE_RANK FIRST ORDER BY pr.discount_value DESC)
+                               FROM promotions pr
+                                        JOIN promotion_products pp ON pr.id = pp.promotion_id
+                               WHERE pp.product_id = p.id
+                                 AND pr.is_active = 'Y'
+                                 AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+                                 AND pr.discount_type = 'FIXED_AMOUNT'
+                                 AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+                              ) AS max_discount_amount_f,
+                              -- 진행중인 공동구매 가격 조회
+                              (SELECT MIN(gb.group_price) KEEP (DENSE_RANK FIRST ORDER BY gb.group_price ASC)
+                               FROM group_buys gb
+                                        JOIN product_variants pv ON gb.product_variant_id = pv.id
+                               WHERE pv.product_id = p.id
+                                 AND gb.status IN ('PENDING', 'ACTIVE')
+                                 AND SYSDATE BETWEEN gb.start_date AND gb.end_date
+                              ) AS group_price
+                          FROM products p
+                                   LEFT JOIN (
+                              SELECT DISTINCT
+                                  product_id,
+                                  FIRST_VALUE(image_url) OVER (
+                                      PARTITION BY product_id
+                                      ORDER BY
+                                          CASE image_type
+                                              WHEN 'PRIMARY' THEN 1
+                                              WHEN 'MAIN' THEN 2
+                                              WHEN 'THUMBNAIL' THEN 3
+                                              WHEN 'HERO' THEN 4
+                                              ELSE 5
+                                              END,
+                                          display_order ASC
+                                      ) AS image_url
+                              FROM product_images
+                              WHERE is_active = 'Y'
+                          ) pi ON p.id = pi.product_id
+                          WHERE p.deleted_at IS NULL
+                            AND (SELECT SUM(stock_quantity) FROM product_variants pv WHERE pv.product_id = p.id) > 0
+                          ORDER BY p.sold_count DESC, p.view_count DESC
+                      )
+        WHERE ROWNUM &lt;= 12
+    </select>
+
+    <!-- 이미지 관련 쿼리들을 일관된 형식으로 수정 -->
+    <select id="findFilteredProducts" parameterType="map" resultType="SearchProduct">
+        SELECT * FROM (
+        SELECT ROWNUM AS rnum, p_filtered.* FROM (
+        SELECT
+        p.id,
+        p.name,
+        p.base_price,
+        pi.image_url,
+        -- 현재 적용 가능한 가장 높은 할인율(%) 조회
+        (SELECT MAX(pr.discount_value) KEEP (DENSE_RANK FIRST ORDER BY pr.discount_value DESC)
+        FROM promotions pr
+        JOIN promotion_products pp ON pr.id = pp.promotion_id
+        WHERE pp.product_id = p.id
+        AND pr.is_active = 'Y'
+        AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+        AND pr.discount_type = 'PERCENTAGE'
+        AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+        ) AS discount_rate,
+        (SELECT MAX(pr.discount_value) KEEP (DENSE_RANK FIRST ORDER BY pr.discount_value DESC)
+        FROM promotions pr
+        JOIN promotion_products pp ON pr.id = pp.promotion_id
+        WHERE pp.product_id = p.id
+        AND pr.is_active = 'Y'
+        AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+        AND pr.discount_type = 'FIXED_AMOUNT'
+        AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+        ) AS discount_amount,
+        (SELECT MAX(pr.max_discount_amount) KEEP (DENSE_RANK FIRST ORDER BY pr.discount_value DESC)
+        FROM promotions pr
+        JOIN promotion_products pp ON pr.id = pp.promotion_id
+        WHERE pp.product_id = p.id
+        AND pr.is_active = 'Y'
+        AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+        AND pr.discount_type = 'PERCENTAGE'
+        AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+        ) AS max_discount_amount_p,
+        (SELECT MAX(pr.max_discount_amount) KEEP (DENSE_RANK FIRST ORDER BY pr.discount_value DESC)
+        FROM promotions pr
+        JOIN promotion_products pp ON pr.id = pp.promotion_id
+        WHERE pp.product_id = p.id
+        AND pr.is_active = 'Y'
+        AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+        AND pr.discount_type = 'FIXED_AMOUNT'
+        AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+        ) AS max_discount_amount_f,
+        -- 진행중인 공동구매 가격 조회
+        (SELECT MIN(gb.group_price) KEEP (DENSE_RANK FIRST ORDER BY gb.group_price ASC)
+        FROM group_buys gb
+        JOIN product_variants pv ON gb.product_variant_id = pv.id
+        WHERE pv.product_id = p.id
+        AND gb.status IN ('PENDING', 'ACTIVE')
+        AND SYSDATE BETWEEN gb.start_date AND gb.end_date
+        ) AS group_price,
+        -- 공동구매 여부 확인
+        CASE WHEN EXISTS (
+        SELECT 1 FROM group_buys gb
+        JOIN product_variants pv ON gb.product_variant_id = pv.id
+        WHERE pv.product_id = p.id
+        AND gb.status IN ('PENDING', 'ACTIVE')
+        AND SYSDATE BETWEEN gb.start_date AND gb.end_date
+        ) THEN 1 ELSE 0 END AS is_group_purchase
+        FROM products p
+        LEFT JOIN (
+        SELECT DISTINCT
+        product_id,
+        FIRST_VALUE(image_url) OVER (
+        PARTITION BY product_id
+        ORDER BY
+        CASE image_type
+        WHEN 'PRIMARY' THEN 1
+        WHEN 'MAIN' THEN 2
+        WHEN 'THUMBNAIL' THEN 3
+        WHEN 'HERO' THEN 4
+        ELSE 5
+        END,
+        display_order ASC
+        ) AS image_url
+        FROM product_images
+        WHERE is_active = 'Y'
+        ) pi ON p.id = pi.product_id
+        <where>
+            p.deleted_at IS NULL
+            <if test="keyword != null and keyword != ''">
+                AND p.name LIKE '%' || #{keyword} || '%'
+            </if>
+            <if test="categoryId != null and categoryId != 'all'">
+                AND p.category_id IN (
+                SELECT id FROM categories
+                START WITH id = #{categoryId}
+                CONNECT BY PRIOR id = parent_id
+                )
+            </if>
+            <if test="minPrice != null">AND p.base_price >= #{minPrice}</if>
+            <if test="maxPrice != null">AND p.base_price &lt;= #{maxPrice}</if>
+            <if test="discountOnly == true">
+                AND EXISTS (
+                SELECT 1
+                FROM promotions pr
+                JOIN promotion_products pp ON pp.promotion_id = pr.id
+                WHERE pp.product_id = p.id
+                AND pr.is_active = 'Y'
+                AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+                AND pr.discount_type = 'PERCENTAGE'
+                AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+                )
+            </if>
+            <if test="groupPurchaseOnly == true">
+                AND EXISTS (
+                SELECT 1 FROM group_buys gb
+                JOIN product_variants pv ON gb.product_variant_id = pv.id
+                WHERE pv.product_id = p.id
+                AND gb.status IN ('PENDING', 'ACTIVE')
+                AND SYSDATE BETWEEN gb.start_date AND gb.end_date
+                )
+            </if>
+            <!-- 속성 필터 - 수정된 버전 -->
+            <if test="attributeFilters != null and !attributeFilters.isEmpty()">
+                AND p.id IN (
+                SELECT pav.product_id
+                FROM product_attribute_values pav
+                JOIN attributes a ON pav.attribute_id = a.id
+                LEFT JOIN attribute_options ao ON pav.attribute_option_id = ao.id
+                WHERE (
+                <foreach collection="attributeFilters.keySet()" item="attributeId" separator=" OR ">
+                    (pav.attribute_id = #{attributeId} AND
+                    CASE
+                    WHEN a.data_type = 'LIST' THEN ao.option_value
+                    WHEN a.data_type = 'NUMBER' THEN TO_CHAR(pav.value_number)
+                    WHEN a.data_type = 'DATE' THEN TO_CHAR(pav.value_date, 'YYYY-MM-DD')
+                    ELSE pav.value_text
+                    END IN
+                    <foreach collection="attributeFilters[attributeId]" item="attrValue" open="(" separator="," close=")">
+                        #{attrValue}
+                    </foreach>
+                    )
+                </foreach>
+                )
+                GROUP BY pav.product_id
+                HAVING COUNT(DISTINCT pav.attribute_id) = #{attributeFiltersCount}
+                )
+            </if>
+        </where>
+        <choose>
+            <when test="sortBy == 'latest'">ORDER BY p.created_at DESC</when>
+            <when test="sortBy == 'price-low'">ORDER BY p.base_price ASC</when>
+            <when test="sortBy == 'price-high'">ORDER BY p.base_price DESC</when>
+            <otherwise>ORDER BY p.sold_count DESC, p.view_count DESC</otherwise>
+        </choose>
+        ) p_filtered
+        ) WHERE rnum BETWEEN #{offset} + 1 AND #{offset} + #{size}
+    </select>
+
+    <select id="searchProducts" parameterType="map" resultType="SearchProduct">
+        SELECT * FROM (
+        SELECT ROWNUM AS rnum, p_filtered.* FROM (
+        SELECT
+        p.id,
+        p.name,
+        p.base_price,
+        pi.image_url,
+        -- 현재 적용 가능한 가장 높은 할인율(%) 조회
+        (SELECT MAX(pr.discount_value) KEEP (DENSE_RANK FIRST ORDER BY pr.discount_value DESC)
+        FROM promotions pr
+        JOIN promotion_products pp ON pr.id = pp.promotion_id
+        WHERE pp.product_id = p.id
+        AND pr.is_active = 'Y'
+        AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+        AND pr.discount_type = 'PERCENTAGE'
+        AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+        ) AS discount_rate,
+        (SELECT MAX(pr.discount_value) KEEP (DENSE_RANK FIRST ORDER BY pr.discount_value DESC)
+        FROM promotions pr
+        JOIN promotion_products pp ON pr.id = pp.promotion_id
+        WHERE pp.product_id = p.id
+        AND pr.is_active = 'Y'
+        AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+        AND pr.discount_type = 'FIXED_AMOUNT'
+        AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+        ) AS discount_amount,
+        (SELECT MAX(pr.max_discount_amount) KEEP (DENSE_RANK FIRST ORDER BY pr.discount_value DESC)
+        FROM promotions pr
+        JOIN promotion_products pp ON pr.id = pp.promotion_id
+        WHERE pp.product_id = p.id
+        AND pr.is_active = 'Y'
+        AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+        AND pr.discount_type = 'PERCENTAGE'
+        AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+        ) AS max_discount_amount_p,
+        (SELECT MAX(pr.max_discount_amount) KEEP (DENSE_RANK FIRST ORDER BY pr.discount_value DESC)
+        FROM promotions pr
+        JOIN promotion_products pp ON pr.id = pp.promotion_id
+        WHERE pp.product_id = p.id
+        AND pr.is_active = 'Y'
+        AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+        AND pr.discount_type = 'FIXED_AMOUNT'
+        AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+        ) AS max_discount_amount_f,
+        -- 진행중인 공동구매 가격 조회
+        (SELECT MIN(gb.group_price) KEEP (DENSE_RANK FIRST ORDER BY gb.group_price ASC)
+        FROM group_buys gb
+        JOIN product_variants pv ON gb.product_variant_id = pv.id
+        WHERE pv.product_id = p.id
+        AND gb.status IN ('PENDING', 'ACTIVE')
+        AND SYSDATE BETWEEN gb.start_date AND gb.end_date
+        ) AS group_price,
+        -- 공동구매 여부 확인
+        CASE WHEN EXISTS (
+        SELECT 1 FROM group_buys gb
+        JOIN product_variants pv ON gb.product_variant_id = pv.id
+        WHERE pv.product_id = p.id
+        AND gb.status IN ('PENDING', 'ACTIVE')
+        AND SYSDATE BETWEEN gb.start_date AND gb.end_date
+        ) THEN 1 ELSE 0 END AS is_group_purchase
+        FROM products p
+        LEFT JOIN (
+        SELECT DISTINCT
+        product_id,
+        FIRST_VALUE(image_url) OVER (
+        PARTITION BY product_id
+        ORDER BY
+        CASE image_type
+        WHEN 'PRIMARY' THEN 1
+        WHEN 'MAIN' THEN 2
+        WHEN 'THUMBNAIL' THEN 3
+        WHEN 'HERO' THEN 4
+        ELSE 5
+        END,
+        display_order ASC
+        ) AS image_url
+        FROM product_images
+        WHERE is_active = 'Y'
+        ) pi ON p.id = pi.product_id
+        <where>
+            p.deleted_at IS NULL
+            <if test="keyword != null and keyword != ''">
+                AND p.name LIKE '%' || #{keyword} || '%'
+            </if>
+            <if test="categoryId != null">
+                AND p.category_id IN (
+                SELECT id FROM categories
+                START WITH id = #{categoryId}
+                CONNECT BY PRIOR id = parent_id
+                AND is_active = 'Y'
+                )
+            </if>
+            <if test="minPrice != null">AND p.base_price >= #{minPrice}</if>
+            <if test="maxPrice != null">AND p.base_price &lt;= #{maxPrice}</if>
+            <if test="discountOnly == true">
+                AND EXISTS (
+                SELECT 1
+                FROM promotions pr
+                JOIN promotion_products pp ON pp.promotion_id = pr.id
+                WHERE pp.product_id = p.id
+                AND pr.is_active = 'Y'
+                AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+                AND pr.discount_type = 'PERCENTAGE'
+                AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+                )
+            </if>
+            <if test="groupPurchaseOnly == true">
+                AND EXISTS (
+                SELECT 1 FROM group_buys gb
+                JOIN product_variants pv ON gb.product_variant_id = pv.id
+                WHERE pv.product_id = p.id
+                AND gb.status IN ('PENDING', 'ACTIVE')
+                AND SYSDATE BETWEEN gb.start_date AND gb.end_date
+                )
+            </if>
+            <!-- 속성 필터 - 수정된 버전 -->
+            <if test="attributeFilters != null and !attributeFilters.isEmpty()">
+                AND p.id IN (
+                SELECT pav.product_id
+                FROM product_attribute_values pav
+                JOIN attributes a ON pav.attribute_id = a.id
+                LEFT JOIN attribute_options ao ON pav.attribute_option_id = ao.id
+                WHERE (
+                <foreach collection="attributeFilters.keySet()" item="attributeId" separator=" OR ">
+                    (pav.attribute_id = #{attributeId} AND
+                    CASE
+                    WHEN a.data_type = 'LIST' THEN ao.option_value
+                    WHEN a.data_type = 'NUMBER' THEN TO_CHAR(pav.value_number)
+                    WHEN a.data_type = 'DATE' THEN TO_CHAR(pav.value_date, 'YYYY-MM-DD')
+                    ELSE pav.value_text
+                    END IN
+                    <foreach collection="attributeFilters[attributeId]" item="attrValue" open="(" separator="," close=")">
+                        #{attrValue}
+                    </foreach>
+                    )
+                </foreach>
+                )
+                GROUP BY pav.product_id
+                HAVING COUNT(DISTINCT pav.attribute_id) = #{attributeFiltersCount}
+                )
+            </if>
+        </where>
+        <choose>
+            <when test="sortBy == 'latest'">ORDER BY p.created_at DESC</when>
+            <when test="sortBy == 'price-low'">ORDER BY p.base_price ASC</when>
+            <when test="sortBy == 'price-high'">ORDER BY p.base_price DESC</when>
+            <otherwise>ORDER BY p.sold_count DESC, p.view_count DESC</otherwise>
+        </choose>
+        ) p_filtered
+        ) WHERE rnum BETWEEN #{offset} + 1 AND #{offset} + #{size}
+    </select>
+
+    <select id="countSearchedProducts" parameterType="map" resultType="int">
+        SELECT COUNT(p.id)
+        FROM products p
+        <where>
+            p.deleted_at IS NULL
+            <if test="keyword != null and keyword != ''">AND p.name LIKE '%' || #{keyword} || '%'</if>
+            <if test="categoryId != null">
+                AND p.category_id IN (
+                SELECT id FROM categories
+                START WITH id = #{categoryId}
+                CONNECT BY PRIOR id = parent_id
+                AND is_active = 'Y'
+                )
+            </if>
+            <if test="minPrice != null">AND p.base_price >= #{minPrice}</if>
+            <if test="maxPrice != null">AND p.base_price &lt;= #{maxPrice}</if>
+            <if test="discountOnly == true">
+                AND EXISTS (
+                SELECT 1
+                FROM promotions pr
+                JOIN promotion_products pp ON pp.promotion_id = pr.id
+                WHERE pp.product_id = p.id
+                AND pr.is_active = 'Y'
+                AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+                AND pr.discount_type = 'PERCENTAGE'
+                AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+                )
+            </if>
+            <if test="groupPurchaseOnly == true">
+                AND EXISTS (
+                SELECT 1 FROM group_buys gb
+                JOIN product_variants pv ON gb.product_variant_id = pv.id
+                WHERE pv.product_id = p.id
+                AND gb.status IN ('PENDING', 'ACTIVE')
+                AND SYSDATE BETWEEN gb.start_date AND gb.end_date
+                )
+            </if>
+            <!-- 속성 필터 - 수정된 버전 -->
+            <if test="attributeFilters != null and !attributeFilters.isEmpty()">
+                AND p.id IN (
+                SELECT pav.product_id
+                FROM product_attribute_values pav
+                JOIN attributes a ON pav.attribute_id = a.id
+                LEFT JOIN attribute_options ao ON pav.attribute_option_id = ao.id
+                WHERE (
+                <foreach collection="attributeFilters.keySet()" item="attributeId" separator=" OR ">
+                    (pav.attribute_id = #{attributeId} AND
+                    CASE
+                    WHEN a.data_type = 'LIST' THEN ao.option_value
+                    WHEN a.data_type = 'NUMBER' THEN TO_CHAR(pav.value_number)
+                    WHEN a.data_type = 'DATE' THEN TO_CHAR(pav.value_date, 'YYYY-MM-DD')
+                    ELSE pav.value_text
+                    END IN
+                    <foreach collection="attributeFilters[attributeId]" item="attrValue" open="(" separator="," close=")">
+                        #{attrValue}
+                    </foreach>
+                    )
+                </foreach>
+                )
+                GROUP BY pav.product_id
+                HAVING COUNT(DISTINCT pav.attribute_id) = #{attributeFiltersCount}
+                )
+            </if>
+        </where>
+    </select>
+
+    <select id="findAttributesByProductId" parameterType="int" resultType="ProductAttributeValue">
+        SELECT
+            pav.attribute_id AS attributeId,
+            a.name AS attributeName,
+            CASE
+                WHEN a.data_type = 'LIST' THEN ao.option_value
+                WHEN a.data_type = 'NUMBER' THEN TO_CHAR(pav.value_number)
+                WHEN a.data_type = 'DATE' THEN TO_CHAR(pav.value_date, 'YYYY-MM-DD')
+                ELSE pav.value_text
+                END AS "value"
+        FROM product_attribute_values pav
+                 JOIN attributes a ON pav.attribute_id = a.id
+                 LEFT JOIN attribute_options ao ON pav.attribute_option_id = ao.id
+        WHERE pav.product_id = #{productId}
+        ORDER BY a.display_order ASC
+    </select>
+
+    <insert id="insertProductAttributeValue" parameterType="map">
+        INSERT INTO product_attribute_values (
+        id, product_id, attribute_id
+        <if test="attributeOptionId != null">, attribute_option_id</if>
+        <if test="valueText != null">, value_text</if>
+        <if test="valueNumber != null">, value_number</if>
+        <if test="valueDate != null">, value_date</if>
+        )
+        VALUES (
+        product_attribute_values_seq.NEXTVAL, #{productId}, #{attributeId}
+        <if test="attributeOptionId != null">, #{attributeOptionId}</if>
+        <if test="valueText != null">, #{valueText}</if>
+        <if test="valueNumber != null">, #{valueNumber}</if>
+        <if test="valueDate != null">, #{valueDate}</if>
+        )
+    </insert>
+
+    <delete id="deleteAttributeValuesByProductId" parameterType="int">
+        DELETE FROM product_attribute_values WHERE product_id = #{productId}
+    </delete>
+
+    <!-- 카테고리별 상품 검색 (하위 카테고리 포함) -->
+    <select id="searchProductsByCategory" parameterType="map" resultType="SearchProduct">
+        SELECT * FROM (
+        SELECT ROWNUM AS rnum, p_filtered.* FROM (
+        SELECT
+        p.id,
+        p.name,
+        p.base_price,
+        pi.image_url,
+        -- 현재 적용 가능한 가장 높은 할인율(%) 조회
+        (SELECT MAX(pr.discount_value) KEEP (DENSE_RANK FIRST ORDER BY pr.discount_value DESC)
+        FROM promotions pr
+        JOIN promotion_products pp ON pr.id = pp.promotion_id
+        WHERE pp.product_id = p.id
+        AND pr.is_active = 'Y'
+        AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+        AND pr.discount_type = 'PERCENTAGE'
+        AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+        ) AS discount_rate,
+        (SELECT MAX(pr.discount_value) KEEP (DENSE_RANK FIRST ORDER BY pr.discount_value DESC)
+        FROM promotions pr
+        JOIN promotion_products pp ON pr.id = pp.promotion_id
+        WHERE pp.product_id = p.id
+        AND pr.is_active = 'Y'
+        AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+        AND pr.discount_type = 'FIXED_AMOUNT'
+        AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+        ) AS discount_amount,
+        (SELECT MAX(pr.max_discount_amount) KEEP (DENSE_RANK FIRST ORDER BY pr.discount_value DESC)
+        FROM promotions pr
+        JOIN promotion_products pp ON pr.id = pp.promotion_id
+        WHERE pp.product_id = p.id
+        AND pr.is_active = 'Y'
+        AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+        AND pr.discount_type = 'PERCENTAGE'
+        AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+        ) AS max_discount_amount_p,
+        (SELECT MAX(pr.max_discount_amount) KEEP (DENSE_RANK FIRST ORDER BY pr.discount_value DESC)
+        FROM promotions pr
+        JOIN promotion_products pp ON pr.id = pp.promotion_id
+        WHERE pp.product_id = p.id
+        AND pr.is_active = 'Y'
+        AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+        AND pr.discount_type = 'FIXED_AMOUNT'
+        AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+        ) AS max_discount_amount_f,
+        -- 진행중인 공동구매 가격 조회
+        (SELECT MIN(gb.group_price) KEEP (DENSE_RANK FIRST ORDER BY gb.group_price ASC)
+        FROM group_buys gb
+        JOIN product_variants pv ON gb.product_variant_id = pv.id
+        WHERE pv.product_id = p.id
+        AND gb.status IN ('PENDING', 'ACTIVE')
+        AND SYSDATE BETWEEN gb.start_date AND gb.end_date
+        ) AS group_price,
+        -- 공동구매 여부 확인
+        CASE WHEN EXISTS (
+        SELECT 1 FROM group_buys gb
+        JOIN product_variants pv ON gb.product_variant_id = pv.id
+        WHERE pv.product_id = p.id
+        AND gb.status IN ('PENDING', 'ACTIVE')
+        AND SYSDATE BETWEEN gb.start_date AND gb.end_date
+        ) THEN 1 ELSE 0 END AS is_group_purchase
+        FROM products p
+        LEFT JOIN (
+        SELECT DISTINCT
+        product_id,
+        FIRST_VALUE(image_url) OVER (
+        PARTITION BY product_id
+        ORDER BY
+        CASE image_type
+        WHEN 'PRIMARY' THEN 1
+        WHEN 'MAIN' THEN 2
+        WHEN 'THUMBNAIL' THEN 3
+        WHEN 'HERO' THEN 4
+        ELSE 5
+        END,
+        display_order ASC
+        ) AS image_url
+        FROM product_images
+        WHERE is_active = 'Y'
+        ) pi ON p.id = pi.product_id
+        <where>
+            p.deleted_at IS NULL
+
+            <!-- 핵심 수정: 카테고리 필터 (하위 카테고리 포함) -->
+            <if test="categoryIds != null and !categoryIds.isEmpty()">
+                AND p.category_id IN
+                <foreach collection="categoryIds" item="categoryId" open="(" separator="," close=")">
+                    #{categoryId}
+                </foreach>
+            </if>
+
+            <!-- 가격 필터 -->
+            <if test="minPrice != null">AND p.base_price >= #{minPrice}</if>
+            <if test="maxPrice != null">AND p.base_price &lt;= #{maxPrice}</if>
+
+            <!-- 할인 상품 필터 -->
+            <if test="discountOnly == true">
+                AND EXISTS (
+                SELECT 1
+                FROM promotions pr
+                JOIN promotion_products pp ON pp.promotion_id = pr.id
+                WHERE pp.product_id = p.id
+                AND pr.is_active = 'Y'
+                AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+                AND pr.discount_type = 'PERCENTAGE'
+                AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+                )
+            </if>
+
+            <!-- 공동구매 상품 필터 -->
+            <if test="groupPurchaseOnly == true">
+                AND EXISTS (
+                SELECT 1 FROM group_buys gb
+                JOIN product_variants pv ON gb.product_variant_id = pv.id
+                WHERE pv.product_id = p.id
+                AND gb.status IN ('PENDING', 'ACTIVE')
+                AND SYSDATE BETWEEN gb.start_date AND gb.end_date
+                )
+            </if>
+
+            <!-- 수정된 속성 필터 처리 -->
+            <if test="attributeFilters != null and attributeFilters.size() > 0">
+                AND p.id IN (
+                SELECT pav.product_id
+                FROM product_attribute_values pav
+                JOIN attributes a ON pav.attribute_id = a.id
+                LEFT JOIN attribute_options ao ON pav.attribute_option_id = ao.id
+                WHERE (
+                <foreach collection="attributeFilters" item="values" index="attributeId" separator=" OR ">
+                    (pav.attribute_id = #{attributeId}
+                    AND CASE
+                    WHEN a.data_type = 'LIST' THEN ao.option_value
+                    WHEN a.data_type = 'NUMBER' THEN TO_CHAR(pav.value_number)
+                    WHEN a.data_type = 'DATE' THEN TO_CHAR(pav.value_date, 'YYYY-MM-DD')
+                    ELSE pav.value_text
+                    END IN
+                    <foreach collection="values" item="value" open="(" separator="," close=")">
+                        #{value}
+                    </foreach>
+                    )
+                </foreach>
+                )
+                GROUP BY pav.product_id
+                HAVING COUNT(DISTINCT pav.attribute_id) = #{attributeFiltersCount}
+                )
+            </if>
+
+            <!-- 재고 있는 상품만 -->
+            AND EXISTS (
+            SELECT 1 FROM product_variants pv
+            WHERE pv.product_id = p.id
+            AND pv.is_active = 'Y'
+            AND pv.stock_quantity > 0
+            )
+        </where>
+
+        <!-- 정렬 조건 -->
+        <choose>
+            <when test="sortBy == 'latest'">ORDER BY p.created_at DESC</when>
+            <when test="sortBy == 'price-low'">ORDER BY p.base_price ASC</when>
+            <when test="sortBy == 'price-high'">ORDER BY p.base_price DESC</when>
+            <otherwise>ORDER BY p.sold_count DESC, p.view_count DESC</otherwise>
+        </choose>
+        ) p_filtered
+        ) WHERE rnum BETWEEN #{offset} + 1 AND #{offset} + #{size}
+    </select>
+
+    <!-- 카테고리별 상품 총 개수 조회 -->
+    <select id="countProductsByCategory" parameterType="map" resultType="int">
+        SELECT COUNT(p.id)
+        FROM products p
+        <where>
+            p.deleted_at IS NULL
+
+            <if test="categoryIds != null and !categoryIds.isEmpty()">
+                AND p.category_id IN
+                <foreach collection="categoryIds" item="categoryId" open="(" separator="," close=")">
+                    #{categoryId}
+                </foreach>
+            </if>
+
+            <if test="minPrice != null">AND p.base_price >= #{minPrice}</if>
+            <if test="maxPrice != null">AND p.base_price &lt;= #{maxPrice}</if>
+
+            <if test="discountOnly == true">
+                AND EXISTS (
+                SELECT 1
+                FROM promotions pr
+                JOIN promotion_products pp ON pp.promotion_id = pr.id
+                WHERE pp.product_id = p.id
+                AND pr.is_active = 'Y'
+                AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+                AND pr.discount_type = 'PERCENTAGE'
+                AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+                )
+            </if>
+
+            <if test="groupPurchaseOnly == true">
+                AND EXISTS (
+                SELECT 1 FROM group_buys gb
+                JOIN product_variants pv ON gb.product_variant_id = pv.id
+                WHERE pv.product_id = p.id
+                AND gb.status IN ('PENDING', 'ACTIVE')
+                AND SYSDATE BETWEEN gb.start_date AND gb.end_date
+                )
+            </if>
+
+            <!-- 수정된 속성 필터 처리 -->
+            <if test="attributeFilters != null and attributeFilters.size() > 0">
+                AND p.id IN (
+                SELECT pav.product_id
+                FROM product_attribute_values pav
+                JOIN attributes a ON pav.attribute_id = a.id
+                LEFT JOIN attribute_options ao ON pav.attribute_option_id = ao.id
+                WHERE (
+                <foreach collection="attributeFilters" item="values" index="attributeId" separator=" OR ">
+                    (pav.attribute_id = #{attributeId}
+                    AND CASE
+                    WHEN a.data_type = 'LIST' THEN ao.option_value
+                    WHEN a.data_type = 'NUMBER' THEN TO_CHAR(pav.value_number)
+                    WHEN a.data_type = 'DATE' THEN TO_CHAR(pav.value_date, 'YYYY-MM-DD')
+                    ELSE pav.value_text
+                    END IN
+                    <foreach collection="values" item="value" open="(" separator="," close=")">
+                        #{value}
+                    </foreach>
+                    )
+                </foreach>
+                )
+                GROUP BY pav.product_id
+                HAVING COUNT(DISTINCT pav.attribute_id) = #{attributeFiltersCount}
+                )
+            </if>
+
+            AND EXISTS (
+            SELECT 1 FROM product_variants pv
+            WHERE pv.product_id = p.id
+            AND pv.is_active = 'Y'
+            AND pv.stock_quantity > 0
+            )
+        </where>
+    </select>
+
+    <!-- 이미지 관련 쿼리들 -->
+    <insert id="insertProductImage" parameterType="ProductImage">
+        INSERT INTO product_images(
+            id, product_id, image_url, alt_text, image_type,
+            display_order, file_size, mime_type, original_filename,
+            is_active, created_at, updated_at
+        )
+        VALUES (
+                   #{id}, #{productId}, #{imageUrl}, #{altText, jdbcType=VARCHAR}, #{imageType, jdbcType=VARCHAR},
+                   #{displayOrder}, #{fileSize}, #{mimeType}, #{originalFilename},
+                   #{isActive, jdbcType=CHAR}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+               )
+    </insert>
+
+    <delete id="deleteProductImages" parameterType="int">
+        DELETE FROM product_images
+        WHERE product_id = #{productId}
+    </delete>
+
+    <delete id="deleteProductImage" parameterType="String">
+        DELETE FROM product_images
+        WHERE id = #{id}
+    </delete>
+
+    <!-- 상품 이미지 순서와 타입 업데이트 -->
+    <update id="updateProductImageOrder" parameterType="map">
+        UPDATE product_images
+        SET
+        <if test="displayOrder != null">
+            display_order = #{displayOrder},
+        </if>
+        <if test="imageType != null">
+            image_type = #{imageType},
+        </if>
+        updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{imageId}
+    </update>
+
+    <!-- 상품 이미지 개수 조회 -->
+    <select id="countProductImages" parameterType="int" resultType="int">
+        SELECT COUNT(*)
+        FROM product_images
+        WHERE product_id = #{productId}
+          AND is_active = 'Y'
+    </select>
+
+    <!-- 상품 이미지 대량 업데이트 -->
+    <update id="batchUpdateProductImages" parameterType="list">
+        <foreach collection="list" item="image" separator=";">
+            UPDATE product_images
+            SET display_order = #{image.displayOrder},
+            image_type = #{image.imageType},
+            updated_at = CURRENT_TIMESTAMP
+            WHERE id = #{image.imageId}
+        </foreach>
+    </update>
+
+    <!-- 상품의 모든 이미지 순서를 자동으로 재정렬 -->
+    <update id="reorderAllProductImages" parameterType="int">
+        UPDATE product_images
+        SET
+            display_order = (
+                SELECT rnum
+                FROM (
+                         SELECT id, ROW_NUMBER() OVER (ORDER BY display_order, created_at) as rnum
+                         FROM product_images
+                         WHERE product_id = #{productId} AND is_active = 'Y'
+                     ) ranked
+                WHERE ranked.id = product_images.id
+            ),
+            image_type = (
+                CASE
+                    WHEN (
+                             SELECT rnum
+                             FROM (
+                                      SELECT id, ROW_NUMBER() OVER (ORDER BY display_order, created_at) as rnum
+                                      FROM product_images
+                                      WHERE product_id = #{productId} AND is_active = 'Y'
+                                  ) ranked
+                             WHERE ranked.id = product_images.id
+                         ) = 1 THEN 'PRIMARY'
+                    WHEN (
+                             SELECT rnum
+                             FROM (
+                                      SELECT id, ROW_NUMBER() OVER (ORDER BY display_order, created_at) as rnum
+                                      FROM product_images
+                                      WHERE product_id = #{productId} AND is_active = 'Y'
+                                  ) ranked
+                             WHERE ranked.id = product_images.id
+                         ) = 2 THEN 'MAIN'
+                    WHEN (
+                             SELECT rnum
+                             FROM (
+                                      SELECT id, ROW_NUMBER() OVER (ORDER BY display_order, created_at) as rnum
+                                      FROM product_images
+                                      WHERE product_id = #{productId} AND is_active = 'Y'
+                                  ) ranked
+                             WHERE ranked.id = product_images.id
+                         ) = 3 THEN 'THUMBNAIL'
+                    WHEN (
+                             SELECT rnum
+                             FROM (
+                                      SELECT id, ROW_NUMBER() OVER (ORDER BY display_order, created_at) as rnum
+                                      FROM product_images
+                                      WHERE product_id = #{productId} AND is_active = 'Y'
+                                  ) ranked
+                             WHERE ranked.id = product_images.id
+                         ) &lt;= 6 THEN 'GALLERY'
+                    ELSE 'DETAIL'
+                    END
+                ),
+            updated_at = CURRENT_TIMESTAMP
+        WHERE product_id = #{productId} AND is_active = 'Y'
+    </update>
+
+    <!-- 상품 이미지를 순서대로 조회 (수정된 버전) -->
+    <select id="findImagesByProductId" parameterType="int" resultType="ProductImage">
+        SELECT
+            id,
+            product_id,
+            image_url,
+            alt_text,
+            image_type,
+            display_order,
+            file_size,
+            mime_type,
+            original_filename,
+            is_active,
+            created_at,
+            updated_at
+        FROM product_images
+        WHERE product_id = #{productId}
+          AND is_active = 'Y'
+        ORDER BY display_order ASC, created_at ASC
+    </select>
+
+    <select id="findOptionsByProductVariantId" parameterType="int" resultType="string">
+        SELECT po.name || ': ' || pov.value_text
+        FROM prod_variant_option_vals pvo
+                 JOIN product_option_values pov ON pvo.product_option_value_id = pov.id
+                 JOIN product_options po ON pov.product_option_id = po.id
+        WHERE pvo.variant_id = #{productVariantId}
+        ORDER BY po.id
+    </select>
+
+    <select id="findProductImageByUrl" parameterType="string" resultType="ProductImage">
+        SELECT * FROM product_images WHERE image_url = #{imageUrl}
+    </select>
+
+    <!-- ========== 첫 번째 파일에서 추가된 기능들 ========== -->
+
+    <!-- 상품 상세 관련 상품 조회 -->
+    <select id="relPro_list" parameterType="int" resultType="SellerProductDetail">
+        <![CDATA[
+        SELECT * FROM (
+                          SELECT
+                              p.id AS id,
+                              p.name AS relProName,
+                              pi.image_url AS relProimageUrl,
+                              pi.alt_text AS relProaltText,
+                              p.base_price AS relProbasePrice,
+
+                              -- 최종 할인가격 계산 (기본가격에서 할인율 적용, 소수점 절사)
+                              CASE
+                                  WHEN discount_info.discount_rate IS NOT NULL THEN
+                                      FLOOR(p.base_price * (100 - discount_info.discount_rate) / 100)
+                                  ELSE p.base_price  -- 할인이 없으면 기본가격
+                                  END AS relPro_finalPrice,
+
+                              -- 할인율 정보 추가 (없으면 0으로 표시)
+                              NVL(discount_info.discount_rate, 0) AS relPro_discountRate,
+
+                              -- 공동구매 진행 여부 (있으면 ACTIVE, 없으면 INACTIVE)
+                              CASE
+                                  WHEN group_buy_info.groupBuyStatus = 'ACTIVE' THEN 'ACTIVE'
+                                  ELSE 'INACTIVE'
+                                  END AS relPro_groupBuy_isActive,
+
+                              group_buy_info.relProMinGroupBuyPrice AS relProMinGroupBuyPrice
+
+                          FROM products p
+
+                                   -- ========== 할인 정보 조인 ==========
+                                   LEFT JOIN (
+                              SELECT
+                                  pp.product_id,
+                                  MAX(pr.discount_value) AS discount_rate
+                              FROM promotions pr
+                                       JOIN promotion_products pp ON pr.id = pp.promotion_id
+                              WHERE pr.is_active = 'Y'
+                                AND pr.promotion_type = 'PRODUCT_DISCOUNT'
+                                AND pr.discount_type = 'PERCENTAGE'
+                                AND SYSDATE BETWEEN pr.start_date AND NVL(pr.end_date, SYSDATE + 1)
+                              GROUP BY pp.product_id
+                          ) discount_info ON p.id = discount_info.product_id
+
+                              -- ========== 공동구매 정보 조인 ==========
+                                   LEFT JOIN (
+                              SELECT
+                                  pv.product_id,
+                                  gb.status AS groupBuyStatus,
+                                  MIN(gb.group_price) AS relProMinGroupBuyPrice
+                              FROM group_buys gb
+                                       JOIN product_variants pv ON gb.product_variant_id = pv.id
+                              WHERE SYSDATE BETWEEN gb.start_date AND gb.end_date
+                                AND gb.status = 'ACTIVE'
+                              GROUP BY pv.product_id, gb.status
+                          ) group_buy_info ON p.id = group_buy_info.product_id
+
+                              -- ========== 상품 이미지 조인 ==========
+                                   LEFT JOIN (
+                              SELECT
+                                  product_id,
+                                  image_url,
+                                  alt_text
+                              FROM product_images
+                              WHERE is_active = 'Y'
+                                AND image_type = 'PRIMARY'
+                                AND display_order = 1
+                          ) pi ON p.id = pi.product_id
+
+                          -- ========== 메인 필터 조건 ==========
+                          WHERE p.deleted_at IS NULL
+                            AND p.id != #{productId}
+                            -- 현재 상품의 카테고리와 부모 카테고리가 같은 상품들
+                            AND p.category_id IN (
+                              SELECT p2.category_id
+                              FROM products p2
+                                       JOIN categories c ON p2.category_id = c.id
+                              WHERE c.parent_id = (
+                                  SELECT c2.parent_id
+                                  FROM products p3
+                                           JOIN categories c2 ON p3.category_id = c2.id
+                                  WHERE p3.id = #{productId}
+                              )
+                          )
+                            -- 재고가 있는 상품만
+                            AND (SELECT SUM(stock_quantity)
+                                 FROM product_variants pv
+                                 WHERE pv.product_id = p.id) > 0
+                          ORDER BY
+                              p.created_at DESC
+                      )
+        WHERE ROWNUM <= 12
+        ]]>
+    </select>
+
+    <!-- 상품 가격 정보 조회(할인적용가) -->
+    <select id="findDiscountPrice" parameterType="int" resultType="SellerProductDetail">
+        WITH lowest_variant AS (
+            SELECT
+                pv.product_id,
+                MIN(pv.price) AS min_price,
+                MIN(pv.id) KEEP (DENSE_RANK FIRST ORDER BY pv.price, pv.id) AS variant_id
+            FROM product_variants pv
+            WHERE pv.product_id = #{productId}
+              AND pv.is_active = 'Y'
+              AND pv.stock_quantity > 0
+            GROUP BY pv.product_id
+        ),
+             best_discount AS (
+                 SELECT
+                     lv.product_id,
+                     lv.min_price AS originalPrice,
+                     lv.variant_id,
+                     p.discount_type AS proDiscountType,
+                     p.discount_value AS proDiscountValue,
+                     p.max_discount_amount AS maxDiscountAmount,
+                     CASE
+                         WHEN p.discount_type = 'PERCENTAGE' THEN
+                             LEAST(
+                                     TRUNC(lv.min_price * p.discount_value / 100, 0),
+                                     COALESCE(p.max_discount_amount, lv.min_price)
+                             )
+                         WHEN p.discount_type = 'FIXED_AMOUNT' THEN
+                             LEAST(p.discount_value, lv.min_price)
+                         ELSE 0
+                         END AS discountAmount,
+                     ROW_NUMBER() OVER (
+                         ORDER BY
+                             CASE
+                                 WHEN p.discount_type = 'PERCENTAGE' THEN
+                                     LEAST(
+                                             TRUNC(lv.min_price * p.discount_value / 100, 0),
+                                             COALESCE(p.max_discount_amount, lv.min_price)
+                                     )
+                                 WHEN p.discount_type = 'FIXED_AMOUNT' THEN
+                                     LEAST(p.discount_value, COALESCE(p.max_discount_amount, lv.min_price))
+                                 ELSE 0
+                                 END DESC,
+                             p.priority DESC
+                         ) as rn
+                 FROM lowest_variant lv
+                          LEFT JOIN promotion_products pp ON lv.product_id = pp.product_id
+                          LEFT JOIN promotions p ON pp.promotion_id = p.id
+                 WHERE (p.id IS NULL OR (
+                     p.promotion_type = 'PRODUCT_DISCOUNT'
+                         AND p.discount_type IN ('PERCENTAGE', 'FIXED_AMOUNT')
+                         AND p.is_active = 'Y'
+                         AND p.start_date &lt;= CURRENT_TIMESTAMP
+                         AND (p.end_date IS NULL OR p.end_date >= CURRENT_TIMESTAMP)
+                     ))
+             )
+        SELECT
+            bd.product_id AS productId,
+            bd.variant_id AS variantId,
+            bd.originalPrice AS basePrice,
+            COALESCE(bd.proDiscountType, 'NONE') AS proDiscountType,
+            COALESCE(bd.proDiscountValue, 0) AS proDiscountValue,
+            bd.maxDiscountAmount,
+            COALESCE(bd.discountAmount, 0) AS discountAmount,
+            (bd.originalPrice - COALESCE(bd.discountAmount, 0)) AS finalPrice,
+            CASE
+                WHEN bd.originalPrice > 0 AND bd.discountAmount > 0 THEN
+                    ROUND(bd.discountAmount * 100.0 / bd.originalPrice, 1)
+                ELSE 0
+                END AS discountRate
+        FROM best_discount bd
+        WHERE bd.rn = 1
+    </select>
+
+
+    <!-- 장바구니에 상품 등록 -->
+    <insert id="insertCartItem" parameterType="map">
+        INSERT INTO cart_items(
+            user_id,
+            product_variant_id,
+            quantity
+        )
+        VALUES(
+                  #{userId},
+                  #{productVariantId},
+                  #{quantity}
+              )
+    </insert>
+
+    <!-- 장바구니 중복 상품 검색 -->
+    <select id="selectCountCartItem" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM cart_items
+        WHERE user_id = #{userId}
+          AND product_variant_id = #{productVariantId}
+    </select>
+
+</mapper>

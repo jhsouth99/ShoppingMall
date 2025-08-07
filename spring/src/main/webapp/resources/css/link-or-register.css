@@ -1,0 +1,356 @@
+/**
+ * Link or Register Page Styles
+ * 계정 연동 선택 페이지 전용 CSS (다크모드 지원)
+ */
+
+/* =====================================
+   페이지 레이아웃
+   ===================================== */
+.link-register-wrapper {
+    min-height: calc(100vh - 200px);
+    display: flex;
+    align-items: center;
+    padding: 40px 0;
+    background-color: var(--bg-secondary);
+}
+
+.link-register-container {
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    background-color: var(--bg-primary);
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 4px 20px var(--shadow-light);
+    border: 1px solid var(--border-color);
+}
+
+/* =====================================
+   헤더 영역
+   ===================================== */
+.link-register-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.social-info {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    background: linear-gradient(135deg, var(--accent-primary), #0056b3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    color: #fff;
+}
+
+.link-register-header h1 {
+    font-size: 28px;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.link-register-header p {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* =====================================
+   정보 메시지
+   ===================================== */
+.info-message {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background-color: rgba(116, 185, 255, 0.1);
+    border: 1px solid rgba(116, 185, 255, 0.3);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 30px;
+}
+
+.info-message i {
+    font-size: 20px;
+    color: var(--accent-primary);
+    flex-shrink: 0;
+}
+
+.info-message p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* =====================================
+   옵션 카드
+   ===================================== */
+.option-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-bottom: 30px;
+}
+
+.option-card {
+    background-color: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.option-card:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px var(--shadow-medium);
+}
+
+.option-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent-primary), #0056b3);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.option-card:hover::before {
+    transform: scaleX(1);
+}
+
+/* 옵션 아이콘 */
+.option-icon {
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    color: #fff;
+}
+
+.option-icon.link {
+    background: linear-gradient(135deg, var(--accent-primary), #0056b3);
+}
+
+.option-icon.create {
+    background: linear-gradient(135deg, var(--accent-secondary), #1e7e34);
+}
+
+/* 옵션 내용 */
+.option-card h3 {
+    font-size: 20px;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.option-card > p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.option-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 24px 0;
+    text-align: left;
+}
+
+.option-features li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.option-features i {
+    color: var(--accent-secondary);
+    font-size: 12px;
+}
+
+/* 옵션 버튼 */
+.option-button {
+    width: 100%;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.option-button.primary {
+    background: linear-gradient(135deg, var(--accent-primary), #0056b3);
+    color: #fff;
+}
+
+.option-button.primary:hover {
+    background: linear-gradient(135deg, #0056b3, #003d82);
+    transform: translateX(5px);
+}
+
+.option-button.secondary {
+    background: linear-gradient(135deg, var(--accent-secondary), #1e7e34);
+    color: #fff;
+}
+
+.option-button.secondary:hover {
+    background: linear-gradient(135deg, #1e7e34, #155724);
+    transform: translateX(5px);
+}
+
+/* =====================================
+   도움말 텍스트
+   ===================================== */
+.help-text {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.help-text p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.help-text a {
+    color: var(--accent-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.help-text a:hover {
+    text-decoration: underline;
+}
+
+/* =====================================
+   반응형 디자인
+   ===================================== */
+@media (max-width: 768px) {
+    .link-register-container {
+        padding: 30px 20px;
+        margin: 0 15px;
+    }
+
+    .option-cards {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .option-card {
+        padding: 24px;
+    }
+
+    .social-info {
+        width: 60px;
+        height: 60px;
+        font-size: 30px;
+    }
+
+    .link-register-header h1 {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 575px) {
+    .link-register-wrapper {
+        padding: 20px 0;
+    }
+
+    .info-message {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+
+    .option-features {
+        font-size: 12px;
+    }
+
+    .option-button {
+        font-size: 14px;
+        padding: 10px 16px;
+    }
+}
+
+/* =====================================
+   다크모드 스타일
+   ===================================== */
+body.dark-theme .link-register-container {
+    background-color: var(--bg-primary);
+    box-shadow: 0 4px 20px var(--shadow-medium);
+}
+
+body.dark-theme .option-card {
+    background-color: var(--bg-secondary);
+}
+
+body.dark-theme .info-message {
+    background-color: rgba(116, 185, 255, 0.1);
+    border-color: rgba(116, 185, 255, 0.3);
+}
+
+/* =====================================
+   애니메이션
+   ===================================== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.link-register-container {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.option-card {
+    animation: fadeIn 0.6s ease-out backwards;
+}
+
+.option-card:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+/* =====================================
+   접근성
+   ===================================== */
+.option-card:focus,
+.option-button:focus {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

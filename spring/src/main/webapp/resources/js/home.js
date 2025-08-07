@@ -93,19 +93,19 @@ $(document).ready(function() {
     
     // 현재 필터 상태
     let currentFilters = {
-        categoryFilter: 'all',
+        categoryId: 'all',
         priceFilter: 'all',
         discountFilter: false,
         groupPurchaseFilter: false,
         sortOption: 'popularity'
     };
-    
+
     // 필터 변경 이벤트 리스너
     $('#category-filter').on('change', function() {
-        currentFilters.categoryFilter = $(this).val();
+        currentFilters.categoryId = $(this).val(); // categoryFilter -> categoryId 로 변경
         resetAndLoadProducts();
     });
-    
+
     $('#price-filter').on('change', function() {
         currentFilters.priceFilter = $(this).val();
         resetAndLoadProducts();
@@ -145,7 +145,40 @@ $(document).ready(function() {
         currentPage++;
         loadProducts(true);
     }
-    
+
+    // 카테고리 필터 동적 생성 함수
+    function populateCategoryFilter() {
+        $.ajax({
+            url: contextPath + '/api/categories', // 공용 카테고리 API 호출
+            type: 'GET',
+            success: function(categoryTree) {
+                const categoryFilterSelect = $('#category-filter');
+
+                // 재귀적으로 옵션을 추가하는 헬퍼 함수
+                function addOptions(categories, depth) {
+                    categories.forEach(function(cat) {
+                        const prefix = '&nbsp;'.repeat(depth * 4) + (depth > 0 ? 'ㄴ ' : '');
+                        const option = $('<option></option>')
+                            .val(cat.id) // value에 숫자 ID를 저장
+                            .html(prefix + cat.name);
+                        categoryFilterSelect.append(option);
+
+                        if (cat.children && cat.children.length > 0) {
+                            addOptions(cat.children, depth + 1);
+                        }
+                    });
+                }
+
+                if(categoryTree && categoryTree.length > 0) {
+                    addOptions(categoryTree, 0);
+                }
+            },
+            error: function(err) {
+                console.error("카테고리 필터를 불러오는데 실패했습니다.", err);
+            }
+        });
+    }
+
     // 상품 로드 함수
     function loadProducts(isAppend) {
         if (isLoading) return;
@@ -161,11 +194,11 @@ $(document).ready(function() {
         
         // AJAX 요청
         $.ajax({
-            url: contextPath + '/products/filter',
+            url: contextPath + '/api/products/filter',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
-                categoryFilter: currentFilters.categoryFilter,
+                categoryId: currentFilters.categoryId,
                 priceFilter: currentFilters.priceFilter,
                 discountFilter: currentFilters.discountFilter,
                 groupPurchaseFilter: currentFilters.groupPurchaseFilter,
@@ -219,7 +252,9 @@ $(document).ready(function() {
             }
         });
     }
-    
+
+    populateCategoryFilter();
+
     // 상품 목록 렌더링
     function renderProducts(products) {
         $('#product-grid').empty();
@@ -239,24 +274,24 @@ $(document).ready(function() {
      
     // 상품 카드 HTML 생성 (할인 및 공동구매 뱃지 포함)
     function createProductCard(product) {
-        let discountRate = product.discount_rate || 0;
-        let isGroupPurchase = product.is_group_purchase == 1;
-        let basePrice = product.base_price || 0;
-        let discountPrice = product.discount_price;
+        let discountRate = product.discountRate || 0;
+        let isGroupPurchase = product.isGroupPurchase == 1;
+        let basePrice = product.basePrice || 0;
+        let discountPrice = product.discountPrice;
         
         // 할인 가격 계산
-        if (discountRate > 0 && !discountPrice) {
-            discountPrice = Math.floor(basePrice * (1 - discountRate / 100));
+        if (product.discountAmount > 0 && !discountPrice) {
+            discountPrice = basePrice - product.discountAmount;
         }
         
         // 공동구매 가격 계산
-        let actualGroupPrice = product.group_price;
-        
+        let actualGroupPrice = product.groupPrice;
+
         let html = `
             <div class="product-card" data-product-id="${product.id}">
                 <div class="product-image">
-                    <img src="${product.image_url || contextPath + '/resources/images/no-image.jpg'}" 
-                         alt="${product.alt_text || product.name}" 
+                    <img src="${contextPath + product.imageUrl || contextPath + '/resources/images/no-image.jpg'}" 
+                         alt="${product.altText || product.name}" 
                          onerror="this.src='${contextPath}/resources/images/no-image.jpg'">
         `;
         
@@ -378,7 +413,7 @@ $(document).ready(function() {
     $(document).on('click', '.product-card', function() {
         let productId = $(this).data('product-id');
         if (productId) {
-            location.href = contextPath + '/pro_detail_view.do?id=' + productId;
+            location.href = contextPath + '/products/' + productId;
         }
     });
 });

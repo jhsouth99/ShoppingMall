@@ -3,7 +3,7 @@
 <mapper namespace="com.example.ecommerce.mapper.SearchMapper">
 
 	<!-- 태그 기반 상품 검색 -->
-	<select id="searchProducts" parameterType="map" resultType="Product">
+	<select id="searchProducts" parameterType="map" resultType="SearchProduct">
 	    SELECT *
 	    FROM (
 	        SELECT

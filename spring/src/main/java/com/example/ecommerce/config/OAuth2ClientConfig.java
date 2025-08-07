@@ -11,7 +11,7 @@ import org.springframework.security.oauth2.client.registration.InMemoryClientReg
 @Configuration
 public class OAuth2ClientConfig {
 
-    // properties ÆÄÀÏ¿¡¼­ Å¬¶óÀÌ¾ğÆ® ID¿Í ½ÃÅ©¸´ °ªÀ» ÀĞ¾î¿É´Ï´Ù.
+    // properties íŒŒì¼ì—ì„œ í´ë¼ì´ì–¸íŠ¸ IDì™€ ì‹œí¬ë¦¿ ê°’ì„ ì½ì–´ì˜µë‹ˆë‹¤.
     @Value("${google.client.id}")
     private String googleClientId;
 
@@ -33,9 +33,9 @@ public class OAuth2ClientConfig {
     @Bean
     public ClientRegistrationRepository clientRegistrationRepository() {
         return new InMemoryClientRegistrationRepository(
-            this.googleClientRegistration(),
-            this.naverClientRegistration(),
-            this.kakaoClientRegistration()
+                this.googleClientRegistration(),
+                this.naverClientRegistration(),
+                this.kakaoClientRegistration()
         );
     }
 

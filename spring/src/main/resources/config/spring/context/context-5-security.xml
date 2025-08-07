@@ -12,7 +12,13 @@
 	<security:http auto-config="true" use-expressions="true">
 		<security:csrf disabled="false"/>
 		
-		<security:intercept-url pattern="/" access="permitAll"/>
+		<security:intercept-url pattern="/" access="permitAll()"/>
+		<security:intercept-url pattern="/api/**" access="permitAll()"/>
+		<security:intercept-url pattern="/uploads/**" access="permitAll()"/>
+		<security:intercept-url pattern="/search/**" access="permitAll()"/>
+		<security:intercept-url pattern="/categories/**" access="permitAll()"/>
+		<security:intercept-url pattern="/resources/**" access="permitAll()"/>
+		<security:intercept-url pattern="/products/**" access="permitAll"/>
 		<security:intercept-url pattern="/login" access="permitAll"/>
 		<security:intercept-url pattern="/social" access="permitAll"/>
 		<security:intercept-url pattern="/signup" access="permitAll"/>
@@ -21,12 +27,23 @@
 		<security:intercept-url pattern="/mail-send" method="POST" access="permitAll"/>
 		<security:intercept-url pattern="/mail-check" method="POST" access="permitAll"/>
 		<security:intercept-url pattern="/signup-perform" method="POST" access="permitAll"/>
+		<security:intercept-url pattern="/find-id/**" access="permitAll()"/>
+		<security:intercept-url pattern="/find-password/**" access="permitAll()"/>
+		<security:intercept-url pattern="/my-page/**" access="hasAnyRole('USER','SELLOR', 'ADMIN')"/>
 		<security:intercept-url pattern="/products/**" access="permitAll"/>
 		<security:intercept-url pattern="/categories/**" access="permitAll"/>
 		<security:intercept-url pattern="/admin/**" access="hasRole('ADMIN')"/>
 		<security:intercept-url pattern="/seller/**" access="hasRole('SELLER')"/>
 		<security:intercept-url pattern="/products/new" access="hasRole('SELLER')"/>
+		<security:intercept-url pattern="/order/**" access="isAuthenticated()"/>
+		<security:intercept-url pattern="/wishlist/**" access="isAuthenticated()"/>
 		<security:intercept-url pattern="/**" access="isAuthenticated()"/>
+		<security:remember-me
+				key="${remember.me.key}"
+				token-validity-seconds="2592000"
+				remember-me-parameter="remember-me"
+				remember-me-cookie="remember-me"
+				user-service-ref="customUserDetailsService"/>
 		<security:form-login
 		    login-page="/login"
 		    login-processing-url="/perform-login"

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="shippingAddress">
+ 	
+ 	<!-- 목록 조회 -->
+ 	<select id="findByUserId" parameterType="int" resultType="ShipAddr">
+		SELECT * FROM shipping_addresses WHERE user_id=#{user_id} ORDER BY is_default DESC, created_at DESC
+ 	</select>
+ 	
+ 	<!-- 단건 -->
+    <select id="findById" parameterType="int" resultType="ShipAddr">
+        SELECT * FROM shipping_addresses WHERE id = #{id}
+    </select>
+    
+    <!-- INSERT (Oracle 시퀀스 & 트리거) -->
+    <insert id="insert" parameterType="ShipAddr">
+        <selectKey resultType="int" keyProperty="id" order="BEFORE">
+            SELECT shipping_addresses_seq.NEXTVAL AS id FROM dual
+        </selectKey>
+        INSERT INTO shipping_addresses
+              (id, user_id, name, recipient_name, phone,
+               address, address_detail, zipcode, is_default)
+        VALUES (#{id}, #{userId}, #{name}, #{recipientName}, #{phone},
+                #{address}, #{addressDetail, jdbcType=VARCHAR}, #{zipcode}, #{isDefault, jdbcType=CHAR})
+    </insert>
+    
+    <!-- UPDATE -->
+    <update id="update" parameterType="ShipAddr">
+        UPDATE shipping_addresses
+        SET    name            = #{name},
+               recipient_name  = #{recipientName},
+               phone           = #{phone},
+               address         = #{address},
+               address_detail  = #{addressDetail, jdbcType=VARCHAR},
+               zipcode         = #{zipcode},
+               is_default      = #{isDefault, jdbcType=CHAR}
+        WHERE  id      = #{id}
+          AND  user_id = #{userId}
+    </update>
+
+    <!-- DELETE -->
+    <delete id="delete" parameterType="int">
+        DELETE FROM shipping_addresses WHERE id = #{id}
+    </delete>
+
+    <!-- 기본 배송지 해제 -->
+    <update id="resetDefault" parameterType="int">
+        UPDATE shipping_addresses SET is_default = 'N' WHERE user_id = #{userId} AND is_default = 'Y'
+    </update>
+
+    <!-- 기본 배송지 지정 -->
+    <update id="setDefault" parameterType="int">
+        UPDATE shipping_addresses SET is_default = 'Y' WHERE id = #{id}
+    </update>
+    
+    <update id="anonymizeByUserId" parameterType="int">
+        UPDATE shipping_addresses
+           SET name = '탈퇴한 사용자의 배송지',
+               recipient_name = '탈퇴고객',
+               phone = '000-0000-0000',
+               address = '삭제된 주소',
+               address_detail = NULL,
+               zipcode = '00000'
+         WHERE user_id = #{userId}
+    </update>
+</mapper>

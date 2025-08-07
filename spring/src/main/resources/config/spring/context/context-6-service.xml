@@ -4,10 +4,12 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
 	
 	<bean id="userService" class="com.example.ecommerce.service.UserService">
+		<constructor-arg ref="passwordEncoder"/>
 		<constructor-arg ref="oAuthAttributesDAO"/>
 		<constructor-arg ref="userDAO"/>
 		<constructor-arg ref="userRoleDAO"/>
-		<constructor-arg ref="passwordEncoder"/>
+		<constructor-arg ref="productDAO"/>
+		<constructor-arg ref="shippingAddressDAO"/>
 	</bean>
 	
 	<bean id="customUserDetailsService" class="com.example.ecommerce.service.CustomUserDetailsService">
@@ -18,14 +20,108 @@
 	<bean id="customOAuth2UserService" class="com.example.ecommerce.service.CustomOAuth2UserService">
 	</bean>
 	
-	<bean id="customOAuth2LoginSuccessHandler" class="com.example.ecommerce.service.CustomOAuth2LoginSuccessHandler">
-		<constructor-arg ref="userService"/>
-		<constructor-arg ref="clientRegistrationRepository"/>
-		<constructor-arg ref="oAuthAttributesDAO"/>
-	</bean>
-	<bean id="customOAuth2LoginFailureHandler" class="com.example.ecommerce.service.CustomOAuth2LoginFailureHandler" />
-	<bean id="customFormLoginSuccessHandler" class="com.example.ecommerce.service.CustomFormLoginSuccessHandler" />
 	<bean id="mailSendService" class="com.example.ecommerce.service.MailSendService">
 		<constructor-arg ref="javaMailSender"/>
 	</bean>
+
+	<bean id="adminUserService" class="com.example.ecommerce.service.AdminUserService">
+		<constructor-arg ref="adminUserDAO"/>
+	</bean>
+	
+	<bean id="orderService" class="com.example.ecommerce.service.OrderService">
+		<constructor-arg ref="orderDAO"/>
+		<constructor-arg ref="shippingAddressDAO"/>
+		<constructor-arg ref="userDAO"/>
+		<constructor-arg ref="groupBuyDAO"/>
+		<constructor-arg ref="refundDAO"/>
+	</bean>
+	<bean id="shippingAddressService" class="com.example.ecommerce.service.ShippingAddressService">
+		<constructor-arg ref="shippingAddressDAO"/>
+	</bean>
+	<bean id="agreementService" class="com.example.ecommerce.service.AgreementService">
+		<constructor-arg ref="agreementDAO"/>
+	</bean>
+	<bean id="groupBuyService" class="com.example.ecommerce.service.GroupBuyService">
+		<constructor-arg ref="groupBuyDAO"/>
+		<constructor-arg ref="productDAO"/>
+	</bean>
+	
+	<bean id="couponService" class="com.example.ecommerce.service.CouponService">
+		<constructor-arg ref="couponDAO"/>
+	</bean>
+
+	<bean id="dashboardService" class="com.example.ecommerce.service.DashboardService">
+    	<constructor-arg ref="sellerDashboardDAO"/>
+	</bean>
+	
+	<bean id="productService" class="com.example.ecommerce.service.ProductService">
+		<constructor-arg ref="fileUploadService"/>
+		<constructor-arg ref="objectMapper"/>
+    	<constructor-arg ref="productDAO"/>
+		<constructor-arg ref="categoryDAO"/>
+		<constructor-arg ref="promotionDAO"/>
+	</bean>
+	
+	<bean id="afterSalesService" class="com.example.ecommerce.service.AfterSalesService">
+    	<constructor-arg ref="afterSalesDAO"/>
+    	<constructor-arg ref="orderDAO"/>
+    	<constructor-arg ref="returnDAO"/>
+	</bean>
+	
+	<bean id="promotionService" class="com.example.ecommerce.service.PromotionService">
+    	<constructor-arg ref="promotionDAO"/>
+    	<constructor-arg ref="productDAO"/>
+	</bean>
+	
+	<bean id="sellerInfoService" class="com.example.ecommerce.service.SellerInfoService">
+    	<constructor-arg ref="sellerInfoDAO"/>
+	</bean>
+	
+	<bean id="qnAService" class="com.example.ecommerce.service.QnAService">
+    	<constructor-arg ref="qnADAO"/>
+	</bean>
+
+	<bean id="inquiryService" class="com.example.ecommerce.service.InquiryService">
+    	<constructor-arg ref="inquiryDAO"/>
+	</bean>
+
+	<bean id="categoryService" class="com.example.ecommerce.service.CategoryService">
+    	<constructor-arg ref="categoryDAO"/>
+	</bean>
+
+	<bean id="reviewService" class="com.example.ecommerce.service.ReviewService">
+		<constructor-arg ref="reviewDAO"/>
+		<constructor-arg ref="fileUploadService"/>
+		<constructor-arg ref="orderDAO"/>
+	</bean>
+
+	<bean id="searchService" class="com.example.ecommerce.service.SearchService">
+		<constructor-arg ref="searchDAO"/>
+	</bean>
+
+	<bean id="carrierService" class="com.example.ecommerce.service.CarrierService">
+		<constructor-arg ref="carrierDAO"/>
+	</bean>
+
+	<bean id="cartService" class="com.example.ecommerce.service.CartService">
+		<constructor-arg ref="productDAO"/>
+		<constructor-arg ref="cartDAO"/>
+	</bean>
+
+	<bean id="cartOptionService" class="com.example.ecommerce.service.CartOptionService">
+		<constructor-arg ref="cartDAO"/>
+	</bean>
+
+	<bean id="wishlistService" class="com.example.ecommerce.service.WishlistService">
+		<constructor-arg ref="wishlistDAO"/>
+	</bean>
+
+	<bean id="shipmentService" class="com.example.ecommerce.service.ShipmentService">
+		<constructor-arg ref="shipmentDAO"/>
+	</bean>
+
+	<bean id="attributeService" class="com.example.ecommerce.service.AttributeService">
+		<constructor-arg ref="attributeDAO"/>
+	</bean>
+
 </beans>

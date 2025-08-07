@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="wishlist">
+
+    <!-- 찜 목록 아이템 존재 여부 확인 -->
+    <select id="isWishlistItem" parameterType="map" resultType="boolean">
+        SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
+        FROM wishlist_items
+        WHERE user_id = #{userId}
+          AND product_id = #{productId}
+    </select>
+
+    <!-- 찜 목록 아이템 추가 -->
+    <insert id="insertWishlistItem" parameterType="map">
+        INSERT INTO wishlist_items (
+            user_id,
+            product_id,
+            added_at
+        ) VALUES (
+                     #{userId},
+                     #{productId},
+                     CURRENT_TIMESTAMP
+                 )
+    </insert>
+
+    <!-- 찜 목록 아이템 삭제 -->
+    <delete id="deleteWishlistItem" parameterType="map">
+        DELETE FROM wishlist_items
+        WHERE user_id = #{userId}
+          AND product_id = #{productId}
+    </delete>
+
+    <!-- 사용자별 목록 -->
+    <select id="findByUserId"
+            resultType="com.example.ecommerce.dto.WishlistItemDto">
+        SELECT w.user_id AS userId
+             , w.product_id AS productId
+             , p.name AS productName
+             , p.base_price AS price
+             , pi.image_url AS imageUrl
+             , w.added_at AS createdAt
+        FROM wishlist_items w
+                 JOIN products p ON p.id = w.product_id
+            /* 대표(썸네일) 이미지를
+            한 장만 가져오도록 인라인 뷰 */
+                 LEFT JOIN (
+            SELECT product_id
+                 , MIN(image_url) KEEP
+                (DENSE_RANK FIRST
+                ORDER BY CASE image_type
+                             WHEN 'THUMBNAIL' THEN 1
+                             WHEN
+                                 'PRIMARY' THEN 2
+                             ELSE 3
+                    END
+                    , display_order) AS image_url
+            FROM
+                product_images
+            WHERE is_active = 'Y'
+            GROUP BY product_id
+        ) pi ON
+            pi.product_id = p.id
+        WHERE w.user_id = #{userId}
+        ORDER BY w.added_at
+            DESC
+    </select>
+
+</mapper>

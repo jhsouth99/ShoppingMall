@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="promotion">
+
+    <resultMap id="PromotionDetailResultMap" type="PromotionDetail">
+        <id property="id" column="promo_id"/>
+        <result property="creatorId" column="promo_creator_id"/>
+        <result property="name" column="promo_name"/>
+        <result property="description" column="promo_description"/>
+        <result property="promotionType" column="promo_type"/>
+        <result property="discountType" column="promo_discount_type"/>
+        <result property="discountValue" column="promo_discount_value"/>
+        <result property="maxDiscountAmount" column="promo_max_discount_amount"/>
+        <result property="startDate" column="promo_start_date"/>
+        <result property="endDate" column="promo_end_date"/>
+        <result property="isActive" column="promo_is_active"/>
+        <result property="priority" column="promo_priority"/>
+        <result property="couponId" column="promo_coupon_id"/>
+
+        <collection property="conditions" ofType="PromotionCondition">
+            <id property="id" column="cond_id"/>
+            <result property="conditionType" column="cond_type"/>
+            <result property="decimalValue" column="cond_decimal_value"/>
+            <result property="cardIssuerValue" column="cond_card_issuer_value"/>
+        </collection>
+        <collection property="productIds" ofType="int">
+            <result column="product_id"/>
+        </collection>
+    </resultMap>
+
+    <select id="findPromotionsByCreator" parameterType="map" resultType="Promotion">
+        SELECT * FROM (
+            SELECT ROWNUM AS rnum, p.* FROM (
+                SELECT * FROM promotions p
+                WHERE creator_id = #{sellerId} OR creator_id IS NULL
+                ORDER BY start_date DESC
+            ) p WHERE ROWNUM &lt;= #{offset} + #{size}
+        ) WHERE rnum > #{offset}
+    </select>
+
+    <select id="countPromotionsByCreator" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM promotions WHERE creator_id = #{sellerId} OR creator_id IS NULL
+    </select>
+
+    <select id="findPromotionDetailsById" parameterType="map" resultMap="PromotionDetailResultMap">
+        SELECT
+            p.id AS promo_id,
+            p.creator_id AS promo_creator_id,
+            p.name AS promo_name,
+            p.description AS promo_description,
+            p.promotion_type AS promo_type,
+            p.discount_type AS promo_discount_type,
+            p.discount_value AS promo_discount_value,
+            p.max_discount_amount AS promo_max_discount_amount,
+            p.start_date AS promo_start_date,
+            p.end_date AS promo_end_date,
+            p.is_active AS promo_is_active,
+            p.priority AS promo_priority,
+            p.coupon_id AS promo_coupon_id,
+
+            pc.id AS cond_id,
+            pc.condition_type AS cond_type,
+            pc.decimal_value AS cond_decimal_value,
+            pc.card_issuer_value AS cond_card_issuer_value,
+
+            pp.product_id
+        FROM promotions p
+                 LEFT JOIN promotion_conditions pc ON p.id = pc.promotion_id
+                 LEFT JOIN promotion_products pp ON p.id = pp.promotion_id
+        WHERE p.id = #{promotionId}
+          AND (p.creator_id = #{sellerId} OR p.creator_id IS NULL)
+    </select>
+
+    <insert id="insertPromotion" parameterType="PromotionDetail" useGeneratedKeys="true" keyProperty="id">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT promotions_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO promotions(id, creator_id, name, promotion_type, discount_type, discount_value, start_date, end_date, is_active, coupon_id)
+        VALUES(#{id}, #{creatorId}, #{name}, #{promotionType},
+        COALESCE(#{discountType}, 'PERCENTAGE'),
+        COALESCE(#{discountValue}, 0),
+        #{startDate, jdbcType=DATE}, #{endDate, jdbcType=DATE}, #{isActive, jdbcType=CHAR}, #{couponId, jdbcType=NUMERIC})
+    </insert>
+
+    <update id="updatePromotion" parameterType="PromotionDetail">
+        UPDATE promotions SET
+            name = #{name},
+            promotion_type = #{promotionType},
+            discount_type = #{discountType, jdbcType=VARCHAR},
+            discount_value = #{discountValue, jdbcType=NUMERIC},
+            start_date = #{startDate},
+            end_date = #{endDate},
+            is_active = #{isActive},
+            coupon_id = #{couponId, jdbcType=NUMERIC}
+        WHERE id = #{id} AND creator_id = #{creatorId}
+    </update>
+
+    <delete id="deleteConditionsByPromotionId" parameterType="int">
+        DELETE FROM promotion_conditions WHERE promotion_id = #{promotionId}
+    </delete>
+    
+    <delete id="deleteProductsByPromotionId" parameterType="int">
+        DELETE FROM promotion_products WHERE promotion_id = #{promotionId}
+    </delete>
+    <insert id="insertPromotionCondition" parameterType="PromotionCondition">
+        INSERT INTO promotion_conditions(id, promotion_id, condition_type, decimal_value, card_issuer_value)
+        VALUES (promotion_conditions_seq.NEXTVAL, #{promotionId}, #{conditionType}, #{decimalValue, jdbcType=NUMERIC}, #{cardIssuerValue, jdbcType=VARCHAR})
+    </insert>
+    
+    <insert id="insertPromotionProductLink" parameterType="map">
+        INSERT INTO promotion_products(promotion_id, product_id) VALUES(#{promotionId}, #{productId})
+    </insert>
+
+    <select id="findPromotionsByProductId" parameterType="int" resultType="Promotion">
+        SELECT p.* FROM promotions p JOIN promotion_products pp ON p.id = pp.promotion_id WHERE pp.product_id = #{productId}
+    </select>
+
+
+    <!-- 특정 상품에 적용 가능한 활성 프로모션 조회 -->
+    <select id="findActivePromotionsByProductId" parameterType="map" resultMap="PromotionDetailResultMap">
+        SELECT
+            p.id AS promo_id,
+            p.creator_id AS promo_creator_id,
+            p.name AS promo_name,
+            p.description AS promo_description,
+            p.promotion_type AS promo_type,
+            p.discount_type AS promo_discount_type,
+            p.discount_value AS promo_discount_value,
+            p.max_discount_amount AS promo_max_discount_amount,
+            p.start_date AS promo_start_date,
+            p.end_date AS promo_end_date,
+            p.is_active AS promo_is_active,
+            p.priority AS promo_priority,
+            p.coupon_id AS promo_coupon_id,
+
+            pc.id AS cond_id,
+            pc.condition_type AS cond_type,
+            pc.decimal_value AS cond_decimal_value,
+            pc.card_issuer_value AS cond_card_issuer_value,
+            pp.product_id
+        FROM promotions p
+                 LEFT JOIN promotion_conditions pc ON p.id = pc.promotion_id
+                 LEFT JOIN promotion_products pp ON p.id = pp.promotion_id
+        WHERE p.is_active = 'Y'
+          AND #{currentDate} BETWEEN p.start_date AND NVL(p.end_date, #{currentDate})
+          AND pp.product_id = #{productId}
+          AND (p.promotion_type = 'PRODUCT_DISCOUNT'
+                OR p.promotion_type IN ('CART_DISCOUNT', 'BUNDLE_DISCOUNT')
+            )
+        ORDER BY p.priority DESC, p.discount_value DESC
+    </select>
+
+    <!-- 전체 상품에 적용되는 활성 프로모션 조회 -->
+    <select id="findActiveGlobalPromotions" parameterType="map" resultMap="PromotionDetailResultMap">
+        SELECT
+            p.id AS promo_id,
+            p.creator_id AS promo_creator_id,
+            p.name AS promo_name,
+            p.description AS promo_description,
+            p.promotion_type AS promo_type,
+            p.discount_type AS promo_discount_type,
+            p.discount_value AS promo_discount_value,
+            p.max_discount_amount AS promo_max_discount_amount,
+            p.start_date AS promo_start_date,
+            p.end_date AS promo_end_date,
+            p.is_active AS promo_is_active,
+            p.priority AS promo_priority,
+            p.coupon_id AS promo_coupon_id,
+
+            pc.id AS cond_id,
+            pc.condition_type AS cond_type,
+            pc.decimal_value AS cond_decimal_value,
+            pc.card_issuer_value AS cond_card_issuer_value,
+            p.id AS product_id
+        FROM promotions p
+                 LEFT JOIN promotion_conditions pc ON p.id = pc.promotion_id
+        WHERE p.is_active = 'Y'
+          AND #{currentDate} BETWEEN p.start_date AND NVL(p.end_date, #{currentDate})
+          AND p.promotion_type IN ('CART_DISCOUNT', 'BUNDLE_DISCOUNT')
+          AND NOT EXISTS (
+            SELECT 1 FROM promotion_products pp WHERE pp.promotion_id = p.id
+        )
+        ORDER BY p.priority DESC, p.discount_value DESC
+    </select>
+</mapper>

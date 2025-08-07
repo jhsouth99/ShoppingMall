@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sellerInfo">
+
+	<select id="findSellerInfoByUserId" resultType="SellerInfo">
+		SELECT
+			u.id AS user_id,
+			u.name AS contact_person_name,
+			u.phone AS contact_number,
+			b.business_name AS store_name,
+			b.biz_number AS business_number,
+			b.verified_at
+		FROM users u
+		LEFT JOIN business_profiles b ON u.id = b.user_id
+		WHERE u.id = #{userId}
+	</select>
+	
+	<update id="updateSellerUser" parameterType="SellerInfo">
+		UPDATE users SET
+			name = #{contactPersonName},
+			phone = #{contactNumber}
+		WHERE id = #{userId}
+	</update>
+	
+	<update id="updateSellerBusinessProfile" parameterType="SellerInfo">
+		UPDATE business_profiles SET
+			business_name = #{storeName}
+			-- biz_number는 일반적으로 수정 불가 항목이므로 제외
+		WHERE user_id = #{userId}
+	</update>
+</mapper>

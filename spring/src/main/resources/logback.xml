@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="jdbc.sqlonly"        level="OFF"/>
+    <logger name="jdbc.sqltiming"      level="WARN"/>
+    <logger name="jdbc.audit"          level="WARN"/>
+    <logger name="jdbc.resultset"      level="OFF"/>
+    <logger name="jdbc.resultsettable" level="INFO"/>
+    <logger name="jdbc.connection"     level="WARN"/>
+
+    <logger name="product" level="TRACE"/>
+    <logger name="sellerProduct" level="TRACE"/>
+    <logger name="user" level="TRACE"/>
+    <logger name="order" level="TRACE"/>
+    <logger name="groupBuy" level="TRACE"/>
+    <logger name="cart" level="TRACE"/>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+    </root>
+
+    <logger name="org.springframework.security" level="DEBUG"/>
+    <logger name="org.springframework.security.web.authentication.rememberme" level="TRACE"/>
+
+</configuration>

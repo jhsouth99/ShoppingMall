@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dashboard">
+
+	<select id="getSellerDashboardSummary" parameterType="int" resultType="SellerDashboardSummary">
+		SELECT
+			-- 1. 오늘 매출액: 오늘 발생한 '취소/실패'가 아닌 주문에 포함된 내 상품들의 총액
+			(SELECT NVL(SUM(oi.total_price_at_purch), 0)
+			 FROM order_items oi
+					  JOIN orders o ON oi.order_id = o.id
+					  JOIN product_variants pv ON oi.product_variant_id = pv.id
+					  JOIN products p ON pv.product_id = p.id
+			 WHERE o.status NOT IN ('CANCELLED', 'FAILED')
+			   AND TRUNC(o.created_at) = TRUNC(SYSDATE)
+			   AND p.seller_id = #{sellerId}
+			) AS todaysSales,
+
+			-- 2. 신규 주문 (미처리): '결제 완료' 상태인 내 상품이 포함된 주문 건수
+			(SELECT COUNT(DISTINCT o.id)
+			 FROM orders o
+					  JOIN order_items oi ON o.id = oi.order_id
+					  JOIN product_variants pv ON oi.product_variant_id = pv.id
+					  JOIN products p ON pv.product_id = p.id
+			 WHERE o.status = 'PAID'
+			   AND p.seller_id = #{sellerId}
+			) AS newOrdersCount,
+
+			-- 3. 미답변 문의: 내 상품에 달린 답변 없는 QnA 수
+			(SELECT COUNT(*)
+			 FROM qnas q
+					  JOIN products p ON q.product_id = p.id
+			 WHERE p.seller_id = #{sellerId}
+			   AND q.answer IS NULL
+			) AS unansweredQnAsCount,
+
+			-- 4. 재고 5개 이하 상품 수: 내 상품 중 재고 5개 이하인 상품 종류 수
+			(SELECT COUNT(DISTINCT p.id)
+			 FROM products p
+					  JOIN product_variants pv ON p.id = pv.product_id
+			 WHERE p.seller_id = #{sellerId}
+			   AND p.deleted_at IS NULL
+			   AND pv.is_active = 'Y'
+			   AND pv.stock_quantity &lt;= 5
+			) AS lowStockItemsCount,
+
+			-- 5. 신규 반품/교환 요청 수: '요청' 상태인 내 상품 관련 A/S 요청 건수
+			(SELECT COUNT(*)
+			 FROM after_sales_requests asr
+					  JOIN orders o ON asr.order_id = o.id
+					  JOIN order_items oi ON o.id = oi.order_id
+					  JOIN product_variants pv ON oi.product_variant_id = pv.id
+					  JOIN products p ON pv.product_id = p.id
+			 WHERE asr.status = 'REQUESTED'
+			   AND p.seller_id = #{sellerId}
+			) AS newReturnRequestsCount
+		FROM DUAL
+	</select>
+
+	<select id="getSellerStoreName" parameterType="int" resultType="String">
+		SELECT business_name
+		FROM business_profiles
+		WHERE user_id = #{sellerId}
+	</select>
+</mapper>

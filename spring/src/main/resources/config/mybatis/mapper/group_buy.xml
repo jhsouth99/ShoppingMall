@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="groupBuy">
+ 	
+  <!-- ============ 내가 참여한 공동구매 ============ -->
+	<select id="findParticipatedGroupBuys" parameterType="map" resultType="GroupBuyParticipant">
+		SELECT *
+		FROM (
+				 SELECT gbp.id,
+						gbp.group_buy_id      AS groupBuyId,
+						gbp.user_id           AS userId,
+						v.id                  AS variantId,
+						gbp.quantity,
+						gbp.order_id          AS orderId,
+						gbp.total_amount_paid       AS paidAmount,
+						gbp.status,
+						gbp.joined_at         AS joinedAt,
+						gbp.created_at        AS createdAt,
+						gbp.updated_at        AS updatedAt,
+						gb.name               AS groupBuyName,
+						gb.end_date           AS endDate,
+						gb.target_quantity    AS targetQuantity,
+						gb.current_quantity   AS currentQuantity,
+						gb.group_price        AS finalPrice,
+						p.id                  AS productId,
+						p.name                AS productName,
+						pi.image_url          AS productImageUrl,
+						v.price               AS originalPrice,
+						(SELECT LISTAGG(pov.value_text, ' / ') WITHIN GROUP (ORDER BY po.name)
+						 FROM prod_variant_option_vals pvov
+								  JOIN product_option_values pov ON pvov.product_option_value_id = pov.id
+								  JOIN product_options po ON pov.product_option_id = po.id
+						 WHERE pvov.variant_id = gb.product_variant_id
+						) AS optionCombination,
+						o.order_no            AS orderNo,
+						o.status              AS orderStatus,
+						r.status              AS refundStatus,
+						o.recipient_name      AS recipientName,
+						o.recipient_phone     AS recipientPhone,
+						o.recipient_address   AS recipientAddress,
+						o.recipient_address_detail AS recipientAddressDetail,
+						o.recipient_zipcode   AS recipientZipcode,
+						o.sub_total_amount    AS subTotalAmount,
+						o.shipping_fee        AS shippingFee,
+						o.final_amount        AS finalAmount,
+						CASE gb.status
+							WHEN 'COMPLETED'  THEN 'SUCCESS'
+							WHEN 'SUCCEEDED'  THEN 'SUCCESS'
+							WHEN 'PENDING'    THEN 'IN_PROGRESS'
+							WHEN 'ACTIVE'     THEN 'IN_PROGRESS'
+							ELSE gb.status
+							END                   AS gbStatus,
+						ROW_NUMBER() OVER (ORDER BY gbp.joined_at DESC) rk
+				 FROM group_buy_participants gbp
+						  JOIN group_buys gb      ON gb.id = gbp.group_buy_id
+						  LEFT JOIN orders o      ON o.id = gbp.order_id
+						  LEFT JOIN product_variants v ON v.id = gb.product_variant_id
+						  LEFT JOIN products p    ON p.id = v.product_id
+				          LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.image_type='primary' AND pi.display_order = 1
+				          LEFT JOIN refunds r     ON r.order_id = o.id
+				 WHERE gbp.user_id = #{userId}
+			 )
+		WHERE rk BETWEEN #{offset}+1 AND #{offset}+#{limit}
+	</select>
+
+
+	<select id="countParticipatedGroupBuys" resultType="int">
+      SELECT COUNT(1)
+        FROM group_buy_participants
+       WHERE user_id = #{userId}
+  </select>
+
+  <!-- ============ 내가 만든 공동구매 ============ -->
+  <!-- <select id="findCreatedGroupBuys" parameterType="map" resultType="com.example.ecommerce.dto.MyGroupBuySummaryDTO">
+    SELECT *
+    FROM (
+        SELECT gb.name                        AS groupBuyName,
+               TRUNC(gb.start_date)           AS createdDate,
+               gb.target_quantity             AS targetQty,
+               gb.current_quantity            AS currentQty,
+               TRUNC(gb.end_date)             AS endDate,
+               CASE gb.status
+                    WHEN 'COMPLETED'  THEN 'SUCCESS'
+                    WHEN 'SUCCEEDED'  THEN 'SUCCESS'
+                    WHEN 'PENDING'    THEN 'IN_PROGRESS'
+                    WHEN 'ACTIVE'     THEN 'IN_PROGRESS'
+                    ELSE 'FAILED'
+               END                            AS state,
+               ROW_NUMBER() OVER (ORDER BY gb.start_date DESC) rk
+          FROM group_buys gb
+         WHERE gb.seller_id = #{userId}
+    )
+    WHERE rk BETWEEN #{offset}+1 AND #{offset}+#{limit}
+  </select> -->
+
+  <select id="countCreatedGroupBuys" resultType="int">
+      SELECT COUNT(1)
+        FROM group_buys
+       WHERE seller_id = #{userId}
+  </select>
+  
+  
+	<select id="findGroupBuysBySellerId" parameterType="map" resultType="GroupBuy">
+		SELECT * FROM (
+			SELECT ROWNUM AS rnum, gb.* FROM (
+				SELECT
+					g.id,
+					g.name,
+					g.target_quantity,
+					g.current_quantity,
+					g.end_date,
+					g.status
+				FROM group_buys g
+				WHERE g.seller_id = #{sellerId}
+				<if test="keyword != null and keyword != ''">
+					AND g.name LIKE '%' || #{keyword} || '%'
+				</if>
+				<if test="status != null and status != ''">
+					AND g.status = #{status}
+				</if>
+				ORDER BY g.start_date DESC
+			) gb WHERE ROWNUM &lt;= #{offset} + #{size}
+		) WHERE rnum > #{offset}
+	</select>
+	
+	<select id="countGroupBuysBySellerId" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		FROM group_buys g
+		WHERE g.seller_id = #{sellerId}
+		<if test="keyword != null and keyword != ''">
+			AND g.name LIKE '%' || #{keyword} || '%'
+		</if>
+		<if test="status != null and status != ''">
+			AND g.status = #{status}
+		</if>
+	</select>
+	
+	<select id="findGroupBuyDetails" parameterType="int" resultType="GroupBuy">
+		SELECT
+			g.id,
+			g.product_variant_id AS productVariantId,
+			g.name,
+			g.description,
+			u.name AS creatorName,
+			g.status,
+			g.start_date AS startDate,
+			g.end_date AS endDate,
+			g.target_quantity AS targetQuantity,
+			g.current_quantity AS currentQuantity,
+			g.group_price AS groupPrice,
+			g.original_variant_price AS originalVariantPrice,
+			(SELECT pi.image_url
+			 FROM product_images pi
+					  JOIN products p ON pi.product_id = p.id
+			 WHERE p.id = pv.product_id AND pi.image_type = 'PRIMARY' AND ROWNUM = 1) AS productImageUrl,
+			u.name AS sellerName,
+			(SELECT p.name
+			 FROM products p
+			 WHERE p.id = pv.product_id) AS productName
+		FROM group_buys g
+				 JOIN users u ON g.seller_id = u.id
+				 JOIN product_variants pv ON g.product_variant_id = pv.id
+		WHERE g.id = #{id}
+	</select>
+
+	<select id="findParticipantsByGroupBuyId" parameterType="int" resultType="GroupBuyParticipant">
+		SELECT
+			p.user_id,
+			u.name AS user_name,
+			p.quantity,
+			p.joined_at,
+			o.order_no
+		FROM group_buy_participants p
+		JOIN users u ON u.id = p.user_id
+		LEFT JOIN orders o ON o.id = p.order_id
+		WHERE p.group_buy_id = #{groupBuyId}
+		ORDER BY p.joined_at DESC
+	</select>
+	
+	<insert id="insertGroupBuy" parameterType="GroupBuy" useGeneratedKeys="true" keyProperty="id">
+		<selectKey keyProperty="id" resultType="int" order="BEFORE">
+			SELECT group_buys_seq.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO group_buys (id, product_variant_id, seller_id, name, description, target_quantity, min_quantity_per_user, max_quantity_per_user, group_price, original_variant_price, start_date, end_date, status)
+		VALUES (#{id}, #{productVariantId}, #{sellerId}, #{name}, #{description}, #{targetQuantity}, #{minQuantityPerUser}, #{maxQuantityPerUser}, #{groupPrice}, #{originalVariantPrice}, #{startDate}, #{endDate}, 'PENDING')
+	</insert>
+	
+	<update id="updateGroupBuy" parameterType="GroupBuy">
+		UPDATE group_buys
+		SET
+			name = #{name},
+			description = #{description},
+			target_quantity = #{targetQuantity},
+			min_quantity_per_user = #{minQuantityPerUser},
+			max_quantity_per_user = #{maxQuantityPerUser},
+			group_price = #{groupPrice},
+			start_date = #{startDate},
+			end_date = #{endDate}
+		WHERE id = #{id} AND seller_id = #{sellerId}
+	</update>
+
+	<select id="findAllGroupBuys" parameterType="map" resultType="GroupBuy">
+		SELECT * FROM (
+		SELECT ROWNUM AS rnum, gb.* FROM (
+		SELECT
+		g.id,
+		g.name,
+		u.name AS creatorName,
+		g.target_quantity AS targetQuantity,
+		g.current_quantity AS currentQuantity,
+		g.start_date AS startDate,
+		g.end_date AS endDate,
+		g.status
+		FROM group_buys g
+		JOIN users u ON g.seller_id = u.id
+		<where>
+			<if test="keyword != null and keyword != ''">
+				(g.name LIKE '%' || #{keyword} || '%' OR u.name LIKE '%' || #{keyword} || '%')
+			</if>
+			<if test="status != null and status != ''">
+				AND g.status = #{status}
+			</if>
+			<if test="productId != null and productId != 0">
+				AND g.product_variant_id IN (
+				    SELECT id FROM product_variants WHERE product_id = #{productId}
+				)
+			</if>
+		</where>
+		ORDER BY g.id DESC
+		) gb WHERE ROWNUM &lt;= #{offset} + #{size}
+		) WHERE rnum > #{offset}
+	</select>
+
+	<select id="countAllGroupBuys" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		FROM group_buys g
+		JOIN users u ON g.seller_id = u.id
+		<where>
+			<if test="keyword != null and keyword != ''">
+				(g.name LIKE '%' || #{keyword} || '%' OR u.name LIKE '%' || #{keyword} || '%')
+			</if>
+			<if test="status != null and status != ''">
+				AND g.status = #{status}
+			</if>
+		</where>
+	</select>
+
+	<select id="findGroupBuysByProductId" parameterType="int" resultType="GroupBuy">
+		SELECT gb.*
+		FROM group_buys gb
+		    JOIN product_variants pv ON gb.product_variant_id = pv.id
+		WHERE pv.product_id = #{productId}
+	</select>
+
+	<select id="findGroupBuyByGroupBuyPartId" parameterType="int" resultType="GroupBuy">
+		SELECT gb.*
+		FROM group_buy_participants gbp
+				 JOIN group_buys gb ON gb.id = gbp.group_buy_id
+		WHERE gbp.id = #{id}
+	</select>
+
+</mapper>

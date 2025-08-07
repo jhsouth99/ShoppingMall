@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import org.apache.ibatis.session.SqlSession;
 
-import com.example.ecommerce.vo.UserRoleVO;
+import com.example.ecommerce.dto.UserRoleDTO;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,7 +18,7 @@ public class UserRoleDAO {
 	private final SqlSession sqlSession;
 
 	public Set<String> findRolesByUserId(int id) {
-		List<UserRoleVO> list = sqlSession.selectList("userRole.findByUserId", id);
+		List<UserRoleDTO> list = sqlSession.selectList("userRole.findByUserId", id);
 		return list.stream().map(elem -> elem.getRole()).collect(Collectors.toSet());
 	}
 

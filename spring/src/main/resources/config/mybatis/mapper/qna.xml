@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="qna">
+
+	<select id="findQnAsBySellerId" parameterType="map" resultType="QnA">
+		SELECT * FROM (
+		SELECT ROWNUM AS rnum, q.* FROM (
+		SELECT
+		qna.id,
+		qna.product_id,
+		p.name AS product_name,
+		qna.user_id AS customer_id,
+		u.name AS customer_name,
+		qna.title,
+		qna.question,
+		qna.answer,
+		qna.questioned_at,
+		qna.answered_at
+		FROM qnas qna
+		JOIN products p ON qna.product_id = p.id
+		JOIN users u ON qna.user_id = u.id
+		WHERE qna.seller_id = #{sellerId}
+		<if test="status == 'pending'">
+			AND qna.answer IS NULL
+		</if>
+		<if test="status == 'answered'">
+			AND qna.answer IS NOT NULL
+		</if>
+		<if test="keyword != null and keyword != ''">
+			AND (p.name LIKE '%' || #{keyword} || '%' OR u.name LIKE '%' || #{keyword} || '%')
+		</if>
+		ORDER BY qna.questioned_at DESC
+		) q
+		<if test="offset != null and size != null and offset != '' and size != ''">
+			WHERE ROWNUM &lt;= #{offset} + #{size}
+		</if>
+		)
+		<if test="offset != null and offset != ''">
+			WHERE rnum > #{offset}
+		</if>
+	</select>
+
+	<select id="countQnAsBySellerId" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		FROM qnas qna
+		JOIN products p ON qna.product_id = p.id
+		JOIN users u ON qna.user_id = u.id
+		WHERE qna.seller_id = #{sellerId}
+		<if test="status == 'pending'">AND qna.answer IS NULL</if>
+		<if test="status == 'answered'">AND qna.answer IS NOT NULL</if>
+		<if test="keyword != null and keyword != ''">AND (p.name LIKE '%' || #{keyword} || '%' OR u.name LIKE '%' || #{keyword} || '%')</if>
+	</select>
+
+	<update id="updateQnAAnswer" parameterType="map">
+		UPDATE qnas SET
+						answer = #{answer},
+						answered_at = SYSDATE
+		WHERE id = #{qnaId} AND seller_id = #{sellerId}
+	</update>
+
+	<!-- 고객(구매자)의 상품 문의 목록 조회 -->
+	<select id="findQnAsByCustomerId" parameterType="map" resultType="QnA">
+		SELECT * FROM (
+		SELECT ROWNUM AS rnum, q_outer.* FROM (
+		SELECT
+		qna.id,
+		qna.product_id,
+		p.name AS product_name,
+		qna.user_id AS customer_id,
+		u.name AS customer_name,
+		qna.title,
+		qna.question,
+		qna.answer,
+		qna.questioned_at,
+		qna.answered_at,
+		qna.is_secret
+		FROM qnas qna
+		JOIN products p ON qna.product_id = p.id
+		JOIN users u ON qna.user_id = u.id
+		WHERE qna.user_id = #{id}
+		ORDER BY qna.questioned_at DESC
+		) q_outer
+		<if test="offset != null and size != null and offset != '' and size != ''">
+			WHERE ROWNUM &lt;= #{offset} + #{size}
+		</if>
+		)
+		<if test="offset != null and offset != ''">
+			WHERE rnum > #{offset}
+		</if>
+	</select>
+
+	<select id="countQnAsByCustomerId" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		FROM qnas qna
+		WHERE qna.user_id = #{id}
+	</select>
+
+	<!-- 특정 문의 상세 조회 (고객 권한 체크용) -->
+	<select id="findQnAById" parameterType="int" resultType="QnA">
+		SELECT
+			qna.id,
+			qna.product_id,
+			p.name AS product_name,
+			qna.user_id AS customer_id,
+			u.name AS customer_name,
+			qna.title,
+			qna.question,
+			qna.answer,
+			qna.questioned_at,
+			qna.answered_at,
+			qna.updated_at,
+			CASE WHEN qna.is_secret = 'Y' THEN 1 ELSE 0 END AS is_secret
+		FROM qnas qna
+				 JOIN products p ON qna.product_id = p.id
+				 JOIN users u ON qna.user_id = u.id
+		WHERE qna.id = #{qnaId}
+	</select>
+
+	<delete id="deleteQnA" parameterType="int">
+		DELETE FROM qnas WHERE id = #{qnaId}
+	</delete>
+
+	<update id="updateQnA" parameterType="map">
+		UPDATE qnas
+		SET
+			title = #{title},
+			question = #{question},
+			is_secret = #{isSecret, jdbcType=CHAR},
+			updated_at = SYSDATE
+		WHERE id = #{qnaId}
+	</update>
+
+	<select id="findQnAsByProductId" parameterType="map" resultType="QnA">
+		SELECT * FROM (
+		SELECT ROWNUM AS rnum, q.* FROM (
+		SELECT
+		qna.id,
+		qna.product_id,
+		p.name AS product_name,
+		qna.user_id AS customer_id,
+		u.name AS customer_name,
+		qna.title,
+		qna.question,
+		qna.answer,
+		qna.questioned_at,
+		qna.answered_at,
+		qna.is_secret
+		FROM qnas qna
+		JOIN products p ON qna.product_id = p.id
+		JOIN users u ON qna.user_id = u.id
+		WHERE qna.product_id = #{productId}
+		<if test="status == 'pending'">
+			AND qna.answer IS NULL
+		</if>
+		<if test="status == 'answered'">
+			AND qna.answer IS NOT NULL
+		</if>
+		<if test="keyword != null and keyword != ''">
+			AND (p.name LIKE '%' || #{keyword} || '%' OR u.name LIKE '%' || #{keyword} || '%')
+		</if>
+		ORDER BY qna.questioned_at DESC
+		) q
+		<if test="offset != null and size != null and offset != '' and size != ''">
+			WHERE ROWNUM &lt;= #{offset} + #{size}
+		</if>
+		)
+		<if test="offset != null and offset != ''">
+			WHERE rnum > #{offset}
+		</if>
+	</select>
+
+	<select id="countQnAsByProductId" parameterType="int" resultType="int">
+		SELECT COUNT(*) FROM qnas WHERE product_id = #{productId}
+	</select>
+	
+	
+	<!-- 상품문의 등록 -->
+	<insert id="saveQna" parameterType="map">
+		INSERT INTO qnas (
+			id,
+			user_id,
+			seller_id,
+			product_id,
+			title,
+            question,
+            is_secret
+		)
+		VALUES (
+			qnas_seq.nextVal,
+			#{userId},
+			(SELECT seller_id FROM products WHERE id = #{productId}),
+			#{productId},
+			#{title},
+			#{question},
+			#{isSecret}
+		)
+	</insert>
+
+</mapper>

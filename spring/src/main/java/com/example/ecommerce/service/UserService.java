@@ -1,62 +1,67 @@
 package com.example.ecommerce.service;
 
-import java.util.Collections;
-import java.util.Set;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.ecommerce.OAuthAttributes;
+import com.example.ecommerce.controller.OAuthAttributes;
 import com.example.ecommerce.dao.OAuthAttributesDAO;
+import com.example.ecommerce.dao.ProductDAO;
+import com.example.ecommerce.dao.ShippingAddressDAO;
 import com.example.ecommerce.dao.UserDAO;
 import com.example.ecommerce.dao.UserRoleDAO;
-import com.example.ecommerce.vo.OAuthAttributesVO;
-import com.example.ecommerce.vo.UserVO;
+import com.example.ecommerce.dto.OAuthAttributesDTO;
+import com.example.ecommerce.dto.UserDTO;
 
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class UserService {
+	private final PasswordEncoder passwordEncoder;
 	private final OAuthAttributesDAO oAuthAttributesDAO;
 	private final UserDAO userDAO;
 	private final UserRoleDAO userRoleDAO;
-	private final PasswordEncoder passwordEncoder;
+    private final ProductDAO sellerProductDAO;
+    private final ShippingAddressDAO shippingAddressDAO;
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     /**
-     * OAuth2 ·Î±×ÀÎ »ç¿ëÀÚ¸¦ Ã³¸®ÇÏ´Â ¸Ş¼Òµå.
-     * »ç¿ëÀÚ°¡ ¾øÀ¸¸é »ı¼ºÇÏ°í, ÀÖÀ¸¸é Á¤º¸¸¦ ·ÎµåÇÕ´Ï´Ù.<br/>
-     * ÁÖÀÇ: ¼Ò¼È ·Î±×ÀÎ ÈÄ ÀÚµ¿ÀÌ ¾Æ´Ñ ¼öµ¿À¸·Î °èÁ¤À» »ı¼ºÇÒ °ÍÀÌ¸é
-     *  ¾ÆÁ÷ °èÁ¤ÀÌ ¾ø´Â °æ¿ì »ç¿ëÀ» Àı´ë ±İÁöÇÕ´Ï´Ù.
-     * @param email OAuth2 Á¦°øÀÚ·ÎºÎÅÍ ¹ŞÀº ÀÌ¸ŞÀÏ
-     * @param name OAuth2 Á¦°øÀÚ·ÎºÎÅÍ ¹ŞÀº ÀÌ¸§
-     * @return UserVO ÃÖÁ¾ »ç¿ëÀÚ Á¤º¸ (±ÇÇÑ Æ÷ÇÔ)
+     * OAuth2 ë¡œê·¸ì¸ ì‚¬ìš©ìë¥¼ ì²˜ë¦¬í•˜ëŠ” ë©”ì†Œë“œ.
+     * ì‚¬ìš©ìê°€ ì—†ìœ¼ë©´ ìƒì„±í•˜ê³ , ìˆìœ¼ë©´ ì •ë³´ë¥¼ ë¡œë“œí•©ë‹ˆë‹¤.<br/>
+     * ì£¼ì˜: ì†Œì…œ ë¡œê·¸ì¸ í›„ ìë™ì´ ì•„ë‹Œ ìˆ˜ë™ìœ¼ë¡œ ê³„ì •ì„ ìƒì„±í•  ê²ƒì´ë©´
+     *  ì•„ì§ ê³„ì •ì´ ì—†ëŠ” ê²½ìš° ì‚¬ìš©ì„ ì ˆëŒ€ ê¸ˆì§€í•©ë‹ˆë‹¤.
+     * @param email OAuth2 ì œê³µìë¡œë¶€í„° ë°›ì€ ì´ë©”ì¼
+     * @param name OAuth2 ì œê³µìë¡œë¶€í„° ë°›ì€ ì´ë¦„
+     * @return UserVO ìµœì¢… ì‚¬ìš©ì ì •ë³´ (ê¶Œí•œ í¬í•¨)
      */
     @Transactional
-    public UserVO processOAuthUser(OAuthAttributes attributes) {
-    	OAuthAttributesVO oAuthAttributesVO = oAuthAttributesDAO.findByUsernameAndProviderId(
+    public UserDTO processOAuthUser(OAuthAttributes attributes) {
+    	OAuthAttributesDTO oAuthAttributesDTO = oAuthAttributesDAO.findByUsernameAndProviderId(
     			attributes.getNameAttributeValue(), attributes.getProvider());
     	logger.debug("DEBUG: (processOAuthUser) attibutes-" + attributes);
-    	UserVO user;
+    	UserDTO user;
     	
-        if (oAuthAttributesVO == null) {
-            // ½Å±Ô »ç¿ëÀÚÀÏ °æ¿ì, »ı¼º ¹× ÀúÀå
-            user = new UserVO();
+        if (oAuthAttributesDTO == null) {
+            // ì‹ ê·œ ì‚¬ìš©ìì¼ ê²½ìš°, ìƒì„± ë° ì €ì¥
+            user = new UserDTO();
             user.setEmail(attributes.getEmail());
             
             user.setUsername(attributes.getProvider()
             		+ "_USER_" + attributes.getNameAttributeValue());
             user.setName(attributes.getName());
-            user.setPassword(UUID.randomUUID().toString()); // ÀÓÀÇÀÇ ºñ¹Ğ¹øÈ£
+            user.setPassword(UUID.randomUUID().toString()); // ì„ì˜ì˜ ë¹„ë°€ë²ˆí˜¸
             
-            // users Å×ÀÌºí¿¡ ÀúÀå (useGeneratedKeys=true ´öºĞ¿¡ user.id¿¡ PK°¡ Ã¤¿öÁü)
+            // users í…Œì´ë¸”ì— ì €ì¥ (useGeneratedKeys=true ë•ë¶„ì— user.idì— PKê°€ ì±„ì›Œì§)
             int res = userDAO.save(user);
             
-            // ¿¡·¯ Ã³¸®
+            // ì—ëŸ¬ ì²˜ë¦¬
             if (res == 0) {
             	logger.error("ERROR: processOAuthUser inserting user"
             			+ " - username=%s, provider=%s",
@@ -64,16 +69,16 @@ public class UserService {
             	return null;
             }
             
-            // user_roles Å×ÀÌºí¿¡ ±âº» ¿ªÇÒ ÀúÀå
+            // user_roles í…Œì´ë¸”ì— ê¸°ë³¸ ì—­í•  ì €ì¥
             userRoleDAO.save(user.getId(), "USER");
             
-            // oauthattributes Å×ÀÌºí¿¡ °ü·Ã Á¤º¸ ÀúÀå
-            oAuthAttributesVO = new OAuthAttributesVO(
+            // oauthattributes í…Œì´ë¸”ì— ê´€ë ¨ ì •ë³´ ì €ì¥
+            oAuthAttributesDTO = new OAuthAttributesDTO(
             		user.getId(), attributes.getProvider(), attributes.getNameAttributeValue(),
             		attributes.getEmail(), attributes.getName());
-            res = oAuthAttributesDAO.save(oAuthAttributesVO);
+            res = oAuthAttributesDAO.save(oAuthAttributesDTO);
             
-            // ¿¡·¯ Ã³¸®
+            // ì—ëŸ¬ ì²˜ë¦¬
             if (res == 0) {
             	logger.error("ERROR: processOAuthUser inserting oAuthAttributes"
             			+ " - username=%s, provider=%s",
@@ -81,41 +86,41 @@ public class UserService {
             	return null;
             }
         } else {
-        	user = userDAO.findById(oAuthAttributesVO.getUser_id());
+        	user = userDAO.findById(oAuthAttributesDTO.getUserId());
         }
 
-        // ±âÁ¸ »ç¿ëÀÚµç, ¹æ±İ »ı¼ºµÈ »ç¿ëÀÚµç ±ÇÇÑ Á¤º¸¸¦ DB¿¡¼­ ·Îµå
-        Set<String> roles = userRoleDAO.findRolesByUserId(oAuthAttributesVO.getUser_id());
-        user.setRoles(roles); // UserVO ³»¿¡¼­ authorities°¡ ¼³Á¤µÊ
+        // ê¸°ì¡´ ì‚¬ìš©ìë“ , ë°©ê¸ˆ ìƒì„±ëœ ì‚¬ìš©ìë“  ê¶Œí•œ ì •ë³´ë¥¼ DBì—ì„œ ë¡œë“œ
+        Set<String> roles = userRoleDAO.findRolesByUserId(oAuthAttributesDTO.getUserId());
+        user.setRoles(roles); // UserVO ë‚´ì—ì„œ authoritiesê°€ ì„¤ì •ë¨
         logger.debug("DEBUG: (processOAuthUser) user-" + user);
 
         return user;
     }
     
     /**
-     * ÀÏ¹İ È¸¿ø°¡ÀÔ
-     * @param user °¡ÀÔ Àü UserVO °´Ã¼ (È¸¿ø°¡ÀÔ Æû ÀÔ·Â Á¤º¸)
-     * @param role ±ÇÇÑ (USER)
-     * @return UserVO °¡ÀÔ ¿Ï·áµÈ »ç¿ëÀÚ Á¤º¸ (±ÇÇÑ Æ÷ÇÔ)
+     * ì¼ë°˜ íšŒì›ê°€ì…
+     * @param user ê°€ì… ì „ UserVO ê°ì²´ (íšŒì›ê°€ì… í¼ ì…ë ¥ ì •ë³´)
+     * @param role ê¶Œí•œ (USER)
+     * @return UserVO ê°€ì… ì™„ë£Œëœ ì‚¬ìš©ì ì •ë³´ (ê¶Œí•œ í¬í•¨)
      */
     @Transactional
-    public UserVO registerUser(UserVO user, String role) {
-    	// ºñ¹Ğ¹øÈ£ ¾ÏÈ£È­
+    public UserDTO registerUser(UserDTO user, String role) {
+    	// ë¹„ë°€ë²ˆí˜¸ ì•”í˜¸í™”
     	String plainPassword = user.getPassword();
     	String cipherPassword = passwordEncoder.encode(plainPassword);
     	user.setPassword(cipherPassword);
     	
-    	// Æû¿¡¼­ ¹ŞÀº Á¤º¸·Î USERS Å×ÀÌºí¿¡ »õ·Î¿î È¸¿ø Á¤º¸ ÀúÀå
+    	// í¼ì—ì„œ ë°›ì€ ì •ë³´ë¡œ USERS í…Œì´ë¸”ì— ìƒˆë¡œìš´ íšŒì› ì •ë³´ ì €ì¥
     	int res = userDAO.save(user);
     	
-    	// ¿¡·¯ Ã³¸®
+    	// ì—ëŸ¬ ì²˜ë¦¬
     	if (res == 0) {
     		logger.error("ERROR: registerUser inserting user - username=%s",
     				user.getUsername());
     		return null;
     	}
     	
-    	// ±ÇÇÑ ºÎ¿©
+    	// ê¶Œí•œ ë¶€ì—¬
     	if (role != null && !role.isBlank()) {
     		userRoleDAO.save(user.getId(), role);
     		user.setRoles(Collections.singleton(role));
@@ -125,16 +130,16 @@ public class UserService {
     }
     
     /**
-     * È¸¿ø¿¡°Ô ±ÇÇÑ ºÎ¿©
-     * @param user_id È¸¿ø ½Äº°ÀÚ
-     * @param role ºÎ¿©ÇÒ ¿ªÇÒ
-     * @return int ¼º°ø ¿©ºÎ
+     * íšŒì›ì—ê²Œ ê¶Œí•œ ë¶€ì—¬
+     * @param user_id íšŒì› ì‹ë³„ì
+     * @param role ë¶€ì—¬í•  ì—­í• 
+     * @return int ì„±ê³µ ì—¬ë¶€
      */
     @Transactional
     public int grantRoleToUser(int user_id, String role) {
     	int res = userRoleDAO.save(user_id, role);
     	
-    	// ¿¡·¯ Ã³¸®
+    	// ì—ëŸ¬ ì²˜ë¦¬
     	if (res == 0) {
     		logger.error("ERROR: grantRoleToUser inserting - user_id=%d, role=%s",
     				user_id, role);
@@ -145,48 +150,48 @@ public class UserService {
     }
 
     /**
-     * È¸¿ø °èÁ¤°ú ¼Ò¼È ·Î±×ÀÎ ¿¬µ¿
-     * @param id È¸¿ø ½Äº°ÀÚ
-     * @param pendingAttributes ¼Ò¼È ·Î±×ÀÎ Á¤º¸
-     * @return int ¼º°ø ¿©ºÎ
+     * íšŒì› ê³„ì •ê³¼ ì†Œì…œ ë¡œê·¸ì¸ ì—°ë™
+     * @param id íšŒì› ì‹ë³„ì
+     * @param pendingAttributes ì†Œì…œ ë¡œê·¸ì¸ ì •ë³´
+     * @return int ì„±ê³µ ì—¬ë¶€
      */
     @Transactional
 	public int linkSocialAccount(int id, OAuthAttributes pendingAttributes) {
-		return oAuthAttributesDAO.save(new OAuthAttributesVO(id,
+		return oAuthAttributesDAO.save(new OAuthAttributesDTO(id,
 				pendingAttributes.getProvider(),pendingAttributes.getNameAttributeValue(),
 				pendingAttributes.getEmail(), pendingAttributes.getName()));
 	}
 
     /**
-     * ¼Ò¼È °¡ÀÔÀÚ¸¦ À§ÇÑ ½Å±Ô È¸¿ø »ı¼º ¹× ¼Ò¼È Á¤º¸ ¿¬µ¿ ¸Ş¼Òµå
-     * @param signupForm °¡ÀÔ Àü UserVO °´Ã¼ (È¸¿ø°¡ÀÔ Æû ÀÔ·Â Á¤º¸)
-     * @param attributes ¼Ò¼È ·Î±×ÀÎ Á¤º¸
-     * @return UserVO °¡ÀÔ ¿Ï·áµÈ »ç¿ëÀÚ Á¤º¸ (±ÇÇÑ Æ÷ÇÔ)
+     * ì†Œì…œ ê°€ì…ìë¥¼ ìœ„í•œ ì‹ ê·œ íšŒì› ìƒì„± ë° ì†Œì…œ ì •ë³´ ì—°ë™ ë©”ì†Œë“œ
+     * @param signupForm ê°€ì… ì „ UserVO ê°ì²´ (íšŒì›ê°€ì… í¼ ì…ë ¥ ì •ë³´)
+     * @param attributes ì†Œì…œ ë¡œê·¸ì¸ ì •ë³´
+     * @return UserVO ê°€ì… ì™„ë£Œëœ ì‚¬ìš©ì ì •ë³´ (ê¶Œí•œ í¬í•¨)
      */
     @Transactional
-    public UserVO registerNewSocialUser(UserVO signupForm, OAuthAttributes attributes) {
-    	// ºñ¹Ğ¹øÈ£ ¾ÏÈ£È­
+    public UserDTO registerNewSocialUser(UserDTO signupForm, OAuthAttributes attributes) {
+    	// ë¹„ë°€ë²ˆí˜¸ ì•”í˜¸í™”
     	String plainPassword = signupForm.getPassword();
     	String cipherPassword = passwordEncoder.encode(plainPassword);
     	signupForm.setPassword(cipherPassword);
     	
-        // Æû¿¡¼­ ¹ŞÀº Á¤º¸·Î USERS Å×ÀÌºí¿¡ »õ·Î¿î È¸¿ø Á¤º¸ ÀúÀå
-        userDAO.save(signupForm); // ÀÌ ¸Ş¼Òµå´Â signupForm °´Ã¼¿¡ »ı¼ºµÈ id¸¦ Ã¤¿öÁà¾ß ÇÔ
+        // í¼ì—ì„œ ë°›ì€ ì •ë³´ë¡œ USERS í…Œì´ë¸”ì— ìƒˆë¡œìš´ íšŒì› ì •ë³´ ì €ì¥
+        userDAO.save(signupForm); // ì´ ë©”ì†Œë“œëŠ” signupForm ê°ì²´ì— ìƒì„±ëœ idë¥¼ ì±„ì›Œì¤˜ì•¼ í•¨
 
-        // USER_SOCIAL_LOGINS Å×ÀÌºí¿¡ ¼Ò¼È ¿¬µ¿ Á¤º¸ ÀúÀå
+        // USER_SOCIAL_LOGINS í…Œì´ë¸”ì— ì†Œì…œ ì—°ë™ ì •ë³´ ì €ì¥
         String providerId = attributes.getProvider();
         String username = attributes.getNameAttributeValue();
         String email = attributes.getEmail();
         String name = attributes.getName();
-        OAuthAttributesVO newSocialLogin = new OAuthAttributesVO(signupForm.getId(),
+        OAuthAttributesDTO newSocialLogin = new OAuthAttributesDTO(signupForm.getId(),
         		providerId, username, email, name);
         oAuthAttributesDAO.save(newSocialLogin);
 
-        // 3. USER_ROLES Å×ÀÌºí¿¡ ±âº» ±ÇÇÑ ÀúÀå
+        // 3. USER_ROLES í…Œì´ë¸”ì— ê¸°ë³¸ ê¶Œí•œ ì €ì¥
         userRoleDAO.save(signupForm.getId(), "USER");
         signupForm.setRoles(Collections.singleton("USER"));
         
-        // ÃÖÁ¾ÀûÀ¸·Î »ı¼ºµÈ È¸¿ø Á¤º¸ ¹İÈ¯
+        // ìµœì¢…ì ìœ¼ë¡œ ìƒì„±ëœ íšŒì› ì •ë³´ ë°˜í™˜
         return signupForm;
     }
 
@@ -195,7 +200,172 @@ public class UserService {
     	return userDAO.findByUsername(username) != null;
 	}
 
+    @Transactional(readOnly = true)
 	public boolean existsByEmail(String email) {
 		return userDAO.findByEmail(email) != null;
+	}
+
+	@Transactional
+	public int resetPassword(int id, String newPasswordEncoded) {
+		UserDTO user = userDAO.findById(id);
+		user.setPassword(newPasswordEncoded);
+		return userDAO.update(user);
+	}
+
+	@Transactional
+	public int setEmail(int id, String email) {
+		UserDTO user = userDAO.findById(id);
+		user.setEmail(email);
+		return userDAO.update(user);
+	}
+
+	@Transactional
+	public int setPhone(int id, String phone) {
+		UserDTO user = userDAO.findById(id);
+		user.setPhone(phone);
+		return userDAO.update(user);
+	}
+	
+    /**
+     * íšŒì› íƒˆí‡´ë¥¼ ì²˜ë¦¬í•©ë‹ˆë‹¤.
+     * @param userId íƒˆí‡´í•  ì‚¬ìš©ìì˜ ID
+     * @param currentPassword í™•ì¸ì„ ìœ„í•´ ì…ë ¥í•œ í˜„ì¬ ë¹„ë°€ë²ˆí˜¸
+     */
+    @Transactional
+    public void deactivateUser(int userId, String currentPassword) {
+        // 1. ì‚¬ìš©ì ì •ë³´ ë° í˜„ì¬ ë¹„ë°€ë²ˆí˜¸ í™•ì¸
+        UserDTO user = userDAO.findById(userId);
+		Set<String> roles = userRoleDAO.findRolesByUserId(userId);
+		user.setRoles(roles);
+		if (user == null) {
+            throw new IllegalArgumentException("ì‚¬ìš©ì ì •ë³´ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
+        }
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new SecurityException("ë¹„ë°€ë²ˆí˜¸ê°€ ì¼ì¹˜í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.");
+        }
+
+        // 2. ì‚¬ìš©ìê°€ íŒë§¤ìì¸ ê²½ìš°, ëª¨ë“  ìƒí’ˆì„ ë¹„í™œì„±í™” ì²˜ë¦¬
+        if (user.getRoles().contains("SELLER")) {
+            sellerProductDAO.deactivateAllProductsBySeller(userId);
+        }
+        
+        // 3. ë°°ì†¡ì§€ ë“± ë¯¼ê°í•œ ì •ë³´ê°€ ë‹´ê¸´ ë‹¤ë¥¸ í…Œì´ë¸”ì˜ ë°ì´í„° ì²˜ë¦¬
+        shippingAddressDAO.anonymizeByUserId(userId);
+
+        // ... ì£¼ë¬¸, ë¦¬ë·° ë“± ë‹¤ë¥¸ í…Œì´ë¸”ì˜ ê°œì¸ì •ë³´ë„ í•„ìš”ì‹œ ë¹„ì‹ë³„í™” ì²˜ë¦¬ ...
+        
+        // 4. users í…Œì´ë¸” ë¹„í™œì„±í™” ë° ë¹„ì‹ë³„í™” ì²˜ë¦¬
+        userDAO.deactivateUser(userId);
+        
+        // 5. Spring Security ì»¨í…ìŠ¤íŠ¸ í´ë¦¬ì–´ (ë¡œê·¸ì•„ì›ƒ ì²˜ë¦¬)
+        SecurityContextHolder.clearContext();
+    }
+
+	// ì‚¬ìš©ìì˜ ì†Œì…œ ê³„ì • ëª©ë¡ ì¡°íšŒ
+	@Transactional(readOnly = true)
+	public List<OAuthAttributesDTO> getUserSocialAccounts(int userId) {
+		return oAuthAttributesDAO.findByUserId(userId);
+	}
+
+	// ì†Œì…œ ê³„ì • ì—°ë™ í•´ì œ
+	@Transactional
+	public void unlinkSocialAccount(int userId, String provider) {
+		// ìµœì†Œ í•˜ë‚˜ì˜ ë¡œê·¸ì¸ ìˆ˜ë‹¨ì€ ë‚¨ê²¨ë‘ì–´ì•¼ í•¨
+		UserDTO user = userDAO.findById(userId);
+		List<OAuthAttributesDTO> socialAccounts = oAuthAttributesDAO.findByUserId(userId);
+
+		// ë¹„ë°€ë²ˆí˜¸ê°€ ì—†ê³  ì†Œì…œ ê³„ì •ì´ 1ê°œë¿ì¸ ê²½ìš° ì—°ë™ í•´ì œ ë¶ˆê°€
+		if ((user.getPassword() == null || user.getPassword().isEmpty())
+				&& socialAccounts.size() <= 1) {
+			throw new IllegalStateException("ë§ˆì§€ë§‰ ë¡œê·¸ì¸ ìˆ˜ë‹¨ì€ í•´ì œí•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
+		}
+
+		int result = oAuthAttributesDAO.deleteByUserIdAndProviderId(userId, provider);
+		if (result == 0) {
+			throw new IllegalArgumentException("ì—°ë™ëœ ê³„ì •ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
+		}
+	}
+
+
+	/**
+	 * ì´ë¦„ê³¼ ì´ë©”ì¼ë¡œ ì‚¬ìš©ì ì°¾ê¸° (ì•„ì´ë”” ì°¾ê¸°ìš©)
+	 */
+	@Transactional(readOnly = true)
+	public UserDTO findByNameAndEmail(String name, String email) {
+		return userDAO.findByNameAndEmail(name, email);
+	}
+
+	/**
+	 * ì•„ì´ë””ì™€ ì´ë©”ì¼ë¡œ ì‚¬ìš©ì ì°¾ê¸° (ë¹„ë°€ë²ˆí˜¸ ì°¾ê¸°ìš©)
+	 */
+	@Transactional(readOnly = true)
+	public UserDTO findByUsernameAndEmail(String username, String email) {
+		UserDTO user = userDAO.findByUsername(username);
+		if (user != null && email.equals(user.getEmail())) {
+			return user;
+		}
+		return null;
+	}
+
+	/**
+	 * ì´ë¦„ê³¼ íœ´ëŒ€í° ë²ˆí˜¸ë¡œ ì‚¬ìš©ì ì°¾ê¸° (ì•„ì´ë”” ì°¾ê¸°ìš©)
+	 */
+	@Transactional(readOnly = true)
+	public UserDTO findByNameAndPhone(String name, String phone) {
+		return userDAO.findByNameAndPhone(name, phone);
+	}
+
+	/**
+	 * ì•„ì´ë””ì™€ íœ´ëŒ€í° ë²ˆí˜¸ë¡œ ì‚¬ìš©ì ì°¾ê¸° (ë¹„ë°€ë²ˆí˜¸ ì°¾ê¸°ìš©)
+	 */
+	@Transactional(readOnly = true)
+	public UserDTO findByUsernameAndPhone(String username, String phone) {
+		UserDTO user = userDAO.findByUsername(username);
+		if (user != null && phone.equals(user.getPhone())) {
+			return user;
+		}
+		return null;
+	}
+
+	/**
+	 * ë¹„ë°€ë²ˆí˜¸ ì¬ì„¤ì • í† í° ì €ì¥
+	 */
+	@Transactional
+	public void savePasswordResetToken(int userId, String resetToken) {
+		UserDTO user = userDAO.findById(userId);
+		if (user != null) {
+			user.setResetToken(resetToken);
+			user.setResetTokenExpiresAt(Date.from(LocalDateTime.now().plusHours(24).atZone(ZoneId.systemDefault()).toInstant())); // 24ì‹œê°„ ìœ íš¨
+			userDAO.updateResetToken(user);
+		}
+	}
+
+	/**
+	 * ì¬ì„¤ì • í† í°ìœ¼ë¡œ ì‚¬ìš©ì ì°¾ê¸°
+	 */
+	@Transactional(readOnly = true)
+	public UserDTO findByResetToken(String resetToken) {
+		return userDAO.findByResetToken(resetToken);
+	}
+
+	/**
+	 * ì¬ì„¤ì • í† í° ì´ˆê¸°í™”
+	 */
+	@Transactional
+	public void clearResetToken(int userId) {
+		UserDTO user = userDAO.findById(userId);
+		if (user != null) {
+			user.setResetToken(null);
+			user.setResetTokenExpiresAt(null);
+			userDAO.updateResetToken(user);
+		}
+	}
+
+	/**
+	 * IDë¡œ ì‚¬ìš©ì ì°¾ê¸°
+	 */
+	@Transactional(readOnly = true)
+	public UserDTO findById(int id) {
+		return userDAO.findById(id);
 	}
 }

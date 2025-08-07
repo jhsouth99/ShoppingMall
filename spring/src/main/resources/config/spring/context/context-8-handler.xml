@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<bean id="customOAuth2LoginSuccessHandler" class="com.example.ecommerce.handler.CustomOAuth2LoginSuccessHandler">
+		<constructor-arg ref="userService"/>
+		<constructor-arg ref="clientRegistrationRepository"/>
+		<constructor-arg ref="oAuthAttributesDAO"/>
+	</bean>
+	<bean id="customOAuth2LoginFailureHandler" class="com.example.ecommerce.handler.CustomOAuth2LoginFailureHandler" />
+	<bean id="customFormLoginSuccessHandler" class="com.example.ecommerce.handler.CustomFormLoginSuccessHandler" />
+</beans>
+

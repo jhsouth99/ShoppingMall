@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="carrier">
+
+    <!-- 활성화된 배송업체 목록 조회 -->
+    <select id="findActiveCarriers" resultType="map">
+        SELECT
+            id as "id",
+            name as "name",
+            code as "code",
+            logo_url as "logoUrl",
+            tracking_url_format as "trackingUrlFormat"
+        FROM carriers
+        WHERE is_active = 'Y'
+        ORDER BY name
+    </select>
+
+    <!-- 배송업체 ID로 상세 조회 -->
+    <select id="findCarrierById" parameterType="int" resultType="map">
+        SELECT
+            id,
+            name,
+            code,
+            logo_url as logoUrl,
+            tracking_url_format as trackingUrlFormat,
+            is_active as isActive
+        FROM carriers
+        WHERE id = #{id}
+    </select>
+
+    <!-- 배송업체 코드로 조회 -->
+    <select id="findCarrierByCode" parameterType="string" resultType="map">
+        SELECT
+            id,
+            name,
+            code,
+            logo_url as logoUrl,
+            tracking_url_format as trackingUrlFormat,
+            is_active as isActive
+        FROM carriers
+        WHERE code = #{code}
+          AND is_active = 'Y'
+    </select>
+
+    <!-- 전체 배송업체 목록 조회 (관리자용) -->
+    <select id="findAllCarriers" resultType="map">
+        SELECT
+            id,
+            name,
+            code,
+            logo_url as logoUrl,
+            tracking_url_format as trackingUrlFormat,
+            is_active as isActive
+        FROM carriers
+        ORDER BY
+            CASE WHEN is_active = 'Y' THEN 0 ELSE 1 END,
+            name
+    </select>
+
+    <!-- 배송업체 추가 (관리자용) -->
+    <insert id="insertCarrier" parameterType="map" useGeneratedKeys="true" keyProperty="id">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT carriers_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO carriers (
+        id, name, code, logo_url, tracking_url_format, is_active
+        )
+        VALUES (
+        #{id}, #{name}, #{code}, #{logoUrl}, #{trackingUrlFormat}, #{isActive}
+        )
+    </insert>
+
+    <!-- 배송업체 수정 (관리자용) -->
+    <update id="updateCarrier" parameterType="map">
+        UPDATE carriers
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="code != null">code = #{code},</if>
+            <if test="logoUrl != null">logo_url = #{logoUrl},</if>
+            <if test="trackingUrlFormat != null">tracking_url_format = #{trackingUrlFormat},</if>
+            <if test="isActive != null">is_active = #{isActive}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 배송업체 활성화/비활성화 -->
+    <update id="updateCarrierStatus" parameterType="map">
+        UPDATE carriers
+        SET is_active = #{isActive}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

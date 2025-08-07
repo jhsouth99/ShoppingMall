@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 
-import com.example.ecommerce.dto.ProductDTO;
+import com.example.ecommerce.dto.SearchProductDTO;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,7 +15,7 @@ public class HomeDAO {
     private final SqlSession sqlSession;
     
     //추천 상품 12개 조회
-    public List<ProductDTO> getRecommendedProducts() {
+    public List<SearchProductDTO> getRecommendedProducts() {
         try {
             return sqlSession.selectList("home.getRecommendedProducts");
         } catch (Exception e) {
@@ -25,7 +25,7 @@ public class HomeDAO {
     }
     
     //필터 조건에 따른 상품 조회
-    public List<ProductDTO> getFilteredProducts(Map<String, Object> filters) {
+    public List<SearchProductDTO> getFilteredProducts(Map<String, Object> filters) {
         try {
         	return sqlSession.selectList("home.getFilteredProducts", filters);
         } catch (Exception e) {

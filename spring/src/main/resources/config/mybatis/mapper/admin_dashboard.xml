@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dashboard">
+
+    <select id="getAdminDashboardSummary" resultType="AdminDashboardSummary">
+        SELECT
+            (SELECT NVL(SUM(final_amount), 0)
+             FROM orders
+             WHERE status IN ('PAID', 'PREPARING', 'SHIPPED', 'DELIVERED')
+               AND created_at >= TRUNC(SYSDATE)) AS today_sales,
+
+            (SELECT COUNT(*)
+             FROM group_buys
+             WHERE status = 'ACTIVE') AS ongoing_group_buys,
+
+            (SELECT COUNT(*)
+             FROM orders
+             WHERE created_at >= TRUNC(SYSDATE)) AS new_orders,
+
+            (SELECT COUNT(*)
+             FROM users
+             WHERE created_at >= TRUNC(SYSDATE)) AS new_users_today,
+
+            (SELECT COUNT(*)
+             FROM reports
+             WHERE status = 'PENDING') AS unprocessed_reports,
+
+            -- 미승인 판매자 수 (승인 대기중인 사업자)
+            (SELECT COUNT(*)
+             FROM business_profiles
+             WHERE status = 'PENDING') AS pendingSellerApprovals
+        FROM DUAL
+    </select>
+</mapper>

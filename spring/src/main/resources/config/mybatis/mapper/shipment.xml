@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="shipment">
+
+    <select id="findShippingMethodsBySellerId" parameterType="int" resultType="ShippingMethod">
+        SELECT
+            ssm.seller_id,
+            ssm.shipping_method_id,
+            sm.carrier_id,
+            sm.name AS shipping_method_name,
+            sm.cost,
+            ssm.cost_override,
+            ssm.is_default
+        FROM seller_shipping_methods ssm
+                 JOIN shipping_methods sm ON sm.id = ssm.shipping_method_id
+        WHERE ssm.seller_id = #{sellerId}
+        ORDER BY ssm.is_default, sm.name
+    </select>
+
+</mapper>

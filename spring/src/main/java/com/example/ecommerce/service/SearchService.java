@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.example.ecommerce.dao.SearchDAO;
-import com.example.ecommerce.dto.ProductDTO;
+import com.example.ecommerce.dto.SearchProductDTO;
 
 import lombok.RequiredArgsConstructor;
 
@@ -14,7 +14,7 @@ public class SearchService {
     private final SearchDAO searchDAO;
     
     //태그 기반 상품 검색
-    public List<ProductDTO> searchProducts(Map<String, Object> searchConditions) {
+    public List<SearchProductDTO> searchProducts(Map<String, Object> searchConditions) {
         return searchDAO.searchProducts(searchConditions);
     }
     

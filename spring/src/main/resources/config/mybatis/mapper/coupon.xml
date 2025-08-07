@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="coupon">
+
+	<select id="findAvailableCouponsByUserId" parameterType="int" resultType="UserCoupon">
+		SELECT c.code AS couponCode,
+		       c.name,
+		       c.discount_type AS discountType,
+		       c.discount_value AS discountValue,
+		       uc.created_at AS issuedAt,
+		       c.valid_from AS validFrom,
+		       c.valid_to AS validTo
+		FROM user_coupons uc
+		JOIN coupons c ON uc.coupon_id = c.id
+		WHERE uc.user_id = #{userId}
+		  AND uc.used_at IS NULL
+		  AND c.valid_to >= TRUNC(SYSDATE)
+		ORDER BY c.valid_to ASC
+	</select>
+
+	<select id="countUserCoupon" parameterType="map" resultType="int">
+		SELECT COUNT(1)
+		FROM user_coupons uc
+		JOIN coupons c ON uc.coupon_id = c.id
+		WHERE uc.user_id = #{userId}
+		  AND c.code = #{couponCode}
+	</select>
+
+	<insert id="insertUserCoupon" parameterType="map">
+        BEGIN
+		INSERT INTO user_coupons (id, user_id, coupon_id, created_at)
+		SELECT user_coupons_seq.NEXTVAL, #{userId}, c.id, SYSDATE
+		FROM coupons c
+		WHERE c.code = #{couponCode}
+		  AND c.valid_to >= TRUNC(SYSDATE)
+		  AND c.is_active = 'Y';
+        END;
+	</insert>
+
+    <select id="findCouponsByCreator" parameterType="map" resultType="Coupon">
+        SELECT * FROM (
+            SELECT ROWNUM AS rnum, c.* FROM (
+                SELECT
+                    id, creator_id, code, name, discount_type, discount_value,
+                    issue_start_date, issue_end_date, -- 조회 컬럼 추가
+                    valid_to, min_purchase_amount, total_usage_limit,
+                    current_usage_count, usage_limit_per_user, is_active, created_at
+                FROM coupons
+                WHERE creator_id = #{sellerId} OR creator_id IS NULL
+                ORDER BY created_at DESC
+            ) c WHERE ROWNUM &lt;= #{offset} + #{size}
+        ) WHERE rnum > #{offset}
+    </select>
+
+    <select id="countCouponsByCreator" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM coupons
+        WHERE creator_id = #{sellerId} OR creator_id IS NULL
+    </select>
+
+    <select id="findCouponById" parameterType="map" resultType="Coupon">
+        SELECT * FROM coupons
+        WHERE id = #{couponId}
+          AND (creator_id = #{sellerId} OR creator_id IS NULL)
+    </select>
+
+    <insert id="insertCoupon" parameterType="Coupon">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT coupons_seq.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO coupons(id, creator_id, code, name, discount_type, discount_value, issue_start_date, issue_end_date, valid_to, min_purchase_amount, total_usage_limit, usage_limit_per_user, is_active)
+        VALUES(#{id}, #{creatorId}, #{code}, #{name}, #{discountType}, #{discountValue}, #{issueStartDate, jdbcType=DATE}, #{issueEndDate, jdbcType=DATE}, #{validTo, jdbcType=DATE}, #{minPurchaseAmount, jdbcType=NUMERIC}, #{totalUsageLimit, jdbcType=NUMERIC}, #{usageLimitPerUser, jdbcType=NUMERIC}, #{isActive, jdbcType=CHAR})
+    </insert>
+
+    <update id="updateCoupon" parameterType="Coupon">
+        UPDATE coupons
+        SET name = #{name},
+            discount_type = #{discountType},
+            discount_value = #{discountValue},
+            issue_start_date = #{issueStartDate, jdbcType=TIMESTAMP},
+            issue_end_date = #{issueEndDate, jdbcType=TIMESTAMP},
+            valid_to = #{validTo, jdbcType=DATE},
+            min_purchase_amount = #{minPurchaseAmount, jdbcType=NUMERIC},
+            total_usage_limit = #{totalUsageLimit, jdbcType=NUMERIC},
+            usage_limit_per_user = #{usageLimitPerUser, jdbcType=NUMERIC},
+            is_active = #{isActive, jdbcType=CHAR}
+        WHERE id = #{id} AND creator_id = #{creatorId}
+    </update>
+
+    <!-- 프로모션에 연결되지 않은 활성 쿠폰 목록 조회 -->
+    <select id="findAvailableCouponsForPromotion" parameterType="map" resultType="Coupon">
+        SELECT c.id, c.code, c.name, c.discount_type, c.discount_value, c.min_purchase_amount
+        FROM coupons c
+        WHERE c.is_active = 'Y'
+          AND (c.creator_id = #{sellerId} OR c.creator_id IS NULL)
+          AND c.id NOT IN (
+            SELECT p.coupon_id
+            FROM promotions p
+            WHERE p.coupon_id IS NOT NULL
+            <if test="excludePromotionId != null">
+              AND p.id != #{excludePromotionId, jdbcType=NUMERIC}
+            </if>
+        )
+        ORDER BY c.created_at DESC
+    </select>
+
+    <!-- 관리자가 모든 쿠폰을 조회 (키워드, 상태 필터링 포함) -->
+    <select id="findAllCoupons" parameterType="map" resultType="Coupon">
+        SELECT * FROM (
+        SELECT ROWNUM AS rnum, c.* FROM (
+        SELECT
+        id, creator_id, code, name, discount_type, discount_value,
+        issue_start_date, issue_end_date,
+        valid_from, valid_to, min_purchase_amount, total_usage_limit,
+        current_usage_count, usage_limit_per_user, is_active, created_at
+        FROM coupons
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND (UPPER(name) LIKE UPPER('%'||#{keyword}||'%')
+            OR UPPER(code) LIKE UPPER('%'||#{keyword}||'%'))
+        </if>
+        <if test="status != null and status != ''">
+            <if test="status == 'active'">
+                AND is_active = 'Y'
+            </if>
+            <if test="status == 'inactive'">
+                AND is_active = 'N'
+            </if>
+        </if>
+        ORDER BY created_at DESC
+        ) c WHERE ROWNUM &lt;= #{offset} + #{size}
+        ) WHERE rnum > #{offset}
+    </select>
+
+    <!-- 관리자가 모든 쿠폰의 총 개수 조회 -->
+    <select id="countAllCoupons" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM coupons
+        WHERE 1=1
+        <if test="keyword != null and keyword != ''">
+            AND (UPPER(name) LIKE UPPER('%'||#{keyword}||'%')
+            OR UPPER(code) LIKE UPPER('%'||#{keyword}||'%'))
+        </if>
+        <if test="status != null and status != ''">
+            <if test="status == 'active'">
+                AND is_active = 'Y'
+            </if>
+            <if test="status == 'inactive'">
+                AND is_active = 'N'
+            </if>
+        </if>
+    </select>
+
+    <!-- 관리자가 특정 쿠폰을 ID로 조회 (권한 체크 없음) -->
+    <select id="findCouponByIdForAdmin" parameterType="int" resultType="Coupon">
+        SELECT * FROM coupons WHERE id = #{couponId}
+    </select>
+
+    <!-- 특정 상품에 사용 가능한 사용자의 쿠폰 조회 -->
+    <select id="findAvailableCouponsForProduct" parameterType="map" resultType="UserCoupon">
+        SELECT
+            c.id AS couponId,
+            c.code AS couponCode,
+            c.name,
+            c.discount_type AS discountType,
+            c.discount_value AS discountValue,
+            c.min_purchase_amount AS minPurchaseAmount,
+            uc.created_at AS issuedAt,
+            c.valid_from AS validFrom,
+            c.valid_to AS validTo,
+            -- 적용 가능 여부 계산
+            CASE
+                WHEN c.min_purchase_amount IS NULL THEN 'Y'
+                WHEN (SELECT base_price FROM products WHERE id = #{productId}) >= c.min_purchase_amount THEN 'Y'
+                ELSE 'N'
+                END AS applicable
+        FROM user_coupons uc
+                 JOIN coupons c ON uc.coupon_id = c.id
+        WHERE uc.user_id = #{userId}
+          AND uc.used_at IS NULL
+          AND c.is_active = 'Y'
+          AND #{currentDate} BETWEEN NVL(c.valid_from, #{currentDate}) AND c.valid_to
+          AND (
+            -- 전체 상품에 적용 가능한 쿠폰이거나
+            NOT EXISTS (
+                SELECT 1 FROM promotion_products pp
+                                  JOIN promotions p ON pp.promotion_id = p.id
+                WHERE p.coupon_id = c.id
+            )
+                OR
+                -- 특정 상품에 적용 가능한 프로모션의 쿠폰
+            EXISTS (
+                SELECT 1 FROM promotion_products pp
+                                  JOIN promotions p ON pp.promotion_id = p.id
+                WHERE p.coupon_id = c.id AND pp.product_id = #{productId}
+            )
+            )
+        ORDER BY
+            CASE WHEN c.discount_type = 'PERCENTAGE' THEN c.discount_value ELSE 0 END DESC,
+            CASE WHEN c.discount_type = 'FIXED_AMOUNT' THEN c.discount_value ELSE 0 END DESC,
+            c.valid_to ASC
+    </select>
+
+    <select id="findCouponByCode" parameterType="string" resultType="Coupon">
+        SELECT * FROM coupons WHERE code = #{code}
+    </select>
+
+    <update id="setUserCouponUsedAtNowByUserIdAndCouponId" parameterType="map">
+        UPDATE user_coupons SET used_at = CURRENT_TIMESTAMP WHERE user_id = #{userId} AND COUPON_ID = #{couponId}
+    </update>
+</mapper>

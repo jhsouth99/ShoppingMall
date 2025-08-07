@@ -1,0 +1,155 @@
+/**
+ * Social Signup Page Additional Styles
+ * 소셜 회원가입 페이지 추가 CSS
+ */
+
+/* =====================================
+   소셜 회원가입 전용 스타일
+   ===================================== */
+.social-signup-form-wrapper {
+    max-width: 500px;
+    width: 100%;
+    background-color: var(--bg-primary);
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 4px 20px var(--shadow-light);
+    border: 1px solid var(--border-color);
+    margin: 0 auto;
+}
+
+/* 소셜 뱃지 */
+.social-badge {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 20px;
+    background-color: var(--bg-secondary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+}
+
+.social-badge img {
+    width: 100%;
+    height: auto;
+}
+
+.social-badge i {
+    font-size: 30px;
+    color: var(--text-muted);
+}
+
+/* 소셜 정보 알림 */
+.social-info-notice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: rgba(116, 185, 255, 0.1);
+    border: 1px solid rgba(116, 185, 255, 0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 25px;
+    font-size: 14px;
+    color: var(--accent-primary);
+}
+
+.social-info-notice i {
+    font-size: 16px;
+}
+
+/* 라벨 뱃지 */
+.label-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    background-color: var(--accent-primary);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: 12px;
+}
+
+/* 읽기 전용 소셜 필드 */
+.readonly-social {
+    background-color: var(--bg-secondary) !important;
+    cursor: default !important;
+}
+
+/* 소셜 이메일 값이 있는 경우 */
+.has-social-value {
+    border-color: var(--accent-primary);
+}
+
+/* 이메일 인증 그룹 */
+.email-verify-group {
+    margin-top: -10px;
+    padding-top: 10px;
+    animation: slideIn 0.3s ease-out;
+}
+
+/* =====================================
+   폼 조정
+   ===================================== */
+/* 인증번호 받기 버튼 숨김/표시 애니메이션 */
+#sendMailBtn {
+    transition: all 0.3s ease;
+}
+
+#sendMailBtn.show {
+    display: inline-block !important;
+}
+
+/* =====================================
+   반응형 디자인
+   ===================================== */
+@media (max-width: 575px) {
+    .social-signup-form-wrapper {
+        padding: 30px 20px;
+        margin: 0 15px;
+    }
+
+    .social-badge {
+        width: 50px;
+        height: 50px;
+        padding: 12px;
+    }
+}
+
+/* =====================================
+   다크모드 스타일
+   ===================================== */
+body.dark-theme .social-signup-form-wrapper {
+    background-color: var(--bg-primary);
+}
+
+body.dark-theme .social-badge {
+    background-color: var(--bg-secondary);
+}
+
+body.dark-theme .social-info-notice {
+    background-color: rgba(116, 185, 255, 0.1);
+    border-color: rgba(116, 185, 255, 0.3);
+}
+
+body.dark-theme .readonly-social {
+    background-color: var(--bg-tertiary) !important;
+}
+
+/* =====================================
+   애니메이션
+   ===================================== */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.social-signup-form-wrapper {
+    animation: fadeIn 0.5s ease-out;
+}
