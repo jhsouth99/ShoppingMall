@@ -32,8 +32,6 @@ public class OrderService {
     private final GroupBuyDAO groupBuyDAO;
     private final RefundDAO refundDAO;
 
-    // ========== 기존 조회 메서드들 (유지) ==========
-
     @Transactional(readOnly = true)
     public PageResult<OrderSummaryDTO> getSingleOrders(int userId, String status, int page, int size) {
         int offset = (page - 1) * size;
@@ -170,8 +168,6 @@ public class OrderService {
 
         return orderDetail;
     }
-
-    // ========== 새로운 주문 플로우 메서드들 ==========
 
     /**
      * 장바구니 아이템들을 OrderRequestDTO로 변환
