@@ -4,7 +4,9 @@
 
 #### Intellij 또는 STS 3 사용
 #### 프론트엔드 - JSP
-#### 백엔드 - Spring MVC
+#### 백엔드 - Spring MVC (레거시 프로젝트)
+
+참고사항: src/main/resources/application.properties 추가
 
 ## node.js 프로젝트
 
