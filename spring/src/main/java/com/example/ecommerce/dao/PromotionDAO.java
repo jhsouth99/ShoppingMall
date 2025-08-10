@@ -28,7 +28,7 @@ public class PromotionDAO {
     }
 
     public PromotionDetailDTO findPromotionDetailsById(Map<String, Object> params) {
-        return null;
+        return sqlSession.selectOne("promotion.findPromotionDetailsById", params);
     }
     
     public int insertPromotion(PromotionDetailDTO promotion) {
