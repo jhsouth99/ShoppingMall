@@ -29,172 +29,173 @@
 <jsp:include page="/WEB-INF/views/common/header.jsp" />
 	
 	<main>
-	<div class="cart-container">
-		<h2 class="cart-title">장바구니</h2>
+		<div class="cart-container">
+			<h2 class="cart-title">장바구니</h2>
 
-		<div class="cart-content" id="cart-content">
-			<div class="cart-header">
-				<div class="select-all-container">
-					<input type="checkbox" id="select-all">
-					<label for="select-all">전체 선택</label>
+			<div class="cart-content" id="cart-content">
+				<div class="cart-header">
+					<div class="select-all-container">
+						<input type="checkbox" id="select-all">
+						<label for="select-all">전체 선택</label>
+					</div>
+					<div class="cart-header-right">
+						<button class="delete-selected-btn">선택 삭제</button>
+						<button class="delete-unable-btn">구매불가 상품 삭제</button>
+					</div>
 				</div>
-				<div class="cart-header-right">
-					<button class="delete-selected-btn">선택 삭제</button>
-					<button class="delete-unable-btn">구매불가 상품 삭제</button>
-				</div>
-			</div>
 
-			<div class="cart-items" id="cart-items">
-				<!-- 장바구니 아이템들 -->
-				<c:choose>
-					<c:when test="${not empty cartList}">
-						<!-- 판매자별로 그룹화 -->
-						<c:set var="currentSeller" value="" />
-						<c:set var="sellerGroupOpen" value="false" />
-						
-						<c:forEach var="dto" items="${cartList}" varStatus="status">
-						    <c:if test="${status.index == 0 or cartList[status.index - 1].businessName ne dto.businessName}">
-						        <!-- 판매자별 그룹 시작 -->
-						        <div class="seller-group" data-shipping-cost="${dto.finalShippingCost}">
-						            <div class="seller-header">
-						                <div class="seller-info">
-						                    <input type="checkbox" class="seller-checkbox" id="seller-${dto.sellerId}">
-						                    <label for="seller-${dto.sellerId}" class="seller-name">
-						                        ${not empty dto.businessName ? dto.businessName : '판매자명'}
-						                    </label>
-						                </div>
-						            </div>
-						            <div class="seller-items">
-						    </c:if>
-							
-							<!-- 상품 아이템 -->
-							<div class="cart-item ${dto.isActive eq 'N' ? 'unavailable' : ''}" 
-							     data-variant-id="${dto.productVariantId}" 
-							     data-user-id="${dto.userId}"
-							     data-seller-id="${dto.sellerId}">
-							    
-							    <div class="item-check">
-							        <input type="checkbox" class="item-checkbox" 
-							               ${dto.isActive eq 'N' ? 'disabled' : 'checked'}>
-							    </div>
-							    
-							    <div class="item-img"
-							         onclick="location.href='${pageContext.request.contextPath}/products/${dto.productId}'"
-							         style="cursor: pointer;">
-							        <img src="${pageContext.request.contextPath}${dto.thumbnailUrl}" alt="${altText}" />
-							        
-							        <!-- 구매불가 상품 오버레이 -->
-							        <c:if test="${dto.isActive eq 'N'}">
-							            <div class="sold-out-overlay">
-							                <div class="sold-out-title">품절</div>
-							            </div>
-							        </c:if>
-							    </div>
-							    
-							    <div class="item-info">
-							        <h3 class="item-name">${dto.productName}</h3>
-			                        <div class="item-option-quantity">
-			                            <!-- Service에서 처리된 옵션 정보 사용 -->
-			                            <c:if test="${not empty dto.optionInfo}">
-			                                <p class="item-option">${dto.optionInfo}</p>
-			                            </c:if>
-								        <p class="item-quantity">${dto.quantity}개</p>
-							        </div>
-							        
-							        <div class="item-details">
-							            <!-- 옵션 선택 버튼 -->
-							            <div class="option-select-container">
-							                <button class="option-select-btn" 
-							                        data-product-id="${dto.productId}"
-							                        data-variant-id="${dto.productVariantId}"
-							                        data-current-quantity="${dto.quantity}"
-							                        ${dto.isActive eq 'N' ? 'disabled' : ''}>
-							                    옵션 선택
-							                </button>
-							            </div>
-							            
-							            <div class="item-price">
-										    <c:choose>
-										        <c:when test="${dto.isDiscounted != null && dto.isDiscounted}">
-										            <p class="original-price" data-unit-original-price="${dto.unitPrice}" data-total-original-price="${dto.totalPrice}">
-										                <fmt:formatNumber value="${dto.totalPrice}" type="number" groupingUsed="true"/>원
-										            </p>
-										            <p class="current-price"
-										               data-unit-price="${dto.finalUnitPrice}"
-										               data-total-price="${dto.finalTotalPrice}"
-										               data-discounted-price="${dto.finalUnitPrice}"> <%-- finalUnitPrice가 할인된 단가라면 이처럼 --%>
-										                <span class="discount-price" style="font-weight: bold;">
-										                    <fmt:formatNumber value="${dto.finalTotalPrice}" type="number" groupingUsed="true"/>원
-										                </span>
-										            </p>
-										        </c:when>
-										        <c:otherwise>
-										            <p class="current-price"
-										               data-unit-price="${dto.finalUnitPrice}"
-										               data-total-price="${dto.finalTotalPrice}">
-										                <span class="regular-price">
-										                    <fmt:formatNumber value="${dto.finalTotalPrice}" type="number" groupingUsed="true"/>원
-										                </span>
-										            </p>
-										        </c:otherwise>
-										    </c:choose>
+				<div class="cart-items" id="cart-items">
+					<!-- 장바구니 아이템들 -->
+					<c:choose>
+						<c:when test="${not empty cartList}">
+							<!-- 판매자별로 그룹화 -->
+							<c:set var="currentSeller" value="" />
+							<c:set var="sellerGroupOpen" value="false" />
+
+							<c:forEach var="dto" items="${cartList}" varStatus="status">
+								<c:if test="${status.index == 0 or cartList[status.index - 1].businessName ne dto.businessName}">
+									<!-- 판매자별 그룹 시작 -->
+									<div class="seller-group" data-shipping-cost="${dto.finalShippingCost}">
+										<div class="seller-header">
+											<div class="seller-info">
+												<input type="checkbox" class="seller-checkbox" id="seller-${dto.sellerId}">
+												<label for="seller-${dto.sellerId}" class="seller-name">
+													${not empty dto.businessName ? dto.businessName : '판매자명'}
+												</label>
+											</div>
 										</div>
-							        </div>
-							    </div>
-							    
-							    <div class="item-actions">
-							        <button class="remove-item" data-variant-id="${dto.productVariantId}" 
-							                data-user-id="${dto.userId}">×</button>
-							    </div>
+										<div class="seller-items">
+								</c:if>
+
+								<!-- 상품 아이템 -->
+								<div class="cart-item ${dto.isActive eq 'N' ? 'unavailable' : ''}"
+									 data-variant-id="${dto.productVariantId}"
+									 data-user-id="${dto.userId}"
+									 data-seller-id="${dto.sellerId}">
+
+									<div class="item-check">
+										<input type="checkbox" class="item-checkbox"
+											   ${dto.isActive eq 'N' ? 'disabled' : 'checked'}>
+									</div>
+
+									<div class="item-img"
+										 onclick="location.href='${pageContext.request.contextPath}/products/${dto.productId}'"
+										 style="cursor: pointer;">
+										<img src="${pageContext.request.contextPath}${dto.thumbnailUrl}" alt="${altText}" />
+
+										<!-- 구매불가 상품 오버레이 -->
+										<c:if test="${dto.isActive eq 'N'}">
+											<div class="sold-out-overlay">
+												<div class="sold-out-title">품절</div>
+											</div>
+										</c:if>
+									</div>
+
+									<div class="item-info">
+										<h3 class="item-name"><a href="${pageContext.request.contextPath}/products/${dto.productId}">${dto.productName}</a></h3>
+										<div class="item-option-quantity">
+											<!-- Service에서 처리된 옵션 정보 사용 -->
+											<c:if test="${not empty dto.optionInfo}">
+												<p class="item-option">${dto.optionInfo}</p>
+											</c:if>
+											<p class="item-quantity">${dto.quantity}개</p>
+										</div>
+
+										<div class="item-details">
+											<!-- 옵션 선택 버튼 -->
+											<div class="option-select-container">
+												<button class="option-select-btn"
+														data-product-id="${dto.productId}"
+														data-variant-id="${dto.productVariantId}"
+														data-current-quantity="${dto.quantity}"
+														${dto.isActive eq 'N' ? 'disabled' : ''}>
+													옵션 선택
+												</button>
+											</div>
+
+											<div class="item-price">
+												<c:choose>
+													<c:when test="${dto.isDiscounted != null && dto.isDiscounted}">
+														<p class="original-price" data-unit-original-price="${dto.unitPrice}" data-total-original-price="${dto.totalPrice}">
+															<fmt:formatNumber value="${dto.totalPrice}" type="number" groupingUsed="true"/>원
+														</p>
+														<p class="current-price"
+														   data-unit-price="${dto.finalUnitPrice}"
+														   data-total-price="${dto.finalTotalPrice}"
+														   data-discounted-price="${dto.finalUnitPrice}"> <%-- finalUnitPrice가 할인된 단가라면 이처럼 --%>
+															<span class="discount-price" style="font-weight: bold;">
+																<fmt:formatNumber value="${dto.finalTotalPrice}" type="number" groupingUsed="true"/>원
+															</span>
+														</p>
+													</c:when>
+													<c:otherwise>
+														<p class="current-price"
+														   data-unit-price="${dto.finalUnitPrice}"
+														   data-total-price="${dto.finalTotalPrice}">
+															<span class="regular-price">
+																<fmt:formatNumber value="${dto.finalTotalPrice}" type="number" groupingUsed="true"/>원
+															</span>
+														</p>
+													</c:otherwise>
+												</c:choose>
+											</div>
+										</div>
+									</div>
+
+									<div class="item-actions">
+										<button class="remove-item" data-variant-id="${dto.productVariantId}"
+												data-user-id="${dto.userId}">×</button>
+									</div>
+								</div>
+
+								<!-- 판매자 그룹 닫기 및 요약 표시 -->
+								<c:if test="${status.last or cartList[status.index + 1].businessName ne dto.businessName}">
+										<!-- 요약 정보는 seller-items 안쪽에! -->
+										<div class="seller-summary">
+											<div class="seller-total">
+												<span class="label">상품금액</span>
+												<span class="value seller-product-total">0원</span>
+											</div>
+											<div class="seller-shipping">
+												<span class="label">배송비</span>
+												<span class="value seller-shipping-cost">무료</span>
+											</div>
+										</div>
+										</div> <!-- seller-items 닫기 -->
+									</div> <!-- seller-group 닫기 -->
+								</c:if>
+							</c:forEach>
+						</c:when>
+						<c:otherwise>
+							<div class="empty-cart" id="empty-cart">
+								<div class="empty-cart-content">
+									<p>장바구니에 담긴 상품이 없습니다.</p>
+									<a href="${pageContext.request.contextPath}/" class="go-shopping-btn">쇼핑하러 가기</a>
+								</div>
 							</div>
-							
-						    <!-- 판매자 그룹 닫기 및 요약 표시 -->
-						    <c:if test="${status.last or cartList[status.index + 1].businessName ne dto.businessName}">
-						            <!-- 요약 정보는 seller-items 안쪽에! -->
-						            <div class="seller-summary">
-						                <div class="seller-total">
-						                    <span class="label">상품금액</span>
-						                    <span class="value seller-product-total">0원</span>
-						                </div>
-						                <div class="seller-shipping">
-						                    <span class="label">배송비</span>
-						                    <span class="value seller-shipping-cost">무료</span>
-						                </div>
-						            </div>
-						            </div> <!-- seller-items 닫기 -->
-						        </div> <!-- seller-group 닫기 -->
-						    </c:if>
-						</c:forEach>
-					</c:when>
-					<c:otherwise>
-						<div class="empty-cart" id="empty-cart">
-							<div class="empty-cart-content">
-								<p>장바구니에 담긴 상품이 없습니다.</p>
-								<a href="${pageContext.request.contextPath}/" class="go-shopping-btn">쇼핑하러 가기</a>
-							</div>
-						</div>
-					</c:otherwise>
-				</c:choose>
+						</c:otherwise>
+					</c:choose>
+				</div>
 			</div>
-		</div>
-		<div class="cart-items-summary" id="cart-items-summary">
-			<!-- 전체 주문 요약 섹션 -->
-			<div class="total-summary">
-				<div class="summary-row">
-					<span class="summary-label">총 상품금액</span>
-					<span class="summary-value total-product-amount">0원</span>
-				</div>
-				<div class="summary-row">
-					<span class="summary-label">총 할인금액</span>
-					<span class="summary-value total-discount-amount">-&nbsp;0원</span>
-				</div>
-				<div class="summary-row">
-					<span class="summary-label">총 배송비</span>
-					<span class="summary-value total-shipping-amount">0원</span>
-				</div>
-				<div class="summary-row total-row">
-					<span class="summary-label">총 주문금액</span>
-					<span class="summary-value final-total-amount">0원</span>
+			<div class="cart-items-summary" id="cart-items-summary">
+				<!-- 전체 주문 요약 섹션 -->
+				<div class="total-summary">
+					<div class="summary-row">
+						<span class="summary-label">총 상품금액</span>
+						<span class="summary-value total-product-amount">0원</span>
+					</div>
+					<div class="summary-row">
+						<span class="summary-label">총 할인금액</span>
+						<span class="summary-value total-discount-amount">-&nbsp;0원</span>
+					</div>
+					<div class="summary-row">
+						<span class="summary-label">총 배송비</span>
+						<span class="summary-value total-shipping-amount">0원</span>
+					</div>
+					<div class="summary-row total-row">
+						<span class="summary-label">총 주문금액</span>
+						<span class="summary-value final-total-amount">0원</span>
+					</div>
 				</div>
 			</div>
 		</div>
