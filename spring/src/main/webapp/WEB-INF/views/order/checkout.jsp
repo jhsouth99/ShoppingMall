@@ -73,7 +73,7 @@
                             <c:when test="${orderType != 'multi'}">
                                 <div class="order-item">
                                     <div class="item-image">
-                                        <img src="${checkoutData.productImageUrl}" alt="${checkoutData.productName}">
+                                        <img src="${pageContext.request.contextPath}${checkoutData.productImageUrl}" alt="${checkoutData.productName}">
                                     </div>
                                     <div class="item-info">
                                         <h3 class="item-name">${checkoutData.productName}</h3>

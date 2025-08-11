@@ -2177,7 +2177,7 @@ function createOrderItemElement(order, item) {
 
     itemElement.innerHTML = `
         <div class="order-item-image">
-            <img src="${productImageUrl || '/images/default-product.jpg'}" 
+            <img src="${contextPath}${productImageUrl || '/images/default-product.jpg'}" 
                  alt="${productName}" 
                  onerror="this.src='${contextPath}/resources/images/no-image.jpg'">
         </div>

@@ -331,13 +331,34 @@
                       JOIN product_option_values pov ON pvov.product_option_value_id = pov.id
                       JOIN product_options po ON pov.product_option_id = po.id
              WHERE pvov.variant_id = oi.product_variant_id
-            ) AS optionCombination
+            ) AS optionCombination,
+            pi.image_url,
+            pi.alt_text
+
         FROM
             order_items oi
                 JOIN
-            product_variants pv ON oi.product_variant_id = pv.id
+                    product_variants pv ON oi.product_variant_id = pv.id
                 JOIN
-            products p ON pv.product_id = p.id
+                    products p ON pv.product_id = p.id
+
+                -- 상품 이미지 조인 (PRIMARY 이미지 우선)
+                LEFT JOIN (
+                    SELECT
+                        product_id,
+                        image_url,
+                        alt_text,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY product_id
+                            ORDER BY
+                                CASE WHEN image_type = 'PRIMARY' THEN 1 ELSE 2 END,
+                                NVL(display_order, 999),
+                                created_at
+                            ) as rn
+                    FROM product_images
+                    WHERE is_active = 'Y'
+                ) pi ON p.id = pi.product_id AND pi.rn = 1
+
         WHERE
             oi.order_id = #{orderId}
         ORDER BY

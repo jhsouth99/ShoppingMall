@@ -236,7 +236,7 @@
                     AND p.shipping_method_id = ssm.shipping_method_id
                  LEFT JOIN shipping_methods sm ON p.shipping_method_id = sm.id
 
-            -- 상품 이미지 조인 (PRIMARY 이미지 우선)
+                -- 상품 이미지 조인 (PRIMARY 이미지 우선)
                  LEFT JOIN (
                     SELECT
                         product_id,

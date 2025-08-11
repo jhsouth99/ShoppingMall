@@ -686,7 +686,6 @@ public class OrderController {
         log.debug("주문 관련 세션 정리 완료");
     }
 
-///  추가
     /**
      * 개별 주문 아이템 구매 확정
      */
