@@ -233,25 +233,25 @@
 
             -- 배송 정보 조인
                  LEFT JOIN seller_shipping_methods ssm ON p.seller_id = ssm.seller_id
-            AND p.shipping_method_id = ssm.shipping_method_id
+                    AND p.shipping_method_id = ssm.shipping_method_id
                  LEFT JOIN shipping_methods sm ON p.shipping_method_id = sm.id
 
             -- 상품 이미지 조인 (PRIMARY 이미지 우선)
                  LEFT JOIN (
-            SELECT
-                product_id,
-                image_url,
-                alt_text,
-                ROW_NUMBER() OVER (
-                    PARTITION BY product_id
-                    ORDER BY
-                        CASE WHEN image_type = 'PRIMARY' THEN 1 ELSE 2 END,
-                        NVL(display_order, 999),
-                        created_at
-                    ) as rn
-            FROM product_images
-            WHERE is_active = 'Y'
-        ) pi ON p.id = pi.product_id AND pi.rn = 1
+                    SELECT
+                        product_id,
+                        image_url,
+                        alt_text,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY product_id
+                            ORDER BY
+                                CASE WHEN image_type = 'PRIMARY' THEN 1 ELSE 2 END,
+                                NVL(display_order, 999),
+                                created_at
+                            ) as rn
+                    FROM product_images
+                    WHERE is_active = 'Y'
+                ) pi ON p.id = pi.product_id AND pi.rn = 1
 
         WHERE ci.user_id = #{userId}
           AND pv.is_active = 'Y'

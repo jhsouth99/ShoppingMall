@@ -81,7 +81,7 @@
 							    <div class="item-img"
 							         onclick="location.href='${pageContext.request.contextPath}/products/${dto.productId}'"
 							         style="cursor: pointer;">
-							        <img src="${imageUrl}" alt="${altText}" />
+							        <img src="${pageContext.request.contextPath}${dto.thumbnailUrl}" alt="${altText}" />
 							        
 							        <!-- 구매불가 상품 오버레이 -->
 							        <c:if test="${dto.isActive eq 'N'}">
