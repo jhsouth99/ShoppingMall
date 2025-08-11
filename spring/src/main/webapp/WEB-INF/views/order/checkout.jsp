@@ -114,7 +114,7 @@
                                 <c:forEach var="item" items="${checkoutData.items}">
                                     <div class="order-item">
                                         <div class="item-image">
-                                            <img src="${item.productImageUrl}" alt="${item.productName}">
+                                            <img src="${pageContext.request.contextPath}${item.productImageUrl}" alt="${item.productName}">
                                         </div>
                                         <div class="item-info">
                                             <h3 class="item-name">${item.productName}</h3>
