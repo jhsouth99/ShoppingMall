@@ -62,6 +62,10 @@ button {
 	accent-color: #333;
 }
 
+.select-all-container input[type="checkbox"] + label {
+	color: #1a1d23;
+}
+
 .cart-header-right button {
 	background-color: transparent;
 	border: 1px solid #ddd;
